@@ -1,6 +1,6 @@
 return {
   colorscheme = "sonokai",
-  option = {
+  options = {
     opt = {
       relativenumber = false,
     },
