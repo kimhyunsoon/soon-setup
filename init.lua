@@ -10,10 +10,5 @@ return {
       format_on_save = false,
     },
   },
-  plugins = {
-    {
-      'microsoft/vscode-js-debug',
-    },
-  },
 }
 
