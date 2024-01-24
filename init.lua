@@ -16,10 +16,18 @@ return {
       ['cc'] = { function()end },
       ['o'] = { function()end },
       ['r'] = { function()end },
-      ['<Tab>'] = { ':norm >><cr>' },
-      ['<S-Tab>'] = { ':norm <<<cr>' },
+      ['<Tab>'] = { ':norm >> <cr>' },
+      ['<S-Tab>'] = { ':norm << <cr>' },
+    },
+    i = {
+      ['<Home>'] = { [[<S-Left>]] },
+      ['<End>'] = { [[<S-Right>]] },
+      ['<C-u>'] = { [[<Esc>:undo<cr>i]] },
+      ['<C-r>'] = { [[<Esc>:redo<cr>i]] },
     },
     n = {
+      ['<Home>'] = { [[<S-Left>]] },
+      ['<End>'] = { [[<S-Right>]] },
       ['<leader>yp'] = {
         function()
           local command = 'let @+ = expand("%:p")'
