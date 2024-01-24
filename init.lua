@@ -11,6 +11,14 @@ return {
     },
   },
   mappings = {
+    [''] = {
+      ['c'] = { function()end },
+      ['cc'] = { function()end },
+      ['o'] = { function()end },
+      ['r'] = { function()end },
+      ['<Tab>'] = { ':norm >><cr>' },
+      ['<S-Tab>'] = { ':norm <<<cr>' },
+    },
     n = {
       ['<leader>yp'] = {
         function()
