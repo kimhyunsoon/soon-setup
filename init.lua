@@ -14,6 +14,7 @@ return {
   },
   mappings = {
     [''] = {
+      ['t'] = { function()end },
       ['c'] = { function()end },
       ['cc'] = { function()end },
       ['o'] = { function()end },
