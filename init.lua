@@ -3,6 +3,8 @@ return {
   options = {
     opt = {
       relativenumber = false,
+      tabstop = 2,
+      shiftwidth = 2,
     },
   }, 
   lsp = {
@@ -16,18 +18,18 @@ return {
       ['cc'] = { function()end },
       ['o'] = { function()end },
       ['r'] = { function()end },
-      ['<Tab>'] = { ':norm >> <cr>' },
-      ['<S-Tab>'] = { ':norm << <cr>' },
+      ['<Tab>'] = { ':norm>><cr>' },
+      ['<S-Tab>'] = { ':norm<<<cr>' },
     },
     i = {
       ['<Home>'] = { [[<S-Left>]] },
       ['<End>'] = { [[<S-Right>]] },
       ['<C-u>'] = { [[<Esc>:undo<cr>i]] },
       ['<C-r>'] = { [[<Esc>:redo<cr>i]] },
+      ['<Tab>'] = { [[<Esc>:norm>><cr>i]] },
+      ['<S-Tab>'] = { [[<Esc>:norm<<<cr>i]] },
     },
     n = {
-      ['<Home>'] = { [[<S-Left>]] },
-      ['<End>'] = { [[<S-Right>]] },
       ['<leader>yp'] = {
         function()
           local command = 'let @+ = expand("%:p")'
@@ -39,6 +41,10 @@ return {
       ['<leader>fo'] = {
         ':!open %:p<cr><cr>',
         desc = 'Open File',
+      },
+      ['<leader>rr'] = {
+        ':RunCode<cr>',
+        desc = 'Code Run Current File'
       },
       ['<leader>rs'] = {
         function()

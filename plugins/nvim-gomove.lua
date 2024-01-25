@@ -1,6 +1,6 @@
 return {
   'booperlv/nvim-gomove',
-    init = function()
+  init = function()
     local map = vim.api.nvim_set_keymap;
     map( "x", "<C-h>", "<Plug>GoVMLineLeft", {} )
     map( "x", "<C-j>", "<Plug>GoVMLineDown", {} )
