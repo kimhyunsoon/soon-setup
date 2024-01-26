@@ -22,6 +22,9 @@ return {
       ['<Tab>'] = { ':norm>><cr>' },
       ['<S-Tab>'] = { ':norm<<<cr>' },
     },
+    x = {
+      ['i'] = { [[<Esc>i]] },
+    },
     i = {
       ['<Home>'] = { [[<S-Left>]] },
       ['<End>'] = { [[<S-Right>]] },
