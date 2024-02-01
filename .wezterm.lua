@@ -53,6 +53,19 @@ config.keys = {
     action = wezterm.action.ActivatePaneDirection 'Up',
   },
 }
+for i = 1, 8 do
+  table.insert(config.keys, {
+    key = tostring(i),
+    mods = 'CMD|ALT',
+    action = wezterm.action.MoveTab(i - 1),
+  })
+  table.insert(config.keys, {
+    key = tostring(i),
+    mods = 'CTRL|ALT',
+    action = wezterm.action.MoveTab(i - 1),
+  })
+end
+
 config.inactive_pane_hsb = {
   saturation = 0.8,
   brightness = 0.4,
