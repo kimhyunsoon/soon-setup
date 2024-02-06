@@ -17,7 +17,7 @@ return {
       ['c'] = { function()end },
       ['cc'] = { function()end },
       ['o'] = { function()end },
-      ['r'] = { function()end },
+      -- ['r'] = { function()end },
       ['<Tab>'] = { ':norm>><cr>' },
       ['<S-Tab>'] = { ':norm<<<cr>' },
     },
