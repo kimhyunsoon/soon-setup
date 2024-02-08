@@ -5,8 +5,13 @@ return {
       relativenumber = false,
       tabstop = 2,
       shiftwidth = 2,
+   },
+  },
+  heirline = {
+    attributes = {
+      buffer_active = { italic = false, bold = true },
     },
-  }, 
+  },
   lsp = {
     formatting = {
       format_on_save = false,
@@ -17,9 +22,9 @@ return {
       ['c'] = { function()end },
       ['cc'] = { function()end },
       ['o'] = { function()end },
-      -- ['r'] = { function()end },
       ['<Tab>'] = { ':norm>><cr>' },
       ['<S-Tab>'] = { ':norm<<<cr>' },
+      ['t'] = { function()end },
     },
     x = {
       ['i'] = { [[<Esc>i]] },

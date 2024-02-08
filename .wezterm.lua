@@ -41,23 +41,14 @@ config.keys = {
     mods = 'CTRL',
     action = wezterm.action.SplitVertical,
   },
-   {
+  {
     key = ']',
-    mods = 'CMD',
+    mods = 'ALT',
     action = wezterm.action.ActivatePaneDirection 'Down',
   },
   {
-    key = ']',
-    mods = 'CTRL',
-    action = wezterm.action.ActivatePaneDirection 'Down',
-  }, {
     key = '[',
-    mods = 'CMD',
-    action = wezterm.action.ActivatePaneDirection 'Up',
-  },
-  {
-    key = '[',
-    mods = 'CTRL',
+    mods = 'ALT',
     action = wezterm.action.ActivatePaneDirection 'Up',
   },
 }
