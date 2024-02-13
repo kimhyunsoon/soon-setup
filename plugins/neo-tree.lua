@@ -25,11 +25,4 @@ return {
       },
     },
   },
-  -- config = function()
-  --   require('neo-tree').setup({
-  --     sources = {
-  --       "filesystem",
-  --     }
-  --   });
-  -- end
 }
