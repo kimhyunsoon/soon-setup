@@ -4,7 +4,7 @@ local colors = {
   green  = '#A7DF78', 
   violet = '#d183e8',
   yellow = '#F5D16C',
-  grey   = '#333333',
+  grey   = '#555555',
   black  = '#000000',
   transparent  = '#00000000',
 }
@@ -37,14 +37,14 @@ local config = {
     lualine_a = {
       {
         'mode',
-        separator = { left = '' },
-        fmt = function(str) return str:sub(1,1) end,
+        separator = { left = '' },
+        fmt = function(str) return str:sub(1,1) .. ' ' end,
       },
     },
     lualine_b = {
       {
         'branch',
-        icon = '',
+        icon = ' ',
       },
     },
     lualine_c = {
@@ -83,7 +83,7 @@ local config = {
       {
       'datetime',
         style = '%H:%M:%S',
-        separator = { right = '' },
+        separator = { right = '', left = ' ' },
         left_padding = 2,
       },
     },

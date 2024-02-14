@@ -1,11 +1,29 @@
 local wezterm = require 'wezterm'
-
 local config = {}
 
 if wezterm.config_builder then
   config = wezterm.config_builder()
 end
 
+local function get_last_dir_name(path)
+  return path:match("[/\\]([^/\\]*)$")
+end
+
+wezterm.on(
+  'format-tab-title',
+  function(tab)
+    local pane = tab.active_pane
+    local title = pane.title
+    local current_working_dir = pane.current_working_dir
+    local process = get_last_dir_name(pane.foreground_process_name)
+    if current_working_dir ~= nil and process == 'nvim' then
+      title =  get_last_dir_name(current_working_dir.path)
+    end
+    return title
+  end
+)
+
+config.show_tab_index_in_tab_bar = false
 config.font = wezterm.font_with_fallback {
    {
     family = 'Hack Nerd Font Mono',
@@ -20,6 +38,7 @@ config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 config.font_size = 12.4
 config.cell_width = 0.8
 config.window_decorations = 'RESIZE'
+
 config.window_background_opacity = 0.83
 config.window_padding = {
   left = 0,
