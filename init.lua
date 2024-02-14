@@ -8,6 +8,7 @@ return {
    },
   },
   heirline = {
+    separators = { breadcrumbs = '  ' },
     attributes = {
       buffer_active = { italic = false, bold = true },
     },
@@ -61,7 +62,6 @@ return {
             local charset = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             local length = 8
             local random_string = ""
-            
             for _ = 1, length do
               local random_index = math.random(1, #charset)
               random_string = random_string .. charset:sub(random_index, random_index)
