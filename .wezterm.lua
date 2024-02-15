@@ -16,8 +16,8 @@ wezterm.on(
     local title = pane.title
     local current_working_dir = pane.current_working_dir
     local process = get_last_dir_name(pane.foreground_process_name)
-    if current_working_dir ~= nil and process == 'nvim' then
-      title =  get_last_dir_name(current_working_dir.path)
+    if current_working_dir ~= nil and (process == 'nvim' or title == 'pnpm')then
+      title = get_last_dir_name(current_working_dir.path)
     end
     return title
   end

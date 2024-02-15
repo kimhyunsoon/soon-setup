@@ -1,10 +1,11 @@
 local colors = {
   red    = '#FF6077',
   blue   = '#85D3F2',
-  green  = '#A7DF78', 
+  green  = '#A7DF78',
   violet = '#d183e8',
   yellow = '#F5D16C',
-  grey   = '#555555',
+  white  = '#FFFFFF',
+  grey   = '#2a2a2a',
   black  = '#000000',
   transparent  = '#00000000',
 }
@@ -76,15 +77,13 @@ local config = {
     lualine_y = {
       {
         'filetype',
-        icon = { align = 'left' },
       },
     },
     lualine_z = {
       {
-      'datetime',
+        'datetime',
         style = '%H:%M:%S',
-        separator = { right = '', left = ' ' },
-        left_padding = 2,
+        separator = { right = '' },
       },
     },
   },

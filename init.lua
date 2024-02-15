@@ -39,6 +39,14 @@ return {
       ['<S-Tab>'] = { [[<Esc>:norm<<<cr>i]] },
     },
     n = {
+      ['{'] = {
+        function() require("astronvim.utils.buffer").nav(-(vim.v.count > 0 and vim.v.count or 1)) end,
+        desc = "Previous buffer",
+      },
+      ['}'] = {
+        function() require("astronvim.utils.buffer").nav((vim.v.count > 0 and vim.v.count or 1)) end,
+        desc = "Next buffer",
+      },
       ['<leader>yp'] = {
         function()
           local command = 'let @+ = expand("%:p")'
