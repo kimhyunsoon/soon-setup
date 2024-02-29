@@ -5,7 +5,14 @@ return {
       relativenumber = false,
       tabstop = 2,
       shiftwidth = 2,
+      softtabstop = 2,
+      expandtab = true,
    },
+  },
+  plugins = {
+    init = {
+      ["Darazaki/indent-o-matic"] = { disable = true },
+    },
   },
   heirline = {
     separators = { breadcrumbs = '  ' },
