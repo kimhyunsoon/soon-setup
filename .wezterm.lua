@@ -38,7 +38,6 @@ config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 config.font_size = 12.4
 config.cell_width = 0.8
 config.window_decorations = 'RESIZE'
-
 config.window_background_opacity = 0.83
 config.window_padding = {
   left = 0,
@@ -48,7 +47,7 @@ config.window_padding = {
 }
 config.color_scheme = 'Adventuretime'
 config.win32_system_backdrop = 'Acrylic'
-config.macos_window_background_blur = 50
+config.macos_window_background_blur = 52
 config.keys = {
   {
     key = '|',

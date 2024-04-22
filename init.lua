@@ -24,6 +24,11 @@ return {
     formatting = {
       format_on_save = false,
     },
+    config = {
+      clangd = {
+        offsetEncoding = 'utf-8',
+      },
+    },
   },
   mappings = {
     [''] = {
