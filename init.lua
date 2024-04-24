@@ -12,6 +12,7 @@ return {
   plugins = {
     init = {
       ["Darazaki/indent-o-matic"] = { disable = true },
+      ["neovim/nvim-lspconfig"] = { opts = { autoformat = false } }
     },
   },
   heirline = {
@@ -23,11 +24,6 @@ return {
   lsp = {
     formatting = {
       format_on_save = false,
-    },
-    config = {
-      clangd = {
-        offsetEncoding = 'utf-8',
-      },
     },
   },
   mappings = {
