@@ -1,5 +1,5 @@
 return {
-  'AstroNvim/astrocommunity',
+  "AstroNvim/astrocommunity",
   { import = 'astrocommunity.pack.typescript' },
   { import = 'astrocommunity.pack.docker' },
   { import = 'astrocommunity.pack.svelte' },
@@ -8,6 +8,7 @@ return {
   { import = 'astrocommunity.pack.lua' },
   { import = 'astrocommunity.pack.rust' },
   { import = 'astrocommunity.pack.cpp' },
+  { import = 'astrocommunity.pack.markdown' },
   { import = 'astrocommunity.editing-support.mini-splitjoin' },
   { import = 'astrocommunity.editing-support.nvim-treesitter-endwise' },
   { import = 'astrocommunity.project.nvim-spectre' },

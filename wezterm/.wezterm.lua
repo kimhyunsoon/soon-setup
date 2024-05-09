@@ -1,8 +1,13 @@
 local wezterm = require 'wezterm'
+local act = wezterm.action
 local config = {}
 
 if wezterm.config_builder then
   config = wezterm.config_builder()
+end
+
+if package.config:sub(1,1) == "\\" then
+  config.default_domain = "WSL:Ubuntu"
 end
 
 local function get_last_dir_name(path)
@@ -16,7 +21,7 @@ wezterm.on(
     local title = pane.title
     local current_working_dir = pane.current_working_dir
     local process = get_last_dir_name(pane.foreground_process_name)
-    if current_working_dir ~= nil and (process == 'nvim' or title == 'pnpm')then
+    if current_working_dir ~= nil and (process == 'nvim' or title == 'pnpm' or process == 'NVIM') then
       title = get_last_dir_name(current_working_dir.path)
     end
     return title
@@ -25,17 +30,13 @@ wezterm.on(
 
 config.show_tab_index_in_tab_bar = false
 config.font = wezterm.font_with_fallback {
-   {
-    family = 'Hack Nerd Font Mono',
-    weight = 'Medium'
-  },
   {
-    family = 'D2CodingLigature Nerd Font Mono',
+    family = 'Hack Nerd Font Mono',
     weight = 'Medium'
   },
 }
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
-config.font_size = 12.4
+config.font_size = 10.5
 config.cell_width = 0.8
 config.window_decorations = 'RESIZE'
 config.window_background_opacity = 0.83
@@ -45,43 +46,84 @@ config.window_padding = {
   top = 4,
   bottom = 0,
 }
-config.color_scheme = 'Adventuretime'
 config.win32_system_backdrop = 'Acrylic'
 config.macos_window_background_blur = 52
 config.keys = {
   {
-    key = '|',
-    mods = 'CMD',
-    action = wezterm.action.SplitVertical,
+    key = '\\',
+    mods = 'ALT',
+    action = act.SplitVertical,
   },
   {
-    key = '|',
+    key = 'v',
     mods = 'CTRL',
-    action = wezterm.action.SplitVertical,
+    action = act.PasteFrom 'Clipboard',
   },
   {
     key = ']',
-    mods = 'ALT',
-    action = wezterm.action.ActivatePaneDirection 'Down',
+    mods = 'CTRL',
+    action = act.ActivatePaneDirection 'Down',
   },
   {
     key = '[',
-    mods = 'ALT',
-    action = wezterm.action.ActivatePaneDirection 'Up',
+    mods = 'CTRL',
+    action = act.ActivatePaneDirection 'Up',
+  },
+  {
+    key = ']',
+    mods = 'CMD',
+    action = act.ActivatePaneDirection 'Down',
+  },
+  {
+    key = '[',
+    mods = 'CMD',
+    action = act.ActivatePaneDirection 'Up',
+  },
+  { key = '{', mods = 'SHIFT|ALT', action = act.MoveTabRelative(-1) },
+  { key = '}', mods = 'SHIFT|ALT', action = act.MoveTabRelative(1) },
+  {
+    key = '{',
+    mods = 'CTRL|SHIFT',
+    action = act.ActivateTabRelative(-1),
+  },
+  {
+    key = '}',
+    mods = 'CTRL|SHIFT',
+    action = act.ActivateTabRelative(1),
+  },
+  {
+    key = 't',
+    mods = 'CMD',
+    action = act.SpawnTab 'CurrentPaneDomain',
+  },
+  {
+    key = 't',
+    mods = 'CTRL',
+    action = act.SpawnTab 'CurrentPaneDomain',
+  },
+  {
+    key = 'w',
+    mods = 'CMD',
+    action = wezterm.action.CloseCurrentTab { confirm = true },
+  },
+  {
+    key = 'w',
+    mods = 'CTRL',
+    action = wezterm.action.CloseCurrentTab { confirm = true },
+  },
+  {
+    key = 'e',
+    mods = 'CTRL|SHIFT',
+    action = act.PromptInputLine {
+      description = 'Enter new name for tab',
+      action = wezterm.action_callback(function(window, _, line)
+        if line then
+          window:active_tab():set_title(line)
+        end
+      end),
+    },
   },
 }
-for i = 1, 8 do
-  table.insert(config.keys, {
-    key = tostring(i),
-    mods = 'CMD|ALT',
-    action = wezterm.action.MoveTab(i - 1),
-  })
-  table.insert(config.keys, {
-    key = tostring(i),
-    mods = 'CTRL|ALT',
-    action = wezterm.action.MoveTab(i - 1),
-  })
-end
 
 config.inactive_pane_hsb = {
   saturation = 0.8,
