@@ -6,15 +6,12 @@ if wezterm.config_builder then
   config = wezterm.config_builder()
 end
 
-if package.config:sub(1,1) == "\\" then
-  config.default_domain = "WSL:Ubuntu"
-end
-
 local function get_last_dir_name(path)
   return path:match("[/\\]([^/\\]*)$")
 end
 
-wezterm.on(
+local function auto_format_title()
+  wezterm.on(
   'format-tab-title',
   function(tab)
     local pane = tab.active_pane
@@ -26,7 +23,14 @@ wezterm.on(
     end
     return title
   end
-)
+  )
+end
+
+if package.config:sub(1,1) == "\\" then
+  config.default_domain = "WSL:Ubuntu"
+else
+  auto_format_title()
+end
 
 config.show_tab_index_in_tab_bar = false
 config.font = wezterm.font_with_fallback {
@@ -34,6 +38,7 @@ config.font = wezterm.font_with_fallback {
     family = 'Hack Nerd Font Mono',
     weight = 'Medium'
   },
+
 }
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 config.font_size = 10.5
