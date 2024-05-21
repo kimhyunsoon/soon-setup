@@ -1,0 +1,9 @@
+###sharpkeys.exe
+- LCtrl <-> LAlt
+- LWin -> LCtrl
+- PrtSc -> RAlt (t14s)
+- RCtrl -> RWin (t14s)
+
+###keymap.ahk 파일 아래경로에 위치
+- Win + R >> shell:startup
+

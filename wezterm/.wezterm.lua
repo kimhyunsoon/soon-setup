@@ -1,15 +1,13 @@
 local wezterm = require 'wezterm'
-local act = wezterm.action
+local is_windows = string.find(wezterm.target_triple, 'windows')
+local is_mac = string.find(wezterm.target_triple, 'apple')
+
+-- Config Builder
 local config = {}
+if wezterm.config_builder then config = wezterm.config_builder() end
 
-if wezterm.config_builder then
-  config = wezterm.config_builder()
-end
-
-local function get_last_dir_name(path)
-  return path:match("[/\\]([^/\\]*)$")
-end
-
+-- Title Auto Formatting (Apply non-Windows)
+local function get_last_dir_name(path) return path:match("[/\\]([^/\\]*)$") end
 local function auto_format_title()
   wezterm.on(
   'format-tab-title',
@@ -26,19 +24,32 @@ local function auto_format_title()
   )
 end
 
-if package.config:sub(1,1) == "\\" then
-  config.default_domain = "WSL:Ubuntu"
+-- Set Windows
+if is_windows then
+  config.wsl_domains = {
+    {
+      name = 'WSL:Ubuntu',
+      distribution = 'Ubuntu',
+      default_cwd = '~',
+    },
+  }
+  config.default_prog = { 'wsl.exe', '~' }
+  config.win32_system_backdrop = 'Acrylic'
+
+-- Set Others
 else
   auto_format_title()
+  config.macos_window_background_blur = 52
 end
 
+-- Set Config
+config.window_close_confirmation = 'NeverPrompt'
 config.show_tab_index_in_tab_bar = false
 config.font = wezterm.font_with_fallback {
   {
     family = 'Hack Nerd Font Mono',
-    weight = 'Medium'
+    weight = 'Medium',
   },
-
 }
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 config.font_size = 10.5
@@ -51,74 +62,82 @@ config.window_padding = {
   top = 4,
   bottom = 0,
 }
-config.win32_system_backdrop = 'Acrylic'
-config.macos_window_background_blur = 52
+config.inactive_pane_hsb = {
+  saturation = 0.8,
+  brightness = 0.4,
+}
+config.foreground_text_hsb = {
+  hue = 1,
+  saturation = 1,
+  brightness = 1.2,
+}
+
+-- Set Keybindings
+local act = wezterm.action
+local CTRL = is_mac and 'CMD' or 'CTRL'
+
 config.keys = {
+
+  -- Vertical Split Pane
   {
     key = '\\',
     mods = 'ALT',
     action = act.SplitVertical,
   },
+
+  -- Paste
   {
     key = 'v',
-    mods = 'CTRL',
+    mods = CTRL,
     action = act.PasteFrom 'Clipboard',
   },
+
+  -- Direction Pane
   {
     key = ']',
-    mods = 'CTRL',
+    mods = CTRL,
     action = act.ActivatePaneDirection 'Down',
   },
   {
     key = '[',
-    mods = 'CTRL',
+    mods = CTRL,
     action = act.ActivatePaneDirection 'Up',
   },
-  {
-    key = ']',
-    mods = 'CMD',
-    action = act.ActivatePaneDirection 'Down',
-  },
-  {
-    key = '[',
-    mods = 'CMD',
-    action = act.ActivatePaneDirection 'Up',
-  },
+
+  -- Move Tab
   { key = '{', mods = 'SHIFT|ALT', action = act.MoveTabRelative(-1) },
   { key = '}', mods = 'SHIFT|ALT', action = act.MoveTabRelative(1) },
+
+  -- Direction Tab
   {
     key = '{',
-    mods = 'CTRL|SHIFT',
+    mods = CTRL .. '|SHIFT',
     action = act.ActivateTabRelative(-1),
   },
   {
     key = '}',
-    mods = 'CTRL|SHIFT',
+    mods = CTRL .. '|SHIFT',
     action = act.ActivateTabRelative(1),
   },
+
+  -- Spawn Tab
   {
     key = 't',
-    mods = 'CMD',
+    mods = CTRL,
     action = act.SpawnTab 'CurrentPaneDomain',
   },
-  {
-    key = 't',
-    mods = 'CTRL',
-    action = act.SpawnTab 'CurrentPaneDomain',
-  },
+
+  -- Close Tab
   {
     key = 'w',
-    mods = 'CMD',
-    action = wezterm.action.CloseCurrentTab { confirm = true },
+    mods = CTRL,
+    action = wezterm.action.CloseCurrentTab { confirm = false },
   },
-  {
-    key = 'w',
-    mods = 'CTRL',
-    action = wezterm.action.CloseCurrentTab { confirm = true },
-  },
+
+  -- Edit Tab Title
   {
     key = 'e',
-    mods = 'CTRL|SHIFT',
+    mods = CTRL .. '|SHIFT',
     action = act.PromptInputLine {
       description = 'Enter new name for tab',
       action = wezterm.action_callback(function(window, _, line)
@@ -128,16 +147,6 @@ config.keys = {
       end),
     },
   },
-}
-
-config.inactive_pane_hsb = {
-  saturation = 0.8,
-  brightness = 0.4,
-}
-config.foreground_text_hsb = {
-  hue = 1,
-  saturation = 1,
-  brightness = 1.2,
 }
 
 return config

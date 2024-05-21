@@ -19,10 +19,10 @@ return {
         ['a'] = { function()end },
         ['cc'] = { function()end },
         ['o'] = { function()end },
-        ['<Tab>'] = { ':norm>><cr>' },
-        ['<S-Tab>'] = { ':norm<<<cr>' },
         ['t'] = { function()end },
         ['<A-Bslash>'] = { function()end },
+        ['<Tab>'] = { ':norm>><cr>' },
+        ['<S-Tab>'] = { ':norm<<<cr>' },
       },
       x = {
         ['i'] = { [[<Esc>i]] },
@@ -34,6 +34,7 @@ return {
         ['<C-r>'] = { [[<Esc>:redo<cr>i]] },
       },
       n = {
+        ['<leader>w'] = { 'viw', desc = 'Select Current Word' },
         ['<A-[>'] = {
           function() require("astrocore.buffer").nav(-(vim.v.count > 0 and vim.v.count or 1)) end,
           desc = "Previous buffer",
