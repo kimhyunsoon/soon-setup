@@ -1,3 +1,29 @@
+function move_cursor_by_word(is_end_key)
+  if is_end_key == nil then is_end_key = true end
+
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local current_line = vim.api.nvim_get_current_line()
+  local line_length = string.len(current_line)
+  local current_word = current_line:match("%w+", cursor[2])
+  if is_end_key then
+    if cursor[2] == line_length then
+      return false
+    end
+  else
+    local space_count = #current_line:match("^%s*")
+    if (cursor[2] - space_count) <= 0 then
+      return false
+    else
+      return true
+    end
+  end
+
+  if current_word == nil or cursor[2] + #current_word == line_length then
+    return true
+  else
+    return false
+  end
+end
 return {
   "AstroNvim/astrocore",
   opts = {
@@ -28,8 +54,24 @@ return {
         ['i'] = { [[<Esc>i]] },
       },
       i = {
-        ['<Home>'] = { [[<S-Left>]] },
-        ['<End>'] = { [[<S-Right>]] },
+        ['<Home>'] = {
+          function()
+            if move_cursor_by_word(false) then
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<S-Left>", true, false, true), 'n', false)
+            else
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<S-Left><End>", true, false, true), 'n', false)
+            end
+          end
+        },
+        ['<End>'] = {
+          function()
+            if move_cursor_by_word(true) then
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), 'n', false)
+            else
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<S-Right>", true, false, true), 'n', false)
+            end
+          end
+        },
         ['<C-u>'] = { [[<Esc>:undo<cr>i]] },
         ['<C-r>'] = { [[<Esc>:redo<cr>i]] },
       },
