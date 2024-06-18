@@ -16,7 +16,6 @@ if not pcall(require, "lazy") then
 end
 vim.api.nvim_set_keymap('n', 'd', '"_d', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('v', 'd', '"_d', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', 'dd', '"_dd', { noremap = true, silent = true })
 
 require "lazy_setup"
 require "polish"
