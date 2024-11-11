@@ -34,12 +34,14 @@ if is_windows then
     },
   }
   config.default_prog = { 'wsl.exe', '~' }
-  config.win32_system_backdrop = 'Acrylic'
+  -- config.win32_system_backdrop = 'Acrylic'
+  -- config.window_background_opacity = 0.83
 
 -- Set Others
 else
   auto_format_title()
   config.macos_window_background_blur = 52
+  config.window_background_opacity = 0.83
 end
 
 -- Set Config
@@ -55,7 +57,6 @@ config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 config.font_size = 10.5
 config.cell_width = 0.8
 config.window_decorations = 'RESIZE'
-config.window_background_opacity = 0.83
 config.window_padding = {
   left = 0,
   right = 0,
