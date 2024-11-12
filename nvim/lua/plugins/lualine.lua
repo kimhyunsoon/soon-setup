@@ -107,6 +107,12 @@ return {
   {
     "rebelot/heirline.nvim",
     optional = true,
-    opts = function(_, opts) opts.statusline = nil end,
+    opts = function(_, opts)
+      local status = require "astroui.status"
+      opts.winbar = {
+        status.component.file_info { filename = { modify = ":." }, filetype = false }
+      }
+      opts.statusline = nil
+    end,
   },
 }
