@@ -10,5 +10,14 @@ if not pcall(require, "lazy") then
   vim.cmd.quit()
 end
 
+vim.api.nvim_set_keymap('n', ':ㅈ', ':w<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', ':ㅂ', ':q<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', 'ㅑ', 'i', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', 'ㅛㅛ', 'yy', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', 'ㅇㅇ', 'dd', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', 'ㅔ', 'p', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', 'ㅕ', 'u', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-ㄱ>', '<C-r>', { noremap = true, silent = true })
+
 require "lazy_setup"
 require "polish"
