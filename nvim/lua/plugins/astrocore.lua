@@ -1,4 +1,4 @@
-function move_cursor_by_word(is_end_key)
+local function move_cursor_by_word(is_end_key)
   if is_end_key == nil then is_end_key = true end
 
   local cursor = vim.api.nvim_win_get_cursor(0)
@@ -24,9 +24,16 @@ function move_cursor_by_word(is_end_key)
     return false
   end
 end
+
 return {
   "AstroNvim/astrocore",
   opts = {
+    diagnostics = {
+      virtual_text = false,
+    },
+    performance = {
+      disable_unneeded_features = true,
+    },
     options = {
       opt = { -- vim.opt.<key>
         clipboard = "unnamedplus",
@@ -35,6 +42,7 @@ return {
         shiftwidth = 2,
         softtabstop = 2,
         expandtab = true,
+
       },
       g = { -- vim.g.<key>
       },
@@ -49,6 +57,9 @@ return {
         ['<A-Bslash>'] = { function()end },
         ['<Tab>'] = { ':norm>><cr>' },
         ['<S-Tab>'] = { ':norm<<<cr>' },
+        ["d"] = { '"_d', noremap = true, silent = true },
+        ["dd"] = { '"_dd', noremap = true, silent = true },
+        ["p"] = { 'p:let @+=@0<CR>', noremap = true, silent = true },
       },
       x = {
         ['i'] = { [[<Esc>i]] },
@@ -87,7 +98,7 @@ return {
         },
         ['<leader>yp'] = {
           function()
-            local command = 'let @+ = expand("%:p")'
+            local command = 'let @+ = expand("%:~")'
             vim.cmd(command)
             vim.notify('Copied "' .. vim.fn.expand('%:p') .. '" to the clipboard!')
           end,
