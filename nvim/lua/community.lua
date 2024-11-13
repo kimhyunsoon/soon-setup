@@ -13,5 +13,4 @@ return {
   { import = 'astrocommunity.completion.copilot-lua-cmp' },
   { import = 'astrocommunity.editing-support.mini-splitjoin' },
   { import = 'astrocommunity.editing-support.nvim-treesitter-endwise' },
-  { import = 'astrocommunity.project.nvim-spectre' },
 }

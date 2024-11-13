@@ -14,6 +14,7 @@ return {
     },
     config = {
       clangd = { capabilities = { offsetEncoding = "utf-8" } },
+      offset_encoding = 'utf-8',
     },
     mappings = {
       n = {
