@@ -23,6 +23,12 @@ require('lazy').setup({ import = "plugins" }, {
   },
 })
 
+-- 복사 하이라이트 설정
+vim.api.nvim_create_autocmd('TextYankPost', {
+  callback = function()
+    vim.highlight.on_yank({ higroup = 'IncSearch', timeout = 200 })
+  end,
+})
+
 -- 키매핑
 require 'keybindings'
-

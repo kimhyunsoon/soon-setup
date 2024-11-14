@@ -7,6 +7,14 @@ return {
     'MunifTanjim/nui.nvim',
   },
   config = function()
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "neo-tree-popup",
+      callback = function()
+        -- vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#000000" })
+        -- vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#89b4fa", bg = "NONE" })
+      end,
+    })
+
     local components = require('neo-tree.sources.common.components')
     require('neo-tree').setup({
       close_if_last_window = true,
@@ -92,26 +100,32 @@ return {
           nowait = true,
         },
         mappings = {
-          ['t'] = false,
-          ['<space>'] = { 
-            'toggle_node', 
-            nowait = false,
-          },
+          ['/'] = false,
+          ['f'] = false,
           ['<2-LeftMouse>'] = 'open',
           ['<cr>'] = 'open',
-          ['l'] = 'open',
-          ['h'] = 'close_node',
           ['a'] = 'add',
           ['d'] = 'delete',
           ['r'] = 'rename',
           ['c'] = 'copy',
           ['m'] = 'move',
-          ['q'] = 'close_window',
           ['R'] = 'refresh',
         },
         enable_normal_mode_for_inputs = false,
         popup_border_style = "rounded",
-        winhighlight = "Normal:NeoTreeNormal,NormalNC:NeoTreeNormalNC",
+        popup = {
+          border = "rounded",
+          position = { col = "100%", row = "2" },
+          size = function(state)
+            local root_name = vim.fn.fnamemodify(state.path, ":~")
+            local root_len = string.len(root_name) + 4
+            return {
+              width = math.max(root_len, 50),
+              height = 1
+            }
+          end,
+        },
+        winhighlight = "Normal:NeoTreeNormal,NormalNC:NeoTreeNormalNC,FloatBorder:FloatBorder,NormalFloat:Normal",
       },
     })
   end,

@@ -13,16 +13,39 @@ vim.opt.fillchars = "eob: "
 -- 줄 번호 표시
 vim.opt.number = true
 
--- 수정된 파일 저장
+-- 수정된 파일 저장 및 종료 처리
 vim.api.nvim_create_autocmd("QuitPre", {
   callback = function()
     local bufs = vim.api.nvim_list_bufs()
+    local non_neotree_bufs = 0
+    local modified_bufs = false
+
     for _, buf in ipairs(bufs) do
-      if vim.api.nvim_buf_get_option(buf, "modified") then
-        vim.api.nvim_buf_call(buf, function()
-          vim.cmd("silent! write")
-        end)
+      if vim.api.nvim_buf_is_loaded(buf) then
+        local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
+        local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+        
+        -- neo-tree가 아니고 일반 버퍼인 경우만 카운트
+        if filetype ~= "neo-tree" and buftype ~= "nofile" then
+          non_neotree_bufs = non_neotree_bufs + 1
+          
+          -- 수정된 일반 파일이 있는지 확인
+          if vim.api.nvim_buf_get_option(buf, "modified") then
+            local bufname = vim.api.nvim_buf_get_name(buf)
+            if bufname ~= "" then
+              vim.api.nvim_buf_call(buf, function()
+                vim.cmd("silent! write")
+              end)
+            end
+            modified_bufs = true
+          end
+        end
       end
+    end
+
+    -- neo-tree와 빈 파일만 남은 경우 즉시 종료
+    if non_neotree_bufs <= 1 and not modified_bufs then
+      vim.cmd("qa!")
     end
   end,
 })
@@ -80,3 +103,32 @@ end
 vim.api.nvim_create_autocmd('WinEnter', {
   callback = set_floating_window_keymap
 })
+
+-- 복사한 텍스트 하이라이트 설정
+vim.api.nvim_create_autocmd('TextYankPost', {
+  pattern = '*',
+  callback = function()
+    vim.highlight.on_yank({
+      higroup = 'YankHighlight',
+      timeout = 200,
+      on_macro = true,
+      on_visual = true,
+    })
+  end,
+})
+
+-- 기본 모드 표시 비활성화
+vim.opt.showmode = false
+-- 명령줄 높이를 0으로 설정하여 상태바를 맨 아래로
+vim.opt.cmdheight = 0
+
+-- 자동 줄바꿈 비활성화 및 가로 스크롤 활성화
+vim.opt.wrap = false
+vim.opt.sidescroll = 1
+vim.opt.scrolloff = 8
+vim.opt.sidescrolloff = 8
+vim.opt.listchars:append({
+  extends = '⟩',
+  precedes = '⟨'
+})
+vim.opt.list = true

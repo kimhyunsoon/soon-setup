@@ -1,3 +1,18 @@
+local select_one_or_multi = function(prompt_bufnr)
+  local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr)
+  local multi = picker:get_multi_selection()
+  if not vim.tbl_isempty(multi) then
+    require('telescope.actions').close(prompt_bufnr)
+    for _, j in pairs(multi) do
+      if j.path ~= nil then
+        vim.cmd(string.format('%s %s', 'edit', j.path))
+      end
+    end
+  else
+    require('telescope.actions').select_default(prompt_bufnr)
+  end
+end
+
 return {
   'nvim-telescope/telescope.nvim', tag = '0.1.6',
   dependencies = {
@@ -6,23 +21,13 @@ return {
     'tsakirist/telescope-lazy.nvim',
   },
   config = function()
-    local select_one_or_multi = function(prompt_bufnr)
-      local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr)
-      local multi = picker:get_multi_selection()
-      if not vim.tbl_isempty(multi) then
-        require('telescope.actions').close(prompt_bufnr)
-        for _, j in pairs(multi) do
-          if j.path ~= nil then
-            vim.cmd(string.format('%s %s', 'edit', j.path))
-          end
-        end
-      else
-        require('telescope.actions').select_default(prompt_bufnr)
-      end
-    end
     require('telescope').load_extension('notify')
     require('telescope').setup({
       defaults = {
+        prompt_prefix = "  ",
+        selection_caret = "  ",
+        multi_icon = "  ",
+        entry_prefix = "   ",
         path_display = { 'truncate' },
         sorting_strategy = 'ascending',
         layout_config = {
@@ -39,5 +44,8 @@ return {
         },
       }
     })
+    vim.cmd([[
+      highlight! link TelescopeSelection TabLine
+    ]])
   end
 }

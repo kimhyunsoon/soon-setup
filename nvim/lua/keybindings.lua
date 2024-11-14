@@ -118,6 +118,10 @@ end, { desc = '이름 변경' })
 vim.keymap.set('n', '<leader>la', vim.lsp.buf.code_action, { desc = '코드 수정 제안' })
 -- 진단 창 열기
 vim.keymap.set('n', '<leader>ld', vim.diagnostic.open_float, { desc = '진단 창 열기' })
+-- 다음 진단으로 이동
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = '다음 진단으로 이동' })
+-- 이전 진단으로 이동
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = '이전 진단으로 이동' })
 
 -- hover 창이 열려있을 때 ESC로 닫기
 vim.api.nvim_create_autocmd('LspAttach', {
