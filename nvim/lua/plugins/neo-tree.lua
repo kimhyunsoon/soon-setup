@@ -1,3 +1,15 @@
+local colors = {
+  red    = '#FF6077',
+  blue   = '#85D3F2',
+  green  = '#A7DF78',
+  violet = '#d183e8',
+  yellow = '#F5D16C',
+  white  = '#FFFFFF',
+  grey   = '#2a2a2a',
+  black  = '#000000',
+  transparent  = '#00000000',
+}
+
 return {
   'nvim-neo-tree/neo-tree.nvim',
   branch = 'v3.x',
@@ -7,11 +19,13 @@ return {
     'MunifTanjim/nui.nvim',
   },
   config = function()
+    vim.api.nvim_set_hl(0, "NeoTreeGitAdded", { fg = colors.green })
+    vim.api.nvim_set_hl(0, "NeoTreeGitModified", { fg = colors.blue })
+    vim.api.nvim_set_hl(0, "NeoTreeGitRemoved", { fg = colors.red })
+
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "neo-tree-popup",
       callback = function()
-        -- vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#000000" })
-        -- vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#89b4fa", bg = "NONE" })
       end,
     })
 
@@ -47,13 +61,13 @@ return {
 
       default_component_configs = {
         modified = {
-          symbol = "",
-          highlight = "DiagnosticSignError",
+          symbol = "",
+          highlight = "TSField",
         },
         icon = {
-          folder_closed = "",
-          folder_open = "",
-          folder_empty = "",
+          folder_closed = "",
+          folder_open = "",
+          folder_empty = "",
           highlight = "NeoTreeFileIcon"
         },
         indent = {
@@ -68,24 +82,20 @@ return {
         },
         diagnostics = {
           align = "right",
-          symbols = {
-            hint = "",
-            info = "",
-            warn = "",
-            error = "",
-          },
+          symbols = { error = '', warn = '', info = '', hint = '' },
         },
         git_status = {
           symbols = {
-            added = "",
-            modified = "",
-            deleted = "",
-            renamed = "",
-            untracked = "",
-            ignored = "",
-            unstaged = "",
-            staged = "",
-            conflict = "",
+            added = '',
+            modified = '󰏬',
+            removed = '',
+            deleted = '',
+            renamed = '',
+            untracked = '',
+            ignored = '',
+            unstaged = '',
+            staged = '',
+            conflict = '',
           },
         },
       },

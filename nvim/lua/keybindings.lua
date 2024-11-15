@@ -26,10 +26,11 @@ local function move_cursor_by_word(is_end_key)
   end
 end
 
+
 -- 들여쓰기
-vim.keymap.set('n', '[Tab]', ':norm>><cr>')
+vim.keymap.set({'n', 'v'}, '<Tab>', ':norm>><cr>')
 -- 내어쓰기 
-vim.keymap.set('n', '[S-Tab]', ':norm<<<cr>')
+vim.keymap.set({'n', 'v'}, '<S-Tab>', ':norm<<<cr>')
 -- 단어 선택
 vim.keymap.set('n', '<leader>w', 'viw', { desc = '단어 선택' })
 -- 단축키 검색
@@ -44,11 +45,17 @@ vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { silent = true }, { des
 -- 파일 탐색기 포커스 토글
 vim.keymap.set('n', '<leader>o', function()
   if vim.bo.filetype == 'neo-tree' then
-    vim.cmd('wincmd p')
+    local win_id = vim.fn.winnr('#')
+    if win_id > 0 then
+      vim.cmd(win_id .. 'wincmd w')
+    else
+      vim.cmd('wincmd p')
+    end
   else
     vim.cmd('Neotree focus')
   end
 end, { silent = true }, { desc = '파일 탐색기 포커스 토글' })
+
 -- 이전 단어로 이동
 vim.keymap.set('i', '<Home>', function()
   if move_cursor_by_word(false) then
@@ -86,7 +93,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- 정보 창 열기
 vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = '정보 창 열기' })
 -- 이름 변경
--- 이름 변경을 floating window로 설정
 vim.keymap.set('n', '<leader>lr', function()
   local curr_name = vim.fn.expand('<cword>')
   local opts = {
@@ -123,19 +129,205 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = '다음 진단으�
 -- 이전 진단으로 이동
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = '이전 진단으로 이동' })
 
--- hover 창이 열려있을 때 ESC로 닫기
+-- hover 창이 열려있을 때 ESC로 닫기 + 검색 하이라이트 제거
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(args)
     vim.keymap.set('n', '<ESC>', function()
+      local closed = false
       local wins = vim.api.nvim_list_wins()
       for _, win in ipairs(wins) do
         local config = vim.api.nvim_win_get_config(win)
         -- floating window인지 확인
         if config.relative ~= '' then
           vim.api.nvim_win_close(win, true)
-          return
+          closed = true
         end
       end
-    end, { buffer = args.buf })
+      -- floating window를 닫지 않았다면 검색 하이라이트 제거
+      if not closed then
+        vim.cmd('noh')
+      end
+    end, { buffer = args.buf, silent = true })
   end,
 })
+
+-- 코드 접기/펼치기 토글
+vim.keymap.set('n', 'll', 'za', { desc = '코드 접기/펼치기 토글' })
+
+-- 이전 버퍼로 이동
+vim.keymap.set('n', '{', ':bprevious<CR>', { silent = true, desc = '이전 버퍼로 이동' })
+-- 다음 버퍼로 이동
+vim.keymap.set('n', '}', ':bnext<CR>', { silent = true, desc = '다음 버퍼로 이동' })
+-- 현재 버퍼 닫기
+vim.keymap.set('n', '<leader>c', function()
+    local buftype = vim.bo.filetype
+    if buftype == "spectre_panel" then
+        vim.cmd('lua require("spectre").close()')
+    elseif buftype == "crunner" then
+        vim.cmd('q')
+    else
+        vim.cmd('bp|bd #')
+    end
+end, { silent = true, desc = '현재 버퍼 닫기' })
+-- 현재 버퍼를 오른쪽으로 스플릿
+vim.keymap.set('n', '|', ':vsplit<CR>', { silent = true, desc = '버퍼 세로 분할' })
+
+-- 스플릿 창 이동
+vim.keymap.set('n', 'H', '<C-w>h', { silent = true, desc = '왼쪽 창으로 이동' })
+vim.keymap.set('n', 'L', '<C-w>l', { silent = true, desc = '오른쪽 창으로 이동' })
+vim.keymap.set('n', 'K', '<C-w>k', { silent = true, desc = '위 창으로 이동' })
+vim.keymap.set('n', 'J', '<C-w>j', { silent = true, desc = '아래 창으로 이동' })
+
+-- 닫기
+vim.keymap.set('n', '<leader>q', ':q<CR>', { silent = true, desc = '닫기' })
+
+-- 문자열 치환
+vim.keymap.set('n', '<leader>sr', function()
+  -- 현재 커서 위치의 단어 가져오기
+  initial_text = vim.fn.expand('<cword>')
+
+  local opts = {
+    relative = 'cursor',
+    row = 0,
+    col = 0,
+    width = 50,
+    height = 2,
+    style = 'minimal',
+    border = 'rounded',
+    title = ' Replace ',
+    title_pos = 'center',
+  }
+  
+  local buf = vim.api.nvim_create_buf(false, true)
+  local win = vim.api.nvim_open_win(buf, true, opts)
+  
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {'', ''})
+  vim.api.nvim_buf_set_text(buf, 0, 0, 0, 0, { initial_text })
+  
+  -- Enter 키를 눌렀을 때의 동작
+  vim.keymap.set('i', '<CR>', function()
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    local find_text = lines[1]
+    local replace_text = lines[2]
+    
+    vim.api.nvim_win_close(win, true)
+    vim.cmd('stopinsert') -- 인서트 모드 종료
+    
+    -- 전체 파일에서 문자열 치환 실행
+    local cmd = string.format('%%s/%s/%s/g', find_text:gsub('/', '\\/'), replace_text:gsub('/', '\\/'))
+    vim.cmd(cmd)
+  end, { buffer = buf })
+  
+  -- ESC 키를 눌렀을 때 창 닫기
+  vim.keymap.set('i', '<ESC>', function()
+    vim.api.nvim_win_close(win, true)
+    vim.cmd('stopinsert') -- 인서트 모드 종료
+  end, { buffer = buf })
+  
+  -- Tab 키로 두 줄 간 이동
+  vim.keymap.set('i', '<Tab>', function()
+    local pos = vim.api.nvim_win_get_cursor(win)
+    if pos[1] == 1 then
+      vim.api.nvim_win_set_cursor(win, {2, 0})
+    else
+      vim.api.nvim_win_set_cursor(win, {1, 0})
+    end
+  end, { buffer = buf })
+  vim.cmd('startinsert')
+end, { desc = '문자열 치환' })
+
+-- 이전 빈 줄로 이동
+vim.api.nvim_set_keymap('n', '[[', [[<cmd>lua if vim.fn.search('^$', 'bW') == 0 then vim.cmd('normal! gg') end<CR>]], { noremap = true, silent = true, desc = '이전 빈 줄로 이동' })
+
+-- 다음 빈 줄로 이동
+vim.api.nvim_set_keymap('n', ']]', [[<cmd>lua if vim.fn.search('^$', 'W') == 0 then vim.cmd('normal! G') end<CR>]], { noremap = true, silent = true, desc = '다음 빈 줄로 이동' })
+
+-- 프로젝트에서 문자열 검색 및 치환
+vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { desc = '프로젝트에서 문자열 검색 및 치환' })
+
+-- 삭제 시 레지스터에 저장하지 않음
+vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
+vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
+
+-- 붙여넣기 후 레지스터 업데이트
+vim.keymap.set('n', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
+
+-- 빈 동작으로 설정된 키 매핑들 비활성화
+local empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>'}
+for _, key in ipairs(empty_keys) do
+  vim.keymap.set('n', key, '<Nop>', { noremap = true, silent = true })
+end
+
+-- x 모드에서 i를 누르면 Esc + i 실행
+vim.keymap.set('x', 'i', '<Esc>i', { noremap = true })
+
+-- 현재 파일의 전체 경로를 클립보드에 복사
+vim.keymap.set('n', '<leader>yp', function()
+  local command = 'let @+ = expand("%:~")'
+  vim.cmd(command)
+end, { desc = '파일 경로 복사' })
+
+-- 현재 파일을 시스템 기본 프로그램으로 열기
+vim.keymap.set('n', '<leader>fo', ':!open %:p<cr><cr>', { desc = '파일 열기' })
+
+-- 랜덤 문자열 생성
+vim.keymap.set('n', '<leader>rs', function()
+  local function generate_random_string()
+    math.randomseed(os.time())
+    local charset = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    local length = 8
+    local random_string = ""
+    for _ = 1, length do
+      local random_index = math.random(1, #charset)
+      random_string = random_string .. charset:sub(random_index, random_index)
+    end
+    return random_string
+  end
+  
+  local command = 'lua vim.api.nvim_put({generate_random_string()}, "c", true, true)'
+  vim.cmd(command)
+end, { desc = '랜덤 문자열 생성' })
+
+-- 현재 파일 코드 실행
+vim.keymap.set('n', '<leader>rr', ':RunCode<CR>', { silent = true, desc = '코드 실행' })
+
+-- 터미널 열기
+vim.keymap.set('n', '<leader>tf', ':ToggleTerm<CR>', { noremap = true, silent = true, desc = '터미널 열기' })
+
+-- Git 관련 키매핑
+vim.api.nvim_create_autocmd('BufEnter', {
+  callback = function(args)
+    local gs = package.loaded.gitsigns
+    if gs then
+      -- 다음 변경사항으로 이동
+      vim.keymap.set('n', ']g', function()
+        if vim.wo.diff then return ']c' end
+        vim.schedule(function() gs.next_hunk() end)
+        return '<Ignore>'
+      end, {expr=true, buffer = args.buf, desc = '다음 Git 변경사항으로 이동'})
+
+      -- 이전 변경사항으로 이동
+      vim.keymap.set('n', '[g', function()
+        if vim.wo.diff then return '[c' end
+        vim.schedule(function() gs.prev_hunk() end)
+        return '<Ignore>'
+      end, {expr=true, buffer = args.buf, desc = '이전 Git 변경사항으로 이동'})
+      
+      -- git blame
+      vim.keymap.set('n', 'gl', function()
+        gs.blame_line{
+          full = true,
+          float = true,
+        }
+      end, { buffer = args.buf, desc = 'Git blame 보기' })
+
+      -- diff 보기
+      vim.keymap.set('n', 'gf', gs.diffthis, { buffer = args.buf, desc = 'Git diff 보기' })
+    end
+  end
+})
+
+-- Git Graph 열기
+vim.keymap.set('n', '<leader>gg', function()
+  require('gitgraph').draw({}, { all = true, max_count = 5000 })
+end, { desc = 'Git Graph 열기' })

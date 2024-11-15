@@ -17,11 +17,11 @@ return {
   'nvim-telescope/telescope.nvim', tag = '0.1.6',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    'rcarriga/nvim-notify',
+    "nvim-telescope/telescope-ui-select.nvim",
     'tsakirist/telescope-lazy.nvim',
   },
   config = function()
-    require('telescope').load_extension('notify')
+    require("telescope").load_extension("ui-select")
     require('telescope').setup({
       defaults = {
         prompt_prefix = "  ",
@@ -42,7 +42,7 @@ return {
             ['<CR>'] = select_one_or_multi,
           }
         },
-      }
+      },
     })
     vim.cmd([[
       highlight! link TelescopeSelection TabLine

@@ -1,104 +1,141 @@
+local colors = {
+  red    = '#FF6077',
+  blue   = '#85D3F2',
+  green  = '#A7DF78',
+  violet = '#d183e8',
+  yellow = '#F5D16C',
+  white  = '#FFFFFF',
+  grey   = '#2a2a2a',
+  light_grey = '#cccccc',
+  black  = '#000000',
+  transparent  = '#00000000',
+}
+
+local bubbles_theme = {
+  normal = {
+    a = { fg = colors.black, bg = colors.green },
+    b = { fg = colors.white, bg = colors.grey },
+    c = { fg = colors.white, bg = colors.transparent },
+  },
+
+  insert = { a = { fg = colors.black, bg = colors.blue } },
+  visual = { a = { fg = colors.black, bg = colors.red } },
+  replace = { a = { fg = colors.black, bg = colors.violet } },
+
+  inactive = {
+    a = { fg = colors.white, bg = colors.black },
+    b = { fg = colors.white, bg = colors.black },
+    c = { fg = colors.black, bg = colors.black },
+  },
+}
 return {
-  "nvim-lualine/lualine.nvim",
-  dependencies = { "nvim-tree/nvim-web-devicons" },
-  config = function()
-    local colors = {
-      bg = "#202328",
-      fg = "#bbc2cf",
-      yellow = "#ECBE7B",
-      cyan = "#008080",
-      darkblue = "#081633",
-      green = "#98be65",
-      orange = "#FF8800",
-      violet = "#a9a1e1",
-      magenta = "#c678dd",
-      blue = "#51afef",
-      red = "#ec5f67"
-    }
-
-    local conditions = {
-      buffer_not_empty = function()
-        return vim.fn.empty(vim.fn.expand("%:t")) ~= 1
-      end,
-    }
-
-    local config = {
+  {
+    "nvim-lualine/lualine.nvim",
+    event = "VeryLazy",
+    opts = {
       options = {
-        component_separators = "",
-        section_separators = "",
-        theme = {
-          normal = { c = { fg = colors.fg, bg = colors.bg } },
-          inactive = { c = { fg = colors.fg, bg = colors.bg } },
-        },
-        disabled_filetypes = {
-          statusline = { "NvimTree", "alpha" },
-          winbar = {},
-        },
+        theme = bubbles_theme,
+        component_separators = '',
+        section_separators = { left = '', right = '' },
         globalstatus = true,
+        ignore_focus = {},
       },
       sections = {
-        lualine_a = {},
-        lualine_b = {},
+        lualine_a = {
+          {
+            'mode',
+            separator = { left = '' },
+            fmt = function(str) return str:sub(1,1) .. ' ' end,
+          },
+        },
+        lualine_b = {
+          {
+            'branch',
+            icon = ' ',
+            separator = { right = ' ' },
+          },
+        },
         lualine_c = {
           {
-            "filename",
-            cond = conditions.buffer_not_empty,
-            color = { fg = colors.magenta, gui = "bold" },
+            'diff',
+            symbols = { added = ' ', modified = '󰏬 ', removed = ' ' },
+            diff_color = {
+              added = { fg = colors.green },
+              modified = { fg = colors.blue },
+              removed = { fg = colors.red },
+            },
           },
           {
-            "diagnostics",
-            sources = { "nvim_diagnostic" },
-            symbols = { error = " ", warn = " ", info = " " },
-            diagnostics_color = {
-              color_error = { fg = colors.red },
-              color_warn = { fg = colors.yellow },
-              color_info = { fg = colors.cyan },
-            },
+            'searchcount',
+            maxcount = 999,
+            timeout = 500,
           },
         },
         lualine_x = {
           {
-            "diff",
-            symbols = { added = " ", modified = "󰝤 ", removed = " " },
-            diff_color = {
-              added = { fg = colors.green },
-              modified = { fg = colors.orange },
-              removed = { fg = colors.red },
-            },
-            cond = conditions.buffer_not_empty,
+            function()
+              local mode = vim.fn.mode()
+              if mode == 'v' or mode == 'V' or mode == '' then
+                local start_line = vim.fn.line('v')
+                local current_line = vim.fn.line('.')
+                local line_count = math.abs(current_line - start_line) + 1
+                
+                local start_pos = vim.fn.getpos('v')
+                local end_pos = vim.fn.getpos('.')
+                local lines = vim.api.nvim_buf_get_text(
+                  0,
+                  math.min(start_pos[2] - 1, end_pos[2] - 1),
+                  math.min(start_pos[3] - 1, end_pos[3] - 1),
+                  math.max(start_pos[2] - 1, end_pos[2] - 1),
+                  math.max(start_pos[3] - 1, end_pos[3] - 1),
+                  {}
+                )
+                local char_count = 0
+                for _, line in ipairs(lines) do
+                  char_count = char_count + vim.fn.strchars(line)
+                end
+                
+                return string.format('[%d/%d]', line_count, char_count)
+              end
+              return ''
+            end,
+            color = { fg = '#ffffff' },
           },
           {
-            "filetype",
-            colored = true,
-            icon_only = true,
+            'diagnostics',
+            sources = { 'nvim_diagnostic' },
+            symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
           },
           {
-            "encoding",
+            'filesize',
+            icon = '󰈔',
+            color = { fg = colors.light_grey },
           },
         },
         lualine_y = {
           {
-            "progress",
-            color = { fg = colors.fg, gui = "bold" },
+            'filetype',
+            separator = { left = ' ' },
           },
         },
         lualine_z = {
           {
-            "location",
-            color = { fg = colors.fg, gui = "bold" },
+            'datetime',
+            style = '%H:%M:%S',
+            separator = { right = '' },
           },
         },
       },
       inactive_sections = {
-        lualine_a = {},
+        lualine_a = { 'filename' },
         lualine_b = {},
-        lualine_c = { "filename" },
-        lualine_x = { "location" },
+        lualine_c = {},
+        lualine_x = {},
         lualine_y = {},
-        lualine_z = {},
+        lualine_z = { 'location' },
       },
-    }
-
-    require("lualine").setup(config)
-  end,
-} 
+      tabline = {},
+      extensions = {},
+    },
+  },
+}

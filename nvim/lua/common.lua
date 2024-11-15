@@ -4,11 +4,23 @@ vim.cmd('set tabstop=2')
 vim.cmd('set softtabstop=2')
 vim.cmd('set shiftwidth=2')
 
+-- 최대 탭 수를 1로 제한
+vim.opt.tabpagemax = 1
+
+-- 탭라인 숨기기
+vim.opt.showtabline = 0
+
 -- leader <space>
 vim.g.mapleader= ' '
 
 -- 빈 공간에서 '~' 기호 없애기
 vim.opt.fillchars = "eob: "
+
+-- OS 클립보드와 nvim 레지스터 연동
+-- linux: xclip or xsel
+-- windows: win32yank
+-- mac은 기본 지원
+vim.opt.clipboard = 'unnamedplus'
 
 -- 줄 번호 표시
 vim.opt.number = true
@@ -25,8 +37,11 @@ vim.api.nvim_create_autocmd("QuitPre", {
         local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
         local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
         
-        -- neo-tree가 아니고 일반 버퍼인 경우만 카운트
-        if filetype ~= "neo-tree" and buftype ~= "nofile" then
+        -- neo-tree, spectre, code_runner가 아니고 일반 버퍼인 경우만 카운트
+        if filetype ~= "neo-tree" and 
+           filetype ~= "spectre_panel" and 
+           filetype ~= "code-runner" and 
+           buftype ~= "nofile" then
           non_neotree_bufs = non_neotree_bufs + 1
           
           -- 수정된 일반 파일이 있는지 확인
@@ -69,8 +84,9 @@ vim.diagnostic.config({
     header = "",
     prefix = "",
   },
-  virtual_text = false,
+  virtual_text = true,
   severity_sort = true,
+  signs = false,
 })
 
 -- undo 파일 저장 디렉토리 설정
@@ -132,3 +148,31 @@ vim.opt.listchars:append({
   precedes = '⟨'
 })
 vim.opt.list = true
+
+-- 커서 라인 배경색 설
+vim.cmd([[
+  highlight CursorLine guibg=#333333
+  set cursorline
+]])
+
+-- 비활성 버퍼의 하이라이트 제거
+vim.api.nvim_create_autocmd('WinLeave', {
+  callback = function()
+    if vim.bo.buftype == '' then
+      vim.cmd('ownsyntax off')
+      vim.cmd('setlocal nocursorline')
+      vim.opt_local.hlsearch = false
+    end
+  end
+})
+
+-- 버퍼 다시 활성화될 때 하이라이트 복원
+vim.api.nvim_create_autocmd('WinEnter', {
+  callback = function()
+    if vim.bo.buftype == '' then
+      vim.cmd('ownsyntax on')
+      vim.cmd('setlocal cursorline')
+      vim.opt_local.hlsearch = true
+    end
+  end
+})

@@ -31,7 +31,6 @@ return {
       Operator = "󰆕",
       TypeParameter = "",
     }
-    
     cmp.setup({
       snippet = {
         expand = function(args)
@@ -55,6 +54,7 @@ return {
       },
       sources = cmp.config.sources({
         { name = "nvim_lsp" },
+        { name = "copilot" },
       }),
       window = {
         completion = {
