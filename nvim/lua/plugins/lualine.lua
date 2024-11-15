@@ -79,7 +79,6 @@ return {
                 local start_line = vim.fn.line('v')
                 local current_line = vim.fn.line('.')
                 local line_count = math.abs(current_line - start_line) + 1
-                
                 local start_pos = vim.fn.getpos('v')
                 local end_pos = vim.fn.getpos('.')
                 local lines = vim.api.nvim_buf_get_text(
@@ -94,7 +93,6 @@ return {
                 for _, line in ipairs(lines) do
                   char_count = char_count + vim.fn.strchars(line)
                 end
-                
                 return string.format('[%d/%d]', line_count, char_count)
               end
               return ''

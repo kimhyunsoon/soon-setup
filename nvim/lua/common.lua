@@ -36,14 +36,12 @@ vim.api.nvim_create_autocmd("QuitPre", {
       if vim.api.nvim_buf_is_loaded(buf) then
         local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
         local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-        
         -- neo-tree, spectre, code_runner가 아니고 일반 버퍼인 경우만 카운트
-        if filetype ~= "neo-tree" and 
-           filetype ~= "spectre_panel" and 
-           filetype ~= "code-runner" and 
+        if filetype ~= "neo-tree" and
+           filetype ~= "spectre_panel" and
+           filetype ~= "code-runner" and
            buftype ~= "nofile" then
           non_neotree_bufs = non_neotree_bufs + 1
-          
           -- 수정된 일반 파일이 있는지 확인
           if vim.api.nvim_buf_get_option(buf, "modified") then
             local bufname = vim.api.nvim_buf_get_name(buf)
@@ -86,7 +84,15 @@ vim.diagnostic.config({
   },
   virtual_text = true,
   severity_sort = true,
-  signs = false,
+  -- signs = false,
+  signs = {
+    text = {
+      [vim.diagnostic.severity.HINT] = "",
+      [vim.diagnostic.severity.INFO] = "",
+      [vim.diagnostic.severity.WARN] = "",
+      [vim.diagnostic.severity.ERROR] = "",
+    },
+  },
 })
 
 -- undo 파일 저장 디렉토리 설정
@@ -176,3 +182,28 @@ vim.api.nvim_create_autocmd('WinEnter', {
     end
   end
 })
+
+-- 커서 위치 저장 및 복원
+vim.api.nvim_create_autocmd("BufReadPost", {
+  callback = function()
+    local line = vim.fn.line
+    if line("'\"") > 0 and line("'\"") <= line("$") then
+        vim.cmd('normal! g`"')
+    end
+  end,
+})
+
+-- 버퍼 닫기 전에 커서 위치 저장
+vim.api.nvim_create_autocmd("BufWritePost", {
+  callback = function()
+    vim.cmd("mkview") -- 뷰 저장
+  end,
+})
+
+-- 버퍼를 열 때 저장된 뷰 로드
+vim.api.nvim_create_autocmd("BufReadPost", {
+  callback = function()
+    vim.cmd("silent! loadview")
+  end,
+})
+

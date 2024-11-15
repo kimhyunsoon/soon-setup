@@ -6,7 +6,7 @@ return {
     require("bufferline").setup({
       options = {
         mode = "buffers",
-        separator_style = "",
+        separator_style = { "", "" },
         themable = false,
         always_show_bufferline = true,
         show_buffer_icons = true,
@@ -32,7 +32,6 @@ return {
           fg = "#ffffff",
           bold = true,
           italic = false,
-          fg = '#ffffff',
         },
         indicator_selected = {
           fg = '#000000',
@@ -46,13 +45,15 @@ return {
         modified_visible = {
           fg = '#cccccc',
         },
-        separator = {
-          fg = "#000000",
-        },
-        separator_selected = {
-          fg = "#000000",
-        },
       },
     })
+    vim.api.nvim_create_autocmd("BufEnter", {
+      pattern = { "[No Name]" },
+      callback = function()
+        if vim.bo.buftype == "" then
+          vim.cmd("bdelete")
+        end
+      end
+    })
   end,
-} 
+}

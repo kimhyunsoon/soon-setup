@@ -1,3 +1,4 @@
+
 local wezterm = require 'wezterm'
 local is_windows = string.find(wezterm.target_triple, 'windows')
 local is_mac = string.find(wezterm.target_triple, 'apple')
@@ -34,14 +35,10 @@ if is_windows then
     },
   }
   config.default_prog = { 'wsl.exe', '~' }
-  -- config.win32_system_backdrop = 'Acrylic'
-  -- config.window_background_opacity = 0.83
 
 -- Set Others
 else
   auto_format_title()
-  config.macos_window_background_blur = 52
-  config.window_background_opacity = 0.83
 end
 
 -- Set Config
@@ -50,7 +47,11 @@ config.show_tab_index_in_tab_bar = false
 config.font = wezterm.font_with_fallback {
   {
     family = 'Hack Nerd Font Mono',
-    weight = 'Medium',
+    weight = 'Regular',
+  },
+  {
+    family = 'D2CodingLigature Nerd Font Mono',
+    weight = 'Regular',
   },
 }
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
@@ -81,7 +82,20 @@ config.keys = {
 
   -- Vertical Split Pane
   {
-    key = '\\',
+    key = '[',
+    mods = 'ALT',
+    action = act.SplitVertical,
+  },
+
+  -- Horizontal Split Pane
+  {
+    key = ']',
+    mods = 'ALT',
+    action = act.SplitHorizontal,
+  },
+
+  {
+    key = '[',
     mods = 'ALT',
     action = act.SplitVertical,
   },
@@ -89,21 +103,15 @@ config.keys = {
   -- Paste
   {
     key = 'v',
-    mods = CTRL,
+    mods = 'CTRL',
     action = act.PasteFrom 'Clipboard',
   },
 
   -- Direction Pane
-  {
-    key = ']',
-    mods = CTRL,
-    action = act.ActivatePaneDirection 'Down',
-  },
-  {
-    key = '[',
-    mods = CTRL,
-    action = act.ActivatePaneDirection 'Up',
-  },
+  { key = 'RightArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Right' },
+  { key = 'DownArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Down' },
+  { key = 'LeftArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Left' },
+  { key = 'UpArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Up' },
 
   -- Move Tab
   { key = '{', mods = 'SHIFT|ALT', action = act.MoveTabRelative(-1) },
@@ -151,3 +159,4 @@ config.keys = {
 }
 
 return config
+

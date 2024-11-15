@@ -3,7 +3,7 @@ return {
     "neovim/nvim-lspconfig",
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-buffer", 
+      "hrsh7th/cmp-buffer",
       "hrsh7th/cmp-path",
       "hrsh7th/cmp-cmdline",
       "hrsh7th/nvim-cmp",
@@ -13,12 +13,11 @@ return {
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
-      
       require("mason").setup()
       local servers = {
         'volar',
         'ts_ls',
+        'lua_ls',
         'docker_compose_language_service',
         'dockerls',
         'powershell_es',
@@ -60,7 +59,6 @@ return {
       }
 
       local lspconfig = require('lspconfig')
-      
       -- 특정 LSP 서버에 대한 추가 설정
       local custom_server_configs = {
         html = {
@@ -85,14 +83,14 @@ return {
             debounce_text_changes = 150,
           }
         }
-        
+
         -- 서버별 커스텀 설정이 있다면 병합
         if custom_server_configs[server] then
           config = vim.tbl_deep_extend("force", config, custom_server_configs[server])
         end
-        
+
         lspconfig[server].setup(config)
       end
     end
   },
-} 
+}

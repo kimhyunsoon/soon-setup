@@ -35,8 +35,20 @@ return {
       popup_border_style = 'rounded',
       enable_git_status = true,
       enable_diagnostics = true,
-      
       filesystem = {
+        window = {
+          mappings = {
+            ["<leader>p"] = "image_wezterm"
+          },
+        },
+        commands = {
+          image_wezterm = function(state)
+            local node = state.tree:get_node()
+            if node.type == "file" then
+              require("image_preview").PreviewImage(node.path)
+            end
+          end,
+        },
         filtered_items = {
           visible = true,
           show_hidden_count = true,
@@ -139,4 +151,4 @@ return {
       },
     })
   end,
-} 
+}

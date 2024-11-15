@@ -42,7 +42,18 @@ return {
         completeopt = 'menu,menuone,noinsert,noselect'
       },
       mapping = {
-        ['<CR>'] = cmp.mapping.confirm({ select = true }),
+        ["<CR>"] = function(fallback)
+          if cmp.visible() then
+            local selected = cmp.get_selected_entry()
+            if selected then
+              cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+            else
+              fallback()
+            end
+          else
+            fallback()
+          end
+        end,
         ['<Up>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Select }),
         ['<Down>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
       },

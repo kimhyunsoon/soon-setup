@@ -26,11 +26,13 @@ local function move_cursor_by_word(is_end_key)
   end
 end
 
-
 -- 들여쓰기
-vim.keymap.set({'n', 'v'}, '<Tab>', ':norm>><cr>')
+vim.keymap.set('n', '<Tab>', ':norm>><cr>')
+vim.keymap.set('v', '<Tab>', '>gv', { noremap = true, silent = true })
 -- 내어쓰기 
-vim.keymap.set({'n', 'v'}, '<S-Tab>', ':norm<<<cr>')
+vim.keymap.set('n', '<S-Tab>', ':norm<<<cr>')
+vim.keymap.set('v', '<S-Tab>', '<gv', { noremap = true, silent = true })
+
 -- 단어 선택
 vim.keymap.set('n', '<leader>w', 'viw', { desc = '단어 선택' })
 -- 단축키 검색
@@ -166,9 +168,14 @@ vim.keymap.set('n', '<leader>c', function()
     elseif buftype == "crunner" then
         vim.cmd('q')
     else
+        local prev_buf = vim.fn.bufnr('#')
+        if prev_buf == -1 or not vim.api.nvim_buf_is_loaded(prev_buf) then
+            return
+        end
         vim.cmd('bp|bd #')
     end
 end, { silent = true, desc = '현재 버퍼 닫기' })
+
 -- 현재 버퍼를 오른쪽으로 스플릿
 vim.keymap.set('n', '|', ':vsplit<CR>', { silent = true, desc = '버퍼 세로 분할' })
 
@@ -197,33 +204,26 @@ vim.keymap.set('n', '<leader>sr', function()
     title = ' Replace ',
     title_pos = 'center',
   }
-  
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_open_win(buf, true, opts)
-  
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, {'', ''})
   vim.api.nvim_buf_set_text(buf, 0, 0, 0, 0, { initial_text })
-  
   -- Enter 키를 눌렀을 때의 동작
   vim.keymap.set('i', '<CR>', function()
     local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
     local find_text = lines[1]
     local replace_text = lines[2]
-    
     vim.api.nvim_win_close(win, true)
     vim.cmd('stopinsert') -- 인서트 모드 종료
-    
     -- 전체 파일에서 문자열 치환 실행
     local cmd = string.format('%%s/%s/%s/g', find_text:gsub('/', '\\/'), replace_text:gsub('/', '\\/'))
     vim.cmd(cmd)
   end, { buffer = buf })
-  
   -- ESC 키를 눌렀을 때 창 닫기
   vim.keymap.set('i', '<ESC>', function()
     vim.api.nvim_win_close(win, true)
     vim.cmd('stopinsert') -- 인서트 모드 종료
   end, { buffer = buf })
-  
   -- Tab 키로 두 줄 간 이동
   vim.keymap.set('i', '<Tab>', function()
     local pos = vim.api.nvim_win_get_cursor(win)
@@ -245,12 +245,13 @@ vim.api.nvim_set_keymap('n', ']]', [[<cmd>lua if vim.fn.search('^$', 'W') == 0 t
 -- 프로젝트에서 문자열 검색 및 치환
 vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { desc = '프로젝트에서 문자열 검색 및 치환' })
 
--- 삭제 시 레지스터에 저장하지 않음
+-- 삭제 및 붙혀넣기 시 레지스터에 저장하지 않음
 vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
 vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
 
 -- 붙여넣기 후 레지스터 업데이트
 vim.keymap.set('n', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
+vim.keymap.set('v', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
 
 -- 빈 동작으로 설정된 키 매핑들 비활성화
 local empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>'}
@@ -283,16 +284,15 @@ vim.keymap.set('n', '<leader>rs', function()
     end
     return random_string
   end
-  
-  local command = 'lua vim.api.nvim_put({generate_random_string()}, "c", true, true)'
-  vim.cmd(command)
+
+  vim.api.nvim_put({generate_random_string()}, 'c', false, true)
 end, { desc = '랜덤 문자열 생성' })
 
 -- 현재 파일 코드 실행
 vim.keymap.set('n', '<leader>rr', ':RunCode<CR>', { silent = true, desc = '코드 실행' })
 
 -- 터미널 열기
-vim.keymap.set('n', '<leader>tf', ':ToggleTerm<CR>', { noremap = true, silent = true, desc = '터미널 열기' })
+vim.keymap.set('n', '<leader>tt', ':ToggleTerm<CR>', { noremap = true, silent = true, desc = '터미널 열기' })
 
 -- Git 관련 키매핑
 vim.api.nvim_create_autocmd('BufEnter', {
@@ -312,7 +312,6 @@ vim.api.nvim_create_autocmd('BufEnter', {
         vim.schedule(function() gs.prev_hunk() end)
         return '<Ignore>'
       end, {expr=true, buffer = args.buf, desc = '이전 Git 변경사항으로 이동'})
-      
       -- git blame
       vim.keymap.set('n', 'gl', function()
         gs.blame_line{
@@ -331,3 +330,19 @@ vim.api.nvim_create_autocmd('BufEnter', {
 vim.keymap.set('n', '<leader>gg', function()
   require('gitgraph').draw({}, { all = true, max_count = 5000 })
 end, { desc = 'Git Graph 열기' })
+
+-- 주석 토글
+vim.keymap.set('n', '<leader>/', function()
+    require('Comment.api').toggle.linewise.current()
+end, { noremap = true, silent = true, desc = '주석 토글' })
+vim.keymap.set('v', '<leader>/', function()
+  local esc = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
+  vim.api.nvim_feedkeys(esc, 'x', false) -- 비주얼 모드 종료 후 범위 사용
+  require('Comment.api').toggle.linewise(vim.fn.visualmode())
+end, { noremap = true, silent = true, desc = '선택 영역 주석 토글' })
+
+-- 새 버퍼 생성
+vim.keymap.set("n", "<leader>n", function()
+  vim.cmd("enew")
+end, { noremap = true, silent = true, desc = "새 버퍼 생성" })
+
