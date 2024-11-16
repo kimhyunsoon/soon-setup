@@ -106,7 +106,7 @@ return {
           },
           {
             'filesize',
-            icon = '󰈔',
+            icon = '',
             color = { fg = colors.light_grey },
           },
         },

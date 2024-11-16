@@ -7,6 +7,7 @@ return {
       whitespace = { highlight = { "NonText", "NonText" } },
       scope = {
         char = "│",
+        highlight = "NonText",
         show_end = false,
         show_start = false,
       },
