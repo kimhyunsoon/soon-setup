@@ -346,3 +346,7 @@ vim.keymap.set("n", "<leader>n", function()
   vim.cmd("enew")
 end, { noremap = true, silent = true, desc = "새 버퍼 생성" })
 
+-- 인서트 모드에서 F1~F24 키를 무시
+for i = 1, 24 do
+    vim.keymap.set('i', '<F' .. i .. '>', '', { noremap = true, silent = true })
+end
