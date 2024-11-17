@@ -108,10 +108,10 @@ config.keys = {
   },
 
   -- Direction Pane
-  { key = 'RightArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Right' },
-  { key = 'DownArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Down' },
-  { key = 'LeftArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Left' },
-  { key = 'UpArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Up' },
+  { key = 'RightArrow', mods = 'SHIFT', action = act.ActivatePaneDirection 'Right' },
+  { key = 'DownArrow', mods = 'SHIFT', action = act.ActivatePaneDirection 'Down' },
+  { key = 'LeftArrow', mods = 'SHIFT', action = act.ActivatePaneDirection 'Left' },
+  { key = 'UpArrow', mods = 'SHIFT', action = act.ActivatePaneDirection 'Up' },
 
   -- Move Tab
   { key = '{', mods = 'SHIFT|ALT', action = act.MoveTabRelative(-1) },
