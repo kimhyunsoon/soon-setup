@@ -59,7 +59,7 @@ vim.keymap.set('n', '<leader>o', function()
 end, { silent = true }, { desc = '파일 탐색기 포커스 토글' })
 
 -- 이전 단어로 이동
-vim.keymap.set('i', '<Home>', function()
+vim.keymap.set({ 'i', 'v' }, '<Home>', function()
   if move_cursor_by_word(false) then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<S-Left>', true, false, true), 'n', false)
   else
@@ -67,7 +67,7 @@ vim.keymap.set('i', '<Home>', function()
   end
 end, { noremap = true, silent = true }, { desc = '이전 단어로 이동' })
 -- 다음 단어로 이동
-vim.keymap.set('i', '<End>', function()
+vim.keymap.set({ 'i', 'v' }, '<End>', function()
   if move_cursor_by_word(true) then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<End>', true, false, true), 'n', false)
   else
@@ -237,10 +237,18 @@ vim.keymap.set('n', '<leader>sr', function()
 end, { desc = '문자열 치환' })
 
 -- 이전 빈 줄로 이동
-vim.api.nvim_set_keymap({ 'n', 'v' }, '[[', [[<cmd>lua if vim.fn.search('^$', 'bW') == 0 then vim.cmd('normal! gg') end<CR>]], { noremap = true, silent = true, desc = '이전 빈 줄로 이동' })
+vim.keymap.set({ 'n', 'v' }, '[[', function()
+  if vim.fn.search('^$', 'bW') == 0 then
+    vim.cmd('normal! gg')
+  end
+end, { noremap = true, silent = true, desc = '이전 빈 줄로 이동' })
 
 -- 다음 빈 줄로 이동
-vim.api.nvim_set_keymap({ 'n', 'v' }, ']]', [[<cmd>lua if vim.fn.search('^$', 'W') == 0 then vim.cmd('normal! G') end<CR>]], { noremap = true, silent = true, desc = '다음 빈 줄로 이동' })
+vim.keymap.set({'n', 'v'}, ']]', function()
+  if vim.fn.search('^$', 'W') == 0 then
+    vim.cmd('normal! G')
+  end
+end, { noremap = true, silent = true, desc = '다음 빈 줄로 이동' })
 
 -- 프로젝트에서 문자열 검색 및 치환
 vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { desc = '프로젝트에서 문자열 검색 및 치환' })
@@ -321,9 +329,30 @@ vim.api.nvim_create_autocmd('BufEnter', {
       end, { buffer = args.buf, desc = 'Git blame 보기' })
 
       -- diff 보기
-      vim.keymap.set('n', 'gf', gs.diffthis, { buffer = args.buf, desc = 'Git diff 보기' })
+      vim.keymap.set('n', '<leader>gd', gs.diffthis, { buffer = args.buf, desc = 'Git diff 보기' })
     end
   end
+})
+
+-- 수정된 파일 탐색
+vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_status, {
+  desc = 'Git 수정된 파일 탐색',
+  noremap = true,
+  silent = true,
+})
+
+-- Staged 파일 탐색
+vim.keymap.set('n', '<leader>gc', require('telescope.builtin').git_commits, {
+  desc = 'Git Commit 탐색',
+  noremap = true,
+  silent = true,
+})
+
+-- Git 브랜치 탐색
+vim.keymap.set('n', '<leader>gb', require('telescope.builtin').git_branches, {
+  desc = 'Git 브랜치 탐색',
+  noremap = true,
+  silent = true,
 })
 
 -- Git Graph 열기
