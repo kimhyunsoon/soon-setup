@@ -335,7 +335,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
 })
 
 -- 수정된 파일 탐색
-vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_status, {
+vim.keymap.set('n', '<leader>gs', require('telescope.builtin').git_status, {
   desc = 'Git 수정된 파일 탐색',
   noremap = true,
   silent = true,
