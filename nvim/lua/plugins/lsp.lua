@@ -15,8 +15,10 @@ return {
     config = function()
       require("mason").setup()
       local servers = {
-        'volar',
         'ts_ls',
+        'eslint',
+        'vtsls',
+        'volar',
         'lua_ls',
         'docker_compose_language_service',
         'dockerls',
@@ -35,7 +37,6 @@ return {
         'golangci_lint_ls',
         'gopls',
         'clangd',
-        'cmake',
       }
 
       require('mason-lspconfig').setup({

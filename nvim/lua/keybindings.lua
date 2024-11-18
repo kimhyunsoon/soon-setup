@@ -237,10 +237,10 @@ vim.keymap.set('n', '<leader>sr', function()
 end, { desc = '문자열 치환' })
 
 -- 이전 빈 줄로 이동
-vim.api.nvim_set_keymap('n', '[[', [[<cmd>lua if vim.fn.search('^$', 'bW') == 0 then vim.cmd('normal! gg') end<CR>]], { noremap = true, silent = true, desc = '이전 빈 줄로 이동' })
+vim.api.nvim_set_keymap({ 'n', 'v' }, '[[', [[<cmd>lua if vim.fn.search('^$', 'bW') == 0 then vim.cmd('normal! gg') end<CR>]], { noremap = true, silent = true, desc = '이전 빈 줄로 이동' })
 
 -- 다음 빈 줄로 이동
-vim.api.nvim_set_keymap('n', ']]', [[<cmd>lua if vim.fn.search('^$', 'W') == 0 then vim.cmd('normal! G') end<CR>]], { noremap = true, silent = true, desc = '다음 빈 줄로 이동' })
+vim.api.nvim_set_keymap({ 'n', 'v' }, ']]', [[<cmd>lua if vim.fn.search('^$', 'W') == 0 then vim.cmd('normal! G') end<CR>]], { noremap = true, silent = true, desc = '다음 빈 줄로 이동' })
 
 -- 프로젝트에서 문자열 검색 및 치환
 vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { desc = '프로젝트에서 문자열 검색 및 치환' })
