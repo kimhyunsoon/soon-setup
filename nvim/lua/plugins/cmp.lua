@@ -2,7 +2,6 @@ return {
   "hrsh7th/nvim-cmp",
   config = function()
     local cmp = require("cmp")
-    local luasnip = require("luasnip")
     
     local kind_icons = {
       Text = "󰉿",
@@ -32,11 +31,6 @@ return {
       TypeParameter = "",
     }
     cmp.setup({
-      snippet = {
-        expand = function(args)
-          luasnip.lsp_expand(args.body)
-        end,
-      },
       preselect = cmp.PreselectMode.None,
       completion = {
         completeopt = 'menu,menuone,noinsert,noselect'

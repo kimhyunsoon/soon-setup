@@ -25,44 +25,6 @@ vim.opt.clipboard = 'unnamedplus'
 -- 줄 번호 표시
 vim.opt.number = true
 
--- 수정된 파일 저장 및 종료 처리
-vim.api.nvim_create_autocmd("QuitPre", {
-  callback = function()
-    local bufs = vim.api.nvim_list_bufs()
-    local non_neotree_bufs = 0
-    local modified_bufs = false
-
-    for _, buf in ipairs(bufs) do
-      if vim.api.nvim_buf_is_loaded(buf) then
-        local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-        local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-        -- neo-tree, spectre, code_runner가 아니고 일반 버퍼인 경우만 카운트
-        if filetype ~= "neo-tree" and
-           filetype ~= "spectre_panel" and
-           filetype ~= "code-runner" and
-           buftype ~= "nofile" then
-          non_neotree_bufs = non_neotree_bufs + 1
-          -- 수정된 일반 파일이 있는지 확인
-          if vim.api.nvim_buf_get_option(buf, "modified") then
-            local bufname = vim.api.nvim_buf_get_name(buf)
-            if bufname ~= "" then
-              vim.api.nvim_buf_call(buf, function()
-                vim.cmd("silent! write")
-              end)
-            end
-            modified_bufs = true
-          end
-        end
-      end
-    end
-
-    -- neo-tree와 빈 파일만 남은 경우 즉시 종료
-    if non_neotree_bufs <= 1 and not modified_bufs then
-      vim.cmd("qa!")
-    end
-  end,
-})
-
 -- 팝업 메뉴 최대 높이 설정
 vim.opt.pumheight = 10
 
@@ -206,4 +168,3 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     vim.cmd("silent! loadview")
   end,
 })
-

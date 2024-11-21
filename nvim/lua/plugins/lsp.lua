@@ -7,8 +7,6 @@ return {
       "hrsh7th/cmp-path",
       "hrsh7th/cmp-cmdline",
       "hrsh7th/nvim-cmp",
-      "L3MON4D3/LuaSnip",
-      "saadparwaiz1/cmp_luasnip",
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
     },
@@ -41,40 +39,43 @@ return {
 
       require('mason-lspconfig').setup({
         ensure_installed = servers,
+        automatic_installation = true,
       })
 
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
-      -- documentSymbol 기능 명시적 활성화
+
       capabilities.textDocument.documentSymbol = {
         dynamicRegistration = false,
         symbolKind = {
-          valueSet = (function()
-            local result = {}
-            for i = 1, 26 do
-              table.insert(result, i)
-            end
-            return result
-          end)(),
+          valueSet = vim.tbl_values(vim.lsp.protocol.SymbolKind),
         },
         hierarchicalDocumentSymbolSupport = true,
       }
 
       local lspconfig = require('lspconfig')
-      -- 특정 LSP 서버에 대한 추가 설정
+
       local custom_server_configs = {
-        html = {
-          filetypes = { "html", "vue" },
-          init_options = {
-            documentSymbols = true,
-            configurationSection = { "html", "css", "javascript" },
+        ts_ls = function()
+          local mason_registry = require('mason-registry')
+          if not mason_registry.is_installed("vue-language-server") then
+            return {
+              filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "json" },
+            }
+          end
+
+          return {
+            init_options = {
+              plugins = {
+                {
+                  name = '@vue/typescript-plugin',
+                  location = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server',
+                  languages = { 'vue' },
+                },
+              },
+            },
+            filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
           }
-        },
-        cssls = {
-          filetypes = { "css", "scss", "less", "vue" },
-        },
-        volar = {
-          filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
-        }
+        end,
       }
 
       for _, server in ipairs(servers) do
@@ -84,12 +85,10 @@ return {
             debounce_text_changes = 150,
           }
         }
-
-        -- 서버별 커스텀 설정이 있다면 병합
         if custom_server_configs[server] then
-          config = vim.tbl_deep_extend("force", config, custom_server_configs[server])
+          local custom_config = custom_server_configs[server]()
+          config = vim.tbl_deep_extend("force", config, custom_config)
         end
-
         lspconfig[server].setup(config)
       end
     end
