@@ -521,3 +521,4 @@ vim.keymap.set('n', '<leader>gg',
     require('gitgraph').draw({}, { all = true, max_count = 5000 })
   end, { noremap = true, silent = true, desc = '[git] Git Graph 열기' }
 )
+
