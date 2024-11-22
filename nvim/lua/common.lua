@@ -96,6 +96,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- 기본 모드 표시 비활성화
 vim.opt.showmode = false
+
 -- 명령줄 높이를 0으로 설정하여 상태바를 맨 아래로
 vim.opt.cmdheight = 0
 
@@ -110,7 +111,7 @@ vim.opt.listchars:append({
 })
 vim.opt.list = true
 
--- 커서 라인 배경색 설
+-- 커서가 위치한 라인의 배경색 설정
 vim.cmd([[
   highlight CursorLine guibg=#333333
   set cursorline
@@ -188,3 +189,4 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.opt_local.formatoptions:remove({ 'c', 'r', 'o' })
   end,
 })
+

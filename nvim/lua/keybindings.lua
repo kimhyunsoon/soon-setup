@@ -135,14 +135,33 @@ vim.keymap.set('n', 'ls',
   end, { noremap = true, silent = true, desc = '[editor] 문자열 치환' }
 )
 
+-- 코드 Split-Jion 토글
+vim.keymap.set('n', 'lw', '<cmd>lua require("treesj").toggle()<CR>', { noremap = true, silent = true, desc = '[editor] 코드 Split-Join 토글' })
+
+-- 텍스트 wrap 토글
+vim.keymap.set('n', '<leader>m', '<cmd>set wrap!<CR>', { noremap = true, silent = true, desc = '[editor] 텍스트 wrap 토글' })
+
 -- ESC를 누르면 검색하이라이트 종료 + hover창 닫기
 vim.keymap.set({ 'n', 'i', 'v' }, '<ESC>', function()
-  -- 텔레스코프 창인 경우 종료
+
+  -- 텔레스코프인 경우 처리
   if vim.bo.filetype == 'TelescopePrompt' then
     require('telescope.actions').close(vim.api.nvim_get_current_buf())
     return
   end
-  
+
+  -- copilot-chat 창인 경우 처리
+  if vim.bo.filetype == 'copilot-chat' then
+    if vim.fn.mode() == 'i' then
+      -- 인서트 모드라면 노말모드로 전환
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, true, true), 'n', false)
+    else
+      -- 노말모드라면 종료
+      vim.cmd('CopilotChatToggle')
+    end
+    return
+  end
+
   -- 검색 하이라이트 종료
   vim.cmd('nohlsearch')
   -- LSP hover 창 닫기
@@ -153,7 +172,7 @@ vim.keymap.set({ 'n', 'i', 'v' }, '<ESC>', function()
   end
   -- cmp 창 닫기
   require('cmp').close()
-  
+
   -- 현재 모드가 노말 모드가 아닐 경우 노말 모드로 전환
   if vim.api.nvim_get_mode().mode ~= 'n' then
     vim.cmd('stopinsert')
@@ -529,3 +548,10 @@ vim.keymap.set('n', '<leader>gg',
     require('gitgraph').draw({}, { all = true, max_count = 5000 })
   end, { noremap = true, silent = true, desc = '[git] Git Graph 열기' }
 )
+
+
+------------------------------------------ [Copilot] ------------------------------------------
+vim.keymap.set({ 'n', 'v' }, '<leader>i', '<cmd>:CopilotChatToggle<CR>', { noremap = true, silent = true, desc = '[copilot] 채팅 토글' })
+vim.keymap.set('n', '<leader>r', '', { desc = '[copilot] 채팅 초기화' })
+vim.keymap.set('n', '<leader>y', '', { desc = '[copilot] 채팅 제안 수락' })
+
