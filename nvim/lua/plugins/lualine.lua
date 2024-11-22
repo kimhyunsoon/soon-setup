@@ -30,8 +30,8 @@ local bubbles_theme = {
 }
 return {
   {
-    "nvim-lualine/lualine.nvim",
-    event = "VeryLazy",
+    'nvim-lualine/lualine.nvim',
+    event = 'VeryLazy',
     opts = {
       options = {
         theme = bubbles_theme,

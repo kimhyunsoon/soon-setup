@@ -30,9 +30,9 @@ end
 -- 랜덤 문자열 생성 함수
 local function generate_random_string()
   math.randomseed(os.time())
-  local charset = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  local charset = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
   local length = 8
-  local random_string = ""
+  local random_string = ''
   for _ = 1, length do
     local random_index = math.random(1, #charset)
     random_string = random_string .. charset:sub(random_index, random_index)
@@ -269,15 +269,15 @@ vim.keymap.set('n', '<leader>c',
         -- 다음 단계로 진행
       else
         vim.api.nvim_echo({{
-          "저장되지 않은 변경사항이 있습니다. 저장하시겠습니까? [y/n]: ",
-          "WarningMsg"
+          '저장되지 않은 변경사항이 있습니다. 저장하시겠습니까? [y/n]: ',
+          'WarningMsg'
         }}, false, {})
 
         local char = vim.fn.getchar()
         local answer = vim.fn.nr2char(char)
         
         if char == 27 then  -- ESC key
-          vim.api.nvim_echo({{"", ""}}, false, {})
+          vim.api.nvim_echo({{'', ''}}, false, {})
           return
         elseif answer:lower() == 'y' then
           vim.cmd('write')
@@ -361,15 +361,15 @@ vim.api.nvim_create_user_command('Q',
 
     while true do
       vim.api.nvim_echo({{
-        "저장되지 않은 변경사항이 있습니다. 저장하시겠습니까? [y/n]: ",
-        "WarningMsg"
+        '저장되지 않은 변경사항이 있습니다. 저장하시겠습니까? [y/n]: ',
+        'WarningMsg'
       }}, false, {})
 
       local char = vim.fn.getchar()
       local answer = vim.fn.nr2char(char)
       
       if char == 27 then  -- ESC key
-        vim.api.nvim_echo({{"", ""}}, false, {})
+        vim.api.nvim_echo({{'', ''}}, false, {})
         return
       elseif answer:lower() == 'y' then
         vim.cmd('wqa')
@@ -407,9 +407,9 @@ vim.keymap.set('n', '<leader>rr', ':RunCode<CR>', { noremap = true, silent = tru
 vim.keymap.set('n', '<leader>tt', ':ToggleTerm<CR>', { noremap = true, silent = true, desc = '[common] 터미널 열기' })
 
 -- 새 버퍼 생성
-vim.keymap.set("n", "<leader>n",
+vim.keymap.set('n', '<leader>n',
   function()
-    vim.cmd("enew")
+    vim.cmd('enew')
   end, { noremap = true, silent = true, desc = '[common] 새 버퍼 생성' }
 )
 
@@ -459,10 +459,18 @@ vim.keymap.set('n', 'lr',
     vim.keymap.set('i', '<CR>', function()
       local new_name = vim.api.nvim_get_current_line()
       vim.api.nvim_win_close(win, true)
-      vim.lsp.buf.rename(new_name)
+      vim.cmd('stopinsert')
+      vim.schedule(function()
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<ESC>', true, false, true), 'n', false)
+        vim.lsp.buf.rename(new_name)
+      end)
     end, { buffer = buf })
     vim.keymap.set('i', '<ESC>', function()
       vim.api.nvim_win_close(win, true)
+      vim.cmd('stopinsert')
+      vim.schedule(function()
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<ESC>', true, false, true), 'n', false)
+      end)
     end, { buffer = buf })
     vim.cmd('startinsert')
   end, { noremap = true, silent = true, desc = '[lsp] 식별자 변경' }

@@ -1,17 +1,17 @@
 return {
   {
-    "neovim/nvim-lspconfig",
+    'neovim/nvim-lspconfig',
     dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-buffer",
-      "hrsh7th/cmp-path",
-      "hrsh7th/cmp-cmdline",
-      "hrsh7th/nvim-cmp",
-      "williamboman/mason.nvim",
-      "williamboman/mason-lspconfig.nvim",
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'hrsh7th/cmp-cmdline',
+      'hrsh7th/nvim-cmp',
+      'williamboman/mason.nvim',
+      'williamboman/mason-lspconfig.nvim',
     },
     config = function()
-      require("mason").setup()
+      require('mason').setup()
       local servers = {
         'ts_ls',
         'eslint',
@@ -57,9 +57,9 @@ return {
       local custom_server_configs = {
         ts_ls = function()
           local mason_registry = require('mason-registry')
-          if not mason_registry.is_installed("vue-language-server") then
+          if not mason_registry.is_installed('vue-language-server') then
             return {
-              filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "json" },
+              filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'json' },
             }
           end
 
@@ -73,15 +73,15 @@ return {
                 },
               },
             },
-            filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
+            filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'json' },
           }
         end,
       }
 
       -- hover 창
-      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+      vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
         vim.lsp.handlers.hover, {
-          border = "rounded",
+          border = 'rounded',
           focusable = false,
         }
       )
@@ -95,7 +95,7 @@ return {
         }
         if custom_server_configs[server] then
           local custom_config = custom_server_configs[server]()
-          config = vim.tbl_deep_extend("force", config, custom_config)
+          config = vim.tbl_deep_extend('force', config, custom_config)
         end
         lspconfig[server].setup(config)
       end

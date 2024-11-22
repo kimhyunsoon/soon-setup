@@ -14,7 +14,7 @@ vim.opt.showtabline = 0
 vim.g.mapleader= ' '
 
 -- 빈 공간에서 '~' 기호 없애기
-vim.opt.fillchars = "eob: "
+vim.opt.fillchars = 'eob: '
 
 -- OS 클립보드와 nvim 레지스터 연동
 -- linux: xclip or xsel
@@ -31,27 +31,27 @@ vim.opt.pumheight = 10
 -- diagnostics
 vim.diagnostic.config({
   float = {
-    border = "rounded",
-    style = "minimal",
-    source = "always",
-    header = "",
-    prefix = "",
+    border = 'rounded',
+    style = 'minimal',
+    source = 'always',
+    header = '',
+    prefix = '',
   },
   virtual_text = true,
   severity_sort = true,
   -- signs = false,
   signs = {
     text = {
-      [vim.diagnostic.severity.HINT] = "▎",
-      [vim.diagnostic.severity.INFO] = "▎",
-      [vim.diagnostic.severity.WARN] = "▎",
-      [vim.diagnostic.severity.ERROR] = "▎",
+      [vim.diagnostic.severity.HINT] = '▎',
+      [vim.diagnostic.severity.INFO] = '▎',
+      [vim.diagnostic.severity.WARN] = '▎',
+      [vim.diagnostic.severity.ERROR] = '▎',
     },
   },
 })
 
 -- undo 파일 저장 디렉토리 설정
-vim.opt.undodir = vim.fn.stdpath("data") .. "/undodir"
+vim.opt.undodir = vim.fn.stdpath('data') .. '/undodir'
 -- undo 파일 사용 활성화
 vim.opt.undofile = true
 
@@ -139,26 +139,26 @@ vim.api.nvim_create_autocmd('WinEnter', {
 })
 
 -- 커서 위치 저장 및 복원
-vim.api.nvim_create_autocmd("BufReadPost", {
+vim.api.nvim_create_autocmd('BufReadPost', {
   callback = function()
     local line = vim.fn.line
-    if line("'\"") > 0 and line("'\"") <= line("$") then
+    if line("'\"") > 0 and line("'\"") <= line('$') then
         vim.cmd('normal! g`"')
     end
   end,
 })
 
 -- 버퍼 닫기 전에 커서 위치 저장
-vim.api.nvim_create_autocmd("BufWritePost", {
+vim.api.nvim_create_autocmd('BufWritePost', {
   callback = function()
-    vim.cmd("mkview") -- 뷰 저장
+    vim.cmd('mkview') -- 뷰 저장
   end,
 })
 
 -- 버퍼를 열 때 저장된 뷰 로드
-vim.api.nvim_create_autocmd("BufReadPost", {
+vim.api.nvim_create_autocmd('BufReadPost', {
   callback = function()
-    vim.cmd("silent! loadview")
+    vim.cmd('silent! loadview')
   end,
 })
 

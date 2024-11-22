@@ -17,17 +17,17 @@ return {
   'nvim-telescope/telescope.nvim', tag = '0.1.6',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    "nvim-telescope/telescope-ui-select.nvim",
+    'nvim-telescope/telescope-ui-select.nvim',
     'tsakirist/telescope-lazy.nvim',
   },
   config = function()
-    require("telescope").load_extension("ui-select")
+    require('telescope').load_extension('ui-select')
     require('telescope').setup({
       defaults = {
-        prompt_prefix = "  ",
-        selection_caret = "  ",
-        multi_icon = "  ",
-        entry_prefix = "   ",
+        prompt_prefix = '  ',
+        selection_caret = '  ',
+        multi_icon = '  ',
+        entry_prefix = '   ',
         path_display = { 'truncate' },
         sorting_strategy = 'ascending',
         layout_config = {

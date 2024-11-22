@@ -1,24 +1,24 @@
 return {
   'akinsho/bufferline.nvim',
-  version = "*",
+  version = '*',
   dependencies = 'nvim-tree/nvim-web-devicons',
   config = function()
-    require("bufferline").setup({
+    require('bufferline').setup({
       options = {
-        mode = "buffers",
-        separator_style = { "", "" },
+        mode = 'buffers',
+        separator_style = { '', '' },
         themable = false,
         always_show_bufferline = true,
         show_buffer_icons = true,
         show_buffer_close_icons = false,
-        buffer_close_icon = "",
+        buffer_close_icon = '',
         diagnostics = false,
         separator = false,
-        text_align = "center",
+        text_align = 'center',
         offsets = {
           {
-            filetype = "neo-tree",
-            text = "",
+            filetype = 'neo-tree',
+            text = '',
             separator = false
           }
         },
@@ -28,7 +28,7 @@ return {
       },
       highlights = {
         buffer_selected = {
-          fg = "#ffffff",
+          fg = '#ffffff',
           bold = true,
           italic = false,
         },
@@ -46,11 +46,11 @@ return {
         },
       },
     })
-    vim.api.nvim_create_autocmd("BufEnter", {
-      pattern = { "[No Name]" },
+    vim.api.nvim_create_autocmd('BufEnter', {
+      pattern = { '[No Name]' },
       callback = function()
-        if vim.bo.buftype == "" then
-          vim.cmd("bdelete")
+        if vim.bo.buftype == '' then
+          vim.cmd('bdelete')
         end
       end
     })

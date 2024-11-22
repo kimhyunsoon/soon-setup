@@ -3,12 +3,12 @@ return {
   init = function()
     require('code_runner').setup({
       filetype = {
-        javascript = "node",
-        typescript = "ts-node",
-        python = "python3",
-        c = "cd $dir && gcc $fileName -o /tmp/$fileNameWithoutExt && /tmp/$fileNameWithoutExt",
+        javascript = 'node',
+        typescript = 'ts-node',
+        python = 'python3',
+        c = 'cd $dir && gcc $fileName -o /tmp/$fileNameWithoutExt && /tmp/$fileNameWithoutExt',
       },
-      mode = "term",
+      mode = 'term',
       focus = false,
     })
   end

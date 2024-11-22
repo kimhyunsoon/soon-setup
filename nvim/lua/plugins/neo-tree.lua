@@ -19,12 +19,12 @@ return {
     'MunifTanjim/nui.nvim',
   },
   config = function()
-    vim.api.nvim_set_hl(0, "NeoTreeGitAdded", { fg = colors.green })
-    vim.api.nvim_set_hl(0, "NeoTreeGitModified", { fg = colors.blue })
-    vim.api.nvim_set_hl(0, "NeoTreeGitRemoved", { fg = colors.red })
+    vim.api.nvim_set_hl(0, 'NeoTreeGitAdded', { fg = colors.green })
+    vim.api.nvim_set_hl(0, 'NeoTreeGitModified', { fg = colors.blue })
+    vim.api.nvim_set_hl(0, 'NeoTreeGitRemoved', { fg = colors.red })
 
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = "neo-tree-popup",
+    vim.api.nvim_create_autocmd('FileType', {
+      pattern = 'neo-tree-popup',
       callback = function()
       end,
     })
@@ -38,14 +38,14 @@ return {
       filesystem = {
         window = {
           mappings = {
-            ["<leader>p"] = "image_wezterm"
+            ['<leader>p'] = 'image_wezterm'
           },
         },
         commands = {
           image_wezterm = function(state)
             local node = state.tree:get_node()
-            if node.type == "file" then
-              require("image_preview").PreviewImage(node.path)
+            if node.type == 'file' then
+              require('image_preview').PreviewImage(node.path)
             end
           end,
         },
@@ -68,19 +68,19 @@ return {
           enabled = true,
           leave_dirs_open = false,
         },
-        hijack_netrw_behavior = "open_default",
+        hijack_netrw_behavior = 'open_default',
       },
 
       default_component_configs = {
         modified = {
-          symbol = "",
-          highlight = "TSField",
+          symbol = '',
+          highlight = 'TSField',
         },
         icon = {
-          folder_closed = "",
-          folder_open = "",
-          folder_empty = "",
-          highlight = "NeoTreeFileIcon"
+          folder_closed = '',
+          folder_open = '',
+          folder_empty = '',
+          highlight = 'NeoTreeFileIcon'
         },
         indent = {
           indent_size = 2,
@@ -93,7 +93,7 @@ return {
           use_git_status_colors = true,
         },
         diagnostics = {
-          align = "right",
+          align = 'right',
           symbols = { error = '', warn = '', info = '', hint = '' },
         },
         git_status = {
@@ -134,12 +134,12 @@ return {
           ['R'] = 'refresh',
         },
         enable_normal_mode_for_inputs = false,
-        popup_border_style = "rounded",
+        popup_border_style = 'rounded',
         popup = {
-          border = "rounded",
-          position = { col = "100%", row = "2" },
+          border = 'rounded',
+          position = { col = '100%', row = '2' },
           size = function(state)
-            local root_name = vim.fn.fnamemodify(state.path, ":~")
+            local root_name = vim.fn.fnamemodify(state.path, ':~')
             local root_len = string.len(root_name) + 4
             return {
               width = math.max(root_len, 50),
@@ -147,7 +147,7 @@ return {
             }
           end,
         },
-        winhighlight = "Normal:NeoTreeNormal,NormalNC:NeoTreeNormalNC,FloatBorder:FloatBorder,NormalFloat:Normal",
+        winhighlight = 'Normal:NeoTreeNormal,NormalNC:NeoTreeNormalNC,FloatBorder:FloatBorder,NormalFloat:Normal',
       },
     })
   end,

@@ -8,17 +8,17 @@ vim.opt.rtp:prepend(lazypath)
 -- 공통 설정
 require 'common'
 
-require('lazy').setup({ import = "plugins" }, {
+require('lazy').setup({ import = 'plugins' }, {
   ui = { backdrop = 100 },
   performance = {
     rtp = {
-    disabled_plugins = {
-      'gzip',
-      'netrwPlugin',
-      'tarPlugin',
-      'tohtml',
-      'zipPlugin',
-    },
+      disabled_plugins = {
+        'gzip',
+        'netrwPlugin',
+        'tarPlugin',
+        'tohtml',
+        'zipPlugin',
+      },
     },
   },
 })
