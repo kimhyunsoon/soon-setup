@@ -45,10 +45,17 @@ end
 -- 들여쓰기
 vim.keymap.set('n', '<Tab>', ':norm>><cr>', { noremap = true, silent = true })
 vim.keymap.set('v', '<Tab>', '>gv', { noremap = true, silent = true })
+vim.keymap.set('i', '<Tab>', function()
+  if vim.fn.pumvisible() == 1 then
+    return '<Tab>'
+  end
+  return '<C-o>>>'
+end, { noremap = true, silent = true, expr = true })
 
 -- 내어쓰기
 vim.keymap.set('n', '<S-Tab>', ':norm<<<cr>', { noremap = true, silent = true })
 vim.keymap.set('v', '<S-Tab>', '<gv', { noremap = true, silent = true })
+vim.keymap.set('i', '<S-Tab>', '<C-o><<', { noremap = true, silent = true })
 
 -- 단어 선택
 vim.keymap.set('n', '<leader>w', 'viw', { noremap = true, silent = true, desc = '단어 선택' })
@@ -129,7 +136,13 @@ vim.keymap.set('n', 'ls',
 )
 
 -- ESC를 누르면 검색하이라이트 종료 + hover창 닫기
-vim.keymap.set('n', '<ESC>', function()
+vim.keymap.set({ 'n', 'i', 'v' }, '<ESC>', function()
+  -- 텔레스코프 창인 경우 종료
+  if vim.bo.filetype == 'TelescopePrompt' then
+    require('telescope.actions').close(vim.api.nvim_get_current_buf())
+    return
+  end
+  
   -- 검색 하이라이트 종료
   vim.cmd('nohlsearch')
   -- LSP hover 창 닫기
@@ -140,6 +153,12 @@ vim.keymap.set('n', '<ESC>', function()
   end
   -- cmp 창 닫기
   require('cmp').close()
+  
+  -- 현재 모드가 노말 모드가 아닐 경우 노말 모드로 전환
+  if vim.api.nvim_get_mode().mode ~= 'n' then
+    vim.cmd('stopinsert')
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<ESC>', true, false, true), 'n', false)
+  end
 end, { noremap = true, silent = true })
 
 -- 주석 토글
@@ -245,13 +264,26 @@ vim.keymap.set('n', '<leader>c',
   function()
     local current_buf = vim.api.nvim_get_current_buf()
     
-    -- 저장되지 않은 변경사항 확인
     if vim.bo[current_buf].modified then
-      vim.api.nvim_echo({{
-        "저장되지 않은 변경사항이 있습니다",
-        "WarningMsg"
-      }}, false, {})
-      return
+      if vim.fn.bufname(current_buf) == '' then
+        -- 다음 단계로 진행
+      else
+        vim.api.nvim_echo({{
+          "저장되지 않은 변경사항이 있습니다. 저장하시겠습니까? [y/n]: ",
+          "WarningMsg"
+        }}, false, {})
+
+        local char = vim.fn.getchar()
+        local answer = vim.fn.nr2char(char)
+        
+        if char == 27 then  -- ESC key
+          vim.api.nvim_echo({{"", ""}}, false, {})
+          return
+        elseif answer:lower() == 'y' then
+          vim.cmd('write')
+        end
+        -- n을 선택하면 저장하지 않고 계속 진행
+      end
     end
     
     -- neo-tree 버퍼인 경우 빠르게 리턴
@@ -277,24 +309,23 @@ vim.keymap.set('n', '<leader>c',
       end
     end
     
-    -- 스플릿 창 처리 (정렬 제거 - 불필요)
+    -- 스플릿 창 처리
     if #valid_wins > 1 and current_win ~= valid_wins[1] then
       vim.cmd('quit')
       return
     end
     
-    -- 버퍼 처리 로직 최적화
+    -- 버퍼 처리 로직
     local bufs = vim.api.nvim_list_bufs()
     local valid_buf_count = 0
     
-    -- 빠른 종료 조건 추가
     for _, buf in ipairs(bufs) do
       if vim.api.nvim_buf_is_valid(buf) 
          and vim.bo[buf].buflisted
          and vim.bo[buf].filetype ~= 'neo-tree' then
         valid_buf_count = valid_buf_count + 1
         if valid_buf_count > 1 then
-          break  -- 2개 이상이면 더 이상 계산할 필요 없음
+          break
         end
       end
     end
@@ -302,9 +333,9 @@ vim.keymap.set('n', '<leader>c',
     -- 버퍼 닫기 처리
     if valid_buf_count <= 1 then
       vim.cmd('enew')
-      vim.cmd('bd ' .. current_buf)
+      vim.cmd('bd! ' .. current_buf)
     else
-      vim.cmd('bp|bd ' .. current_buf)
+      vim.cmd('bp|bd! ' .. current_buf)
     end
   end,
   { noremap = true, silent = true, desc = '[common] 현재 버퍼 닫기' }
@@ -313,41 +344,43 @@ vim.keymap.set('n', '<leader>c',
 -- 전체 닫기
 vim.cmd('cabbrev q <c-r>=(getcmdtype()==\':\' && getcmdpos()==1 ? \'Q\' : \'q\')<CR>')
 
-vim.api.nvim_create_user_command('Q', function()
+vim.api.nvim_create_user_command('Q',
+  function()
     local has_unsaved = false
     for _, buf in ipairs(vim.fn.getbufinfo()) do
-        if buf.changed == 1 then
-            has_unsaved = true
-            break
-        end
+      if buf.changed == 1 and buf.name ~= '' then
+        has_unsaved = true
+        break
+      end
     end
 
     if not has_unsaved then
-        vim.cmd('qa')
-        return
+      vim.cmd('qa')
+      return
     end
 
     while true do
-        vim.api.nvim_echo({{
-            "저장되지 않은 변경사항이 있습니다. 저장하시겠습니까? [y/n]: ",
-            "WarningMsg"
-        }}, false, {})
+      vim.api.nvim_echo({{
+        "저장되지 않은 변경사항이 있습니다. 저장하시겠습니까? [y/n]: ",
+        "WarningMsg"
+      }}, false, {})
 
-        local char = vim.fn.getchar()
-        local answer = vim.fn.nr2char(char)
-        
-        if char == 27 then  -- ESC key
-            vim.api.nvim_echo({{"", ""}}, false, {})
-            return
-        elseif answer:lower() == 'y' then
-            vim.cmd('wqa')
-            break
-        elseif answer:lower() == 'n' then
-            vim.cmd('qa!')
-            break
-        end
+      local char = vim.fn.getchar()
+      local answer = vim.fn.nr2char(char)
+      
+      if char == 27 then  -- ESC key
+        vim.api.nvim_echo({{"", ""}}, false, {})
+        return
+      elseif answer:lower() == 'y' then
+        vim.cmd('wqa')
+        break
+      elseif answer:lower() == 'n' then
+        vim.cmd('qa!')
+        break
+      end
     end
-end, {})
+  end, {}
+)
 
 -- 현재 버퍼를 오른쪽으로 스플릿
 vim.keymap.set('n', '|', ':vsplit<CR>', { noremap = true, silent = true, desc = '[common] 버퍼 세로 분할' })
