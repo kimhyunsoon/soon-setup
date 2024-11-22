@@ -28,13 +28,6 @@ vim.opt.number = true
 -- 팝업 메뉴 최대 높이 설정
 vim.opt.pumheight = 10
 
--- hover 창
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-  vim.lsp.handlers.hover, {
-    border = "rounded",
-  }
-)
-
 -- diagnostics
 vim.diagnostic.config({
   float = {
@@ -166,5 +159,32 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 vim.api.nvim_create_autocmd("BufReadPost", {
   callback = function()
     vim.cmd("silent! loadview")
+  end,
+})
+
+-- diagnostic float 창에 자동으로 커서 이동
+local function goto_float_window()
+  local wins = vim.api.nvim_list_wins()
+  for _, win in ipairs(wins) do
+    local config = vim.api.nvim_win_get_config(win)
+    if config.relative ~= '' then  -- floating window 확인
+      vim.api.nvim_set_current_win(win)
+      break
+    end
+  end
+end
+
+-- diagnostic float 명령어 재정의
+local orig_float = vim.diagnostic.open_float
+vim.diagnostic.open_float = function(...)
+  orig_float(...)
+  vim.schedule(goto_float_window)
+end
+
+-- 자동 주석 비활성화
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*',
+  callback = function()
+    vim.opt_local.formatoptions:remove({ 'c', 'r', 'o' })
   end,
 })

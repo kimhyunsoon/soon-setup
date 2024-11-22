@@ -23,7 +23,6 @@ return {
           }
         },
         modified_icon = '',
-        tab_size = 0,
         padding = 0,
         clickable = true,
       },

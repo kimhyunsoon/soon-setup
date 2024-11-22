@@ -2,33 +2,51 @@ return {
   "hrsh7th/nvim-cmp",
   config = function()
     local cmp = require("cmp")
-    
+   
+    vim.api.nvim_set_hl(0, "CmpItemKindText", { fg = "#e2e2e3" })
+    vim.api.nvim_set_hl(0, "CmpItemKindKeyword", { fg = "#b39df3" })
+    vim.api.nvim_set_hl(0, "CmpItemKindConstant", { fg = "#e2e2e3" })
+    vim.api.nvim_set_hl(0, "CmpItemKindFunction", { fg = "#76cce0" })
+    vim.api.nvim_set_hl(0, "CmpItemKindMethod", { fg = "#fc5d7c" })
+    vim.api.nvim_set_hl(0, "CmpItemKindConstructor", { fg = "#fc5d7c" })
+    vim.api.nvim_set_hl(0, "CmpItemKindClass", { fg = "#fc5d7c" })
+    vim.api.nvim_set_hl(0, "CmpItemKindInterface", { fg = "#76cce0" })
+    vim.api.nvim_set_hl(0, "CmpItemKindModule", { fg = "#fc5d7c" })
+    vim.api.nvim_set_hl(0, "CmpItemKindProperty", { fg = "#7f8490" })
+    vim.api.nvim_set_hl(0, "CmpItemKindVariable", { fg = "#e2e2e3" })
+    vim.api.nvim_set_hl(0, "CmpItemKindField", { fg = "#7f8490" })
+    vim.api.nvim_set_hl(0, "CmpItemKindSnippet", { fg = "#b39df3" })
+    vim.api.nvim_set_hl(0, "CmpItemKindFile", { fg = "#9ed072" })
+    vim.api.nvim_set_hl(0, "CmpItemKindFolder", { fg = "#9ed072" })
+    vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = "#b39df3" })
+
     local kind_icons = {
       Text = "󰉿",
       Method = "󰆧",
       Function = "󰊕",
-      Constructor = "",
-      Field = "󰜢",
+      Constructor = "󰒓",
+      Field = "",
       Variable = "󰀫",
       Class = "󰠱",
-      Interface = "",
-      Module = "",
+      Interface = "󰜰",
+      Module = "󰕳",
       Property = "󰜢",
       Unit = "󰑭",
       Value = "󰎠",
-      Enum = "",
+      Enum = "󰕘",
       Keyword = "󰌋",
-      Snippet = "",
+      Snippet = "󰃐",
       Color = "󰏘",
       File = "󰈙",
-      Reference = "󰈇",
+      Reference = "",
       Folder = "󰉋",
-      EnumMember = "",
+      EnumMember = "",
       Constant = "󰏿",
       Struct = "󰙅",
-      Event = "",
+      Event = "󰂚",
       Operator = "󰆕",
-      TypeParameter = "",
+      Copilot = "",
+      TypeParameter = "󰅲",
     }
     cmp.setup({
       preselect = cmp.PreselectMode.None,
@@ -53,7 +71,9 @@ return {
       },
       formatting = {
         format = function(entry, vim_item)
-          vim_item.kind = string.format('%s %s', kind_icons[vim_item.kind], vim_item.kind)
+          local kind = vim_item.kind
+          vim_item.kind = string.format('%s %s', kind_icons[kind], kind)
+          vim_item.kind_hl_group = "CmpItemKind" .. kind
           return vim_item
         end
       },
@@ -68,9 +88,10 @@ return {
         },
         documentation = {
           border = "rounded",
-          winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder",
+          winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
         },
       },
     })
+    
   end
 }

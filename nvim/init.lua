@@ -32,3 +32,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- 키매핑
 require 'keybindings'
+
+-- Vue 파일에서 TypeScript 지원을 위한 추가 설정
+vim.g.vue_pre_processors = 'detect_on_enter'

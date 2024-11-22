@@ -49,7 +49,7 @@ vim.keymap.set('i', '<Tab>', function()
   if vim.fn.pumvisible() == 1 then
     return '<Tab>'
   end
-  return '<C-o>>>'
+  return '<C-o>>><Right><Right>'
 end, { noremap = true, silent = true, expr = true })
 
 -- 내어쓰기
@@ -521,4 +521,3 @@ vim.keymap.set('n', '<leader>gg',
     require('gitgraph').draw({}, { all = true, max_count = 5000 })
   end, { noremap = true, silent = true, desc = '[git] Git Graph 열기' }
 )
-

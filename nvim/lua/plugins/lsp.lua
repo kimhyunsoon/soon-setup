@@ -78,6 +78,14 @@ return {
         end,
       }
 
+      -- hover 창
+      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+        vim.lsp.handlers.hover, {
+          border = "rounded",
+          focusable = false,
+        }
+      )
+
       for _, server in ipairs(servers) do
         local config = {
           capabilities = capabilities,
