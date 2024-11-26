@@ -432,6 +432,9 @@ vim.keymap.set('n', '<leader>n',
   end, { noremap = true, silent = true, desc = '[common] 새 버퍼 생성' }
 )
 
+-- 마크다운 미리보기
+vim.keymap.set('n', '<leader>mp', ':MarkdownPreview<CR>', { noremap = true, silent = true, desc = '[common] 마크다운 미리보기' })
+
 
 
 ------------------------------------------ [lsp] ------------------------------------------

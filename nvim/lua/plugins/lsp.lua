@@ -15,7 +15,6 @@ return {
       local servers = {
         'ts_ls',
         'eslint',
-        'vtsls',
         'volar',
         'lua_ls',
         'docker_compose_language_service',
@@ -55,6 +54,26 @@ return {
       local lspconfig = require('lspconfig')
 
       local custom_server_configs = {
+
+        eslint = function()
+          return {
+            cmd = { "vscode-eslint-language-server", "--stdio" },
+            filetypes = { "javascript", "javascriptreact", "javascript.jsx", "typescript", "typescriptreact", "typescript.tsx", "vue" },
+            root_dir = function(fname)
+              local util = require('lspconfig').util
+              return util.find_package_json_ancestor(fname) or
+                     util.find_node_modules_ancestor(fname) or
+                     util.root_pattern('.eslintrc*')(fname) or
+                     vim.fn.getcwd()
+            end,
+            settings = {
+              workingDirectory = { mode = "location" },
+              format = { enable = true },
+              validate = "on",
+            }
+          }
+        end,
+
         ts_ls = function()
           local mason_registry = require('mason-registry')
           if not mason_registry.is_installed('vue-language-server') then
@@ -76,6 +95,7 @@ return {
             filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'json' },
           }
         end,
+
       }
 
       -- hover 창
