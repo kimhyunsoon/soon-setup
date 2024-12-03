@@ -182,6 +182,26 @@ vim.diagnostic.open_float = function(...)
   vim.schedule(goto_float_window)
 end
 
+-- lsp hover 명령어 재정의
+local orig_hover = vim.lsp.buf.hover
+vim.lsp.buf.hover = function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+  if #clients == 0 then return end
+  
+  -- hover 요청을 보내고 결과를 처리하는 새로운 handler 생성
+  local function handler(err, result, ctx, config)
+    vim.lsp.handlers["textDocument/hover"](err, result, ctx, config)
+    if result then
+      vim.schedule(goto_float_window)
+    end
+  end
+  
+  -- hover 요청 시 새로운 handler 사용
+  local params = vim.lsp.util.make_position_params()
+  vim.lsp.buf_request(bufnr, 'textDocument/hover', params, handler)
+end
+
 -- 자동 주석 비활성화
 vim.api.nvim_create_autocmd('FileType', {
   pattern = '*',
