@@ -61,15 +61,30 @@ return {
             filetypes = { "javascript", "javascriptreact", "javascript.jsx", "typescript", "typescriptreact", "typescript.tsx", "vue" },
             root_dir = function(fname)
               local util = require('lspconfig').util
-              return util.find_package_json_ancestor(fname) or
-                     util.find_node_modules_ancestor(fname) or
-                     util.root_pattern('.eslintrc*')(fname) or
-                     vim.fn.getcwd()
+              local project_root = util.find_git_ancestor(fname) or vim.fn.getcwd()
+              local config_path = util.root_pattern('eslint.config.js', '.eslintrc.js', '.eslintrc.json', '.eslintrc')(fname) or
+                                 util.root_pattern('apps/*/eslint.config.js', 'apps/*/.eslintrc.js', 'apps/*/.eslintrc.json', 'apps/*/.eslintrc')(fname)
+              return config_path or project_root
             end,
             settings = {
               workingDirectory = { mode = "location" },
+              nodePath = vim.fn.getcwd() .. "/node_modules",
               format = { enable = true },
               validate = "on",
+              codeAction = {
+                disableRuleComment = {
+                  enable = true,
+                  location = "separateLine"
+                },
+                showDocumentation = {
+                  enable = true
+                }
+              },
+              useWorkspaceDependencies = true,
+              workspaceFolder = {
+                uri = vim.fn.getcwd(),
+              },
+              resolvePluginsRelativeTo = vim.fn.getcwd()
             }
           }
         end,

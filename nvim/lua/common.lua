@@ -210,3 +210,11 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+-- eslint 설정 파일 없음 에러 무시
+local notify = vim.notify
+vim.notify = function(msg, ...)
+  if msg:match("%-32603") and msg:match("eslint") then
+    return
+  end
+  notify(msg, ...)
+end
