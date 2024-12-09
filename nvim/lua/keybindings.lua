@@ -558,3 +558,4 @@ vim.keymap.set({ 'n', 'v' }, '<leader>i', '<cmd>:CopilotChatToggle<CR>', { norem
 vim.keymap.set('n', '<leader>r', '', { desc = '[copilot] 채팅 초기화' })
 vim.keymap.set('n', '<leader>y', '', { desc = '[copilot] 채팅 제안 수락' })
 
+
