@@ -30,6 +30,11 @@ return {
         entry_prefix = '   ',
         path_display = { 'truncate' },
         sorting_strategy = 'ascending',
+        borderchars = {
+          prompt = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+        },
         layout_config = {
           horizontal = { prompt_position = 'top', preview_width = 0.55 },
           vertical = { mirror = false },
@@ -41,6 +46,47 @@ return {
           i = {
             ['<CR>'] = select_one_or_multi,
           }
+        },
+      },
+      pickers = {
+        git_status = {
+          git_icons ={
+            added = "",
+            changed = "",
+            copied = "",
+            deleted = "",
+            renamed = "",
+            unmerged = "",
+            untracked = "",
+          },
+        },
+        git_commits = {
+          mappings = {
+            i = {
+              ["<CR>"] = function(prompt_bufnr)
+                -- 현재 선택된 항목 가져오기
+                local selection = require('telescope.actions.state').get_selected_entry()
+                -- telescope 창 닫기
+                require('telescope.actions').close(prompt_bufnr)
+                
+                -- 새 버퍼 생성
+                vim.cmd('enew')
+                local buf = vim.api.nvim_get_current_buf()
+                
+                -- git show 명령어로 커밋 전체 내용 가져오기
+                local commit_hash = selection.value
+                local result = vim.fn.systemlist('git show ' .. commit_hash)
+                
+                -- 버퍼에 내용 쓰기
+                vim.api.nvim_buf_set_lines(buf, 0, -1, false, result)
+                -- 버퍼를 읽기 전용으로 설정
+                vim.bo[buf].modifiable = false
+                vim.bo[buf].readonly = true
+                -- 파일 타입을 git으로 설정 (구문 강조를 위해)
+                vim.bo[buf].filetype = 'git'
+              end,
+            },
+          },
         },
       },
     })

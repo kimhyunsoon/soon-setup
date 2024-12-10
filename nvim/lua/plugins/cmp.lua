@@ -2,7 +2,6 @@ return {
   'hrsh7th/nvim-cmp',
   config = function()
     local cmp = require('cmp')
-   
     vim.api.nvim_set_hl(0, 'CmpItemKindText', { fg = '#e2e2e3' })
     vim.api.nvim_set_hl(0, 'CmpItemKindKeyword', { fg = '#b39df3' })
     vim.api.nvim_set_hl(0, 'CmpItemKindConstant', { fg = '#e2e2e3' })
@@ -92,6 +91,5 @@ return {
         },
       },
     })
-    
   end
 }

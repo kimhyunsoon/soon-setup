@@ -428,14 +428,16 @@ vim.keymap.set('n', '<leader>tt', ':ToggleTerm<CR>', { noremap = true, silent = 
 -- 새 버퍼 생성
 vim.keymap.set('n', '<leader>n',
   function()
-    vim.cmd('enew')
+    
   end, { noremap = true, silent = true, desc = '[common] 새 버퍼 생성' }
 )
 
--- 마크다운 미리보기
-vim.keymap.set('n', '<leader>mp', ':MarkdownPreview<CR>', { noremap = true, silent = true, desc = '[common] 마크다운 미리보기' })
+-- 이전/다음커서 이동
+vim.keymap.set('n', 'o', '<C-o>', { noremap = true, silent = true, desc = '[common] 이전 커서로 이동' })
+vim.keymap.set('n', 'O', '<C-i>', { noremap = true, silent = true, desc = '[common] 다음 커서로 이동' })
 
 
+vim.keymap.set('n', '<leader>nh', '<cmd>Telescope notify<CR>', { noremap = true, silent = true, desc = '[common] 알림 기록 보기' })
 
 ------------------------------------------ [lsp] ------------------------------------------
 -- 레퍼런스 찾기
@@ -557,5 +559,4 @@ vim.keymap.set('n', '<leader>gg',
 vim.keymap.set({ 'n', 'v' }, '<leader>i', '<cmd>:CopilotChatToggle<CR>', { noremap = true, silent = true, desc = '[copilot] 채팅 토글' })
 vim.keymap.set('n', '<leader>r', '', { desc = '[copilot] 채팅 초기화' })
 vim.keymap.set('n', '<leader>y', '', { desc = '[copilot] 채팅 제안 수락' })
-
 
