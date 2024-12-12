@@ -54,6 +54,9 @@ config.font = wezterm.font_with_fallback {
     weight = 'Regular',
   },
 }
+config.window_background_opacity = 0.8
+config.macos_window_background_blur = 20
+config.win32_system_backdrop = 'Acrylic'
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 config.font_size = 10.5
 config.cell_width = 0.8
