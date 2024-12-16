@@ -42,6 +42,9 @@ end
 
 
 ------------------------------------------ [editor] ------------------------------------------
+-- Redo
+vim.keymap.set('n', 'R', '<C-r>', { noremap = true, silent = true, desc = '[editor] Redo' })
+
 -- 들여쓰기
 vim.keymap.set('n', '<Tab>', ':norm>><cr>', { noremap = true, silent = true })
 vim.keymap.set('v', '<Tab>', '>gv', { noremap = true, silent = true })

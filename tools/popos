@@ -1,2 +1,5 @@
+gnome-tweaks - gnome 기능개선 / apt
 gpick - 컬러피커 / apt
 tesseract-ocr + textshot - OCR / snap
+autokey-gtk - 단축키 (firefox 탭전환 등) / apt
+wmctrl - 앱전환 / apt

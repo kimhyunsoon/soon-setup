@@ -1,4 +1,3 @@
-
 local wezterm = require 'wezterm'
 local is_windows = string.find(wezterm.target_triple, 'windows')
 local is_mac = string.find(wezterm.target_triple, 'apple')
@@ -11,20 +10,19 @@ if wezterm.config_builder then config = wezterm.config_builder() end
 local function get_last_dir_name(path) return path:match("[/\\]([^/\\]*)$") end
 local function auto_format_title()
   wezterm.on(
-  'format-tab-title',
-  function(tab)
-    local pane = tab.active_pane
-    local title = pane.title
-    local current_working_dir = pane.current_working_dir
-    local process = get_last_dir_name(pane.foreground_process_name)
-    if current_working_dir ~= nil and (process == 'nvim' or title == 'pnpm' or process == 'NVIM') then
-      title = get_last_dir_name(current_working_dir.path)
+    'format-tab-title',
+    function(tab)
+      local pane = tab.active_pane
+      local title = pane.title
+      local current_working_dir = pane.current_working_dir
+      local process = pane.foreground_process_name and get_last_dir_name(pane.foreground_process_name) or ""
+      if current_working_dir ~= nil and (process == 'nvim' or title == 'pnpm' or process == 'NVIM') then
+        title = get_last_dir_name(current_working_dir.path)
+      end
+      return title
     end
-    return title
-  end
   )
 end
-
 -- Set Windows
 if is_windows then
   config.wsl_domains = {
@@ -35,8 +33,6 @@ if is_windows then
     },
   }
   config.default_prog = { 'wsl.exe', '~' }
-
--- Set Others
 else
   auto_format_title()
 end
@@ -62,9 +58,9 @@ config.font_size = 10.5
 config.cell_width = 0.8
 config.window_decorations = 'RESIZE'
 config.window_padding = {
-  left = 0,
-  right = 0,
-  top = 4,
+  left = 20,
+  right = 20,
+  top = 20,
   bottom = 0,
 }
 config.inactive_pane_hsb = {
@@ -97,16 +93,10 @@ config.keys = {
     action = act.SplitHorizontal,
   },
 
-  {
-    key = '[',
-    mods = 'ALT',
-    action = act.SplitVertical,
-  },
-
   -- Paste
   {
     key = 'v',
-    mods = 'CTRL',
+    mods = CTRL,
     action = act.PasteFrom 'Clipboard',
   },
 
@@ -149,7 +139,7 @@ config.keys = {
   -- Edit Tab Title
   {
     key = 'e',
-    mods = CTRL .. '|SHIFT',
+    mods = 'ALT' .. '|SHIFT',
     action = act.PromptInputLine {
       description = 'Enter new name for tab',
       action = wezterm.action_callback(function(window, _, line)
