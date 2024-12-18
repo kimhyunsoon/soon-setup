@@ -58,9 +58,9 @@ config.font_size = 10.5
 config.cell_width = 0.8
 config.window_decorations = 'RESIZE'
 config.window_padding = {
-  left = 20,
-  right = 20,
-  top = 20,
+  left = 0,
+  right = 0,
+  top = 0,
   bottom = 0,
 }
 config.inactive_pane_hsb = {
@@ -71,6 +71,13 @@ config.foreground_text_hsb = {
   hue = 1,
   saturation = 1,
   brightness = 1.2,
+}
+
+config.use_ime = true
+config.set_environment_variables = {
+  GTK_IM_MODULE = "ibus",
+  XMODIFIERS = "@im=ibus",
+  QT_IM_MODULE = "ibus"
 }
 
 -- Set Keybindings

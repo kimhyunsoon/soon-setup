@@ -6,8 +6,8 @@
 5. install nvim (version 9^)
 6. install WezTerm
 7. (optional) chmod +x ~/.local/share/nvim/mason/bin/*
-8. cp -r ./nvim ~/.config/nvim
-9. cp ./terminal/.wezterm.lua ~/.wezterm.lua
+8. ln -s ./nvim ~/.config/nvim
+9. ln -s ./terminal/.wezterm.lua ~/.wezterm.lua
 10. do :Copilot auth on nvim
 
 ### Wezterm Options
