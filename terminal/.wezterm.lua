@@ -1,3 +1,4 @@
+-- ~/.wezterm.lua
 local wezterm = require 'wezterm'
 local is_windows = string.find(wezterm.target_triple, 'windows')
 local is_mac = string.find(wezterm.target_triple, 'apple')
@@ -57,6 +58,8 @@ config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 config.font_size = 10.5
 config.cell_width = 0.8
 config.window_decorations = 'RESIZE'
+config.enable_wayland = true
+config.front_end = 'WebGpu'
 config.window_padding = {
   left = 0,
   right = 0,

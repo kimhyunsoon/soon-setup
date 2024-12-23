@@ -1,14 +1,16 @@
+## wayland로 강제실행
+.desktop Exec에 env LIBGL_ALWAYS_SOFTWARE=1 WAYLAND_DISPLAY=1 추가
+
 gnome-tweaks - gnome 기능개선 / apt
 gpick - 컬러피커 / apt
 tesseract-ocr + textshot - OCR / snap
 autokey-gtk - 단축키 (firefox 탭전환 등) / apt
 input-remapper - 키매핑 / apt
 ulauncher - spotlight / apt
-wmctrl - 앱전환 / apt
 chrome-gnome-shell - 시스템 인디케이터 / apt 설치 후 gnome extension
-Clipboard History - dsfsdfsdf 
+Happy Appy Hotkey - 앱전환 / gnome extemsion
+Clipboard History - 클립보드 매니저 / gnome extension
 blerc - 터미널 자동완성
-
 -- ~/.blerc
 ble-face argument_error=fg=231
 ble-face argument_option=fg=231
@@ -77,7 +79,7 @@ ble-face varname_export=fg=231
 ble-face varname_expr=fg=231
 ble-face varname_hash=fg=231
 ble-face varname_new=fg=231
-ble-face varname_number=fg=231
+ble-face varname_number=fg=23
 ble-face varname_readonly=fg=231
 ble-face varname_transform=fg=231
 ble-face varname_unset=fg=231
