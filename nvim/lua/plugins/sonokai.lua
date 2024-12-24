@@ -15,5 +15,8 @@ return {
       orange = { '#cccccc', 203 },
     }
     vim.cmd([[colorscheme sonokai]])
+    vim.cmd([[
+      highlight Visual guibg=#666666
+    ]])
   end
 }

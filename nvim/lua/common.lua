@@ -29,6 +29,18 @@ vim.opt.number = true
 vim.opt.pumheight = 10
 
 -- diagnostics
+local signs = {
+  { name = "DiagnosticSignError", text = "▎" },
+  { name = "DiagnosticSignWarn", text = "▎" },
+  { name = "DiagnosticSignHint", text = "▎" },
+  { name = "DiagnosticSignInfo", text = "▎" },
+}
+
+-- signs 등록
+for _, sign in ipairs(signs) do
+  vim.fn.sign_define(sign.name, { texthl = sign.name, text = sign.text, numhl = "" })
+end
+
 vim.diagnostic.config({
   float = {
     border = 'rounded',
@@ -40,14 +52,7 @@ vim.diagnostic.config({
   virtual_text = true,
   severity_sort = true,
   -- signs = false,
-  signs = {
-    text = {
-      [vim.diagnostic.severity.HINT] = '▎',
-      [vim.diagnostic.severity.INFO] = '▎',
-      [vim.diagnostic.severity.WARN] = '▎',
-      [vim.diagnostic.severity.ERROR] = '▎',
-    },
-  },
+  signs = true
 })
 
 -- undo 파일 저장 디렉토리 설정

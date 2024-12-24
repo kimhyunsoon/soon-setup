@@ -1,88 +1,25 @@
-## wayland로 강제실행
-.desktop Exec에 env LIBGL_ALWAYS_SOFTWARE=1 WAYLAND_DISPLAY=1 추가
+# wayland로 강제실행
+# .desktop Exec에 env WAYLAND_DISPLAY=1 추가
 
-gnome-tweaks - gnome 기능개선 / apt
-gpick - 컬러피커 / apt
-tesseract-ocr + textshot - OCR / snap
-autokey-gtk - 단축키 (firefox 탭전환 등) / apt
-input-remapper - 키매핑 / apt
-ulauncher - spotlight / apt
-chrome-gnome-shell - 시스템 인디케이터 / apt 설치 후 gnome extension
-Happy Appy Hotkey - 앱전환 / gnome extemsion
-Clipboard History - 클립보드 매니저 / gnome extension
-blerc - 터미널 자동완성
--- ~/.blerc
-ble-face argument_error=fg=231
-ble-face argument_option=fg=231
-ble-face auto_complete=fg=242
-ble-face cmdinfo_cd_cdpath=fg=231
-ble-face command_alias=fg=231
-ble-face command_builtin=fg=231
-ble-face command_builtin_dot=fg=231
-ble-face command_directory=fg=231
-ble-face command_file=fg=231
-ble-face command_function=fg=231
-ble-face command_jobs=fg=231
-ble-face command_keyword=fg=231
-ble-face command_suffix=fg=231
-ble-face command_suffix_new=fg=231
-ble-face disabled=fg=231
-ble-face filename_block=fg=231
-ble-face filename_character=fg=231
-ble-face filename_directory=fg=231
-ble-face filename_directory_sticky=fg=231
-ble-face filename_executable=fg=231
-ble-face filename_link=fg=231
-ble-face filename_ls_colors=fg=231
-ble-face filename_orphan=fg=231
-ble-face filename_other=fg=231
-ble-face filename_pipe=fg=231
-ble-face filename_setgid=fg=231
-ble-face filename_setuid=fg=231
-ble-face filename_socket=fg=231
-ble-face filename_url=fg=231
-ble-face filename_warning=fg=231
-ble-face menu_complete_match=fg=231
-ble-face menu_complete_selected=fg=231
-ble-face menu_desc_default=fg=231
-ble-face menu_desc_quote=ref:syntax_quoted
-ble-face menu_desc_type=ref:syntax_delimiter
-ble-face menu_filter_fixed=fg=231
-ble-face menu_filter_input=fg=231
-ble-face overwrite_mode=fg=231
-ble-face prompt_status_line=fg=231
-ble-face region=fg=231
-ble-face region_insert=fg=231
-ble-face region_match=fg=231
-ble-face region_target=fg=231
-ble-face syntax_brace=fg=231
-ble-face syntax_command=fg=231
-ble-face syntax_comment=fg=231
-ble-face syntax_default=fg=231
-ble-face syntax_delimiter=fg=231
-ble-face syntax_document=fg=231
-ble-face syntax_document_begin=fg=231
-ble-face syntax_error=fg=red
-ble-face syntax_escape=fg=231
-ble-face syntax_expr=fg=231
-ble-face syntax_function_name=fg=231
-ble-face syntax_glob=fg=231
-ble-face syntax_history_expansion=fg=231
-ble-face syntax_param_expansion=fg=231
-ble-face syntax_quotation=fg=231
-ble-face syntax_quoted=fg=231
-ble-face syntax_tilde=fg=231
-ble-face syntax_varname=fg=231
-ble-face varname_array=fg=231
-ble-face varname_empty=fg=231
-ble-face varname_export=fg=231
-ble-face varname_expr=fg=231
-ble-face varname_hash=fg=231
-ble-face varname_new=fg=231
-ble-face varname_number=fg=23
-ble-face varname_readonly=fg=231
-ble-face varname_transform=fg=231
-ble-face varname_unset=fg=231
-ble-face vbell=fg=231
-ble-face vbell_erase=fg=231
-ble-face vbell_flash=fg=231
+# apt
+sudo apt install -y \
+    gnome-tweaks \
+    dconf-editor \
+    autokey-gtk \
+    input-remapper \
+    chrome-gnome-shell \
+    gnome-screenshot \
+    wl-clipboard \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    tesseract-ocr-kor
+
+# gnome extension
+Happy Appy Hotkey
+Clipboard History
+Color Picker
+Search Light
+
+# etc
+ble.sh # 터미널 자동완성 / 검색 후 설치
+ocr # OCR 스크립트 / 홈 디렉토리에 ocr.sh 추가 후 bash ~/ocr.sh

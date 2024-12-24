@@ -227,6 +227,9 @@ vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
 vim.keymap.set('n', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
 vim.keymap.set('v', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
 
+-- x로 잘라내기
+vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
+
 -- 빈 동작으로 설정된 키 매핑들 비활성화
 local empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>', 's'}
 for _, key in ipairs(empty_keys) do
