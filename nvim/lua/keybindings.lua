@@ -366,6 +366,9 @@ vim.keymap.set('n', '<leader>c',
   { noremap = true, silent = true, desc = '[common] 현재 버퍼 닫기' }
 )
 
+-- 수정되지 않은 버퍼 전체 닫기
+vim.keymap.set('n', '<leader>q', ':%bd<CR>', { noremap = true, silent = true, desc = '[common] 수정되지 않은 버퍼 전체 닫기' })
+
 -- 전체 닫기
 vim.cmd('cabbrev q <c-r>=(getcmdtype()==\':\' && getcmdpos()==1 ? \'Q\' : \'q\')<CR>')
 
