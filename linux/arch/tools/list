@@ -1,0 +1,52 @@
+# input korean
+paru -S kime
+
+# key mapping
+paru -S keyd
+# keys-application-mapper -d가 동작하지 않는 경우
+sudo chmod 666 /var/run/keyd.socket
+
+# bluetooth
+sudo pacman -S bluez bluez-utils xdg-desktop-portal-hyprland
+sudo pacman -S blueberry
+sudo systemctl enable bluetooth
+sudo systemctl start bluetooth
+sudo usermod -a -G bluetooth $USER
+
+# monitor
+sudo paru -S nwg-displays
+nvim /etc/systemd/logind.conf
+# HandleLidSwitch=ignore 주석해제
+sudo pacman -S jq
+
+# file manager
+sudo pacman -S thunar thunar-archive-plugin thunar-media-tags-plugin thunar-volman gvfs
+
+# wifi manager
+sudo pacman -S network-manager-applet
+
+# theme
+sudo pacman -S nwg-look
+
+# capture
+sudo pacman -S wl-clipboard
+paru -S hyprshot
+
+#wezterm-git ocr
+sudo pacman -S tesseract tesseract-data-eng tesseract-data-kor
+
+# color picker
+sudo pacman -S hyprpicker
+
+# clipboard manager
+sudo pacman -S cliphist wofi
+
+# zip
+sudo pacman -S unzip zip unrar p7zip xarchiver thunar-archive-plugin file-roller
+
+# app launcher
+paru -S onagre
+
+# 기타 등등..
+sudo pacman -S firefox thunderbird chromium fzf docker bashtop neofetch neovim foot
+paru -S wezterm-git slack-desktop-wayland

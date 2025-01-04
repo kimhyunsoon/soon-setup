@@ -1,26 +1,8 @@
 ### Setting Steps
-1. install ripgrep (windows: xclip)
-2. install build-essential (or gcc)
-3. install go / rust / node (22 LTS)
-4. install NerdFont (Hack Mono, D2CodingLighture Mono)
-5. install nvim (version 9^)
-6. install WezTerm
-7. (optional) chmod +x ~/.local/share/nvim/mason/bin/*
-8. ln -s ./nvim ~/.config/nvim
-9. ln -s ./terminal/.wezterm.lua ~/.wezterm.lua
-10. do :Copilot auth on nvim
-
-### Wezterm Options
-```
-# WezTerm Shell Integration for bash
-if [[ -n "$WEZTERM_PANE" ]]; then
-  update_cwd() {
-    printf "\033]7;file://%s%s\033\\" "$(hostname)" "$PWD"
-  }
-  if [[ -z "$PROMPT_COMMAND" ]]; then
-    PROMPT_COMMAND="update_cwd"
-  else
-    PROMPT_COMMAND="$PROMPT_COMMAND;update_cwd"
-  fi
-fi
-```
+1. install clipboard tool (ripgrep, xclip, wl-clipboard..)
+2. install build tool (build-essential, gcc..)
+3. install language (go, rust, node(22LTS), jdk..)
+4. install Hack Nerd Font Mono / Neovim(9^) / Wezterm
+5. ln -s ./common/nvim ~/.config/nvim
+6. ln -s ./common/.wezterm.lua ~/.wezterm.lua
+7. (optional) do :Copilot auth on nvim

@@ -47,7 +47,7 @@ config.font = wezterm.font_with_fallback {
     weight = 'Regular',
   },
   {
-    family = 'D2CodingLigature Nerd Font Mono',
+    family = 'Noto Sans CJK KR',
     weight = 'Regular',
   },
 }
@@ -55,11 +55,18 @@ config.window_background_opacity = 0.8
 config.macos_window_background_blur = 20
 config.win32_system_backdrop = 'Acrylic'
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
-config.font_size = 16
+config.font_size = 12
 config.cell_width = 0.8
 config.window_decorations = 'NONE'
 config.enable_wayland = true
-config.dpi = 96.0
+config.use_ime = true
+-- config.set_environment_variables = {
+--   GTK_IM_MODULE = 'kime',
+--   XMODIFIERS = '@im=kime',
+--   QT_IM_MODULE = 'kime'
+-- }
+config.front_end = 'WebGpu'
+-- config.dpi = 96.0
 
 config.window_padding = {
   left = 0,
@@ -75,13 +82,6 @@ config.foreground_text_hsb = {
   hue = 1,
   saturation = 1,
   brightness = 1.2,
-}
-
-config.use_ime = true
-config.set_environment_variables = {
-  GTK_IM_MODULE = "ibus",
-  XMODIFIERS = "@im=ibus",
-  QT_IM_MODULE = "ibus"
 }
 
 -- Set Keybindings
@@ -102,6 +102,20 @@ config.keys = {
     key = ']',
     mods = 'ALT',
     action = act.SplitHorizontal,
+  },
+
+  -- sigint
+  {
+    key = 'c',
+    mods = 'SUPER',
+    action = act.SendString('\x03'),
+  },
+
+  -- Copy
+  {
+    key = 'c',
+    mods = CTRL,
+    action = act.CopyTo 'Clipboard',
   },
 
   -- Paste

@@ -24,3 +24,18 @@ Dim Background Windows
 # etc
 ble.sh # 터미널 자동완성 / 검색 후 설치
 ocr # OCR 스크립트 / 홈 디렉토리에 ocr.sh 추가 후 bash ~/ocr.sh
+
+### Wezterm Options
+```
+# WezTerm Shell Integration for bash
+if [[ -n "$WEZTERM_PANE" ]]; then
+  update_cwd() {
+    printf "\033]7;file://%s%s\033\\" "$(hostname)" "$PWD"
+  }
+  if [[ -z "$PROMPT_COMMAND" ]]; then
+    PROMPT_COMMAND="update_cwd"
+  else
+    PROMPT_COMMAND="$PROMPT_COMMAND;update_cwd"
+  fi
+fi
+```

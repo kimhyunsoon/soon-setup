@@ -1,0 +1,61 @@
+{
+  "layer": "top",
+  "position": "top",
+  "output": ["eDP-1", "DP-1", "HDMI-A-1", "DP-2", "HDMI-A-1"],
+  "reload_style_on_change": true,
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["clock"],
+  "modules-right": ["cpu","memory","tray","bluetooth","battery"],
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "format-icons": {
+      "active": "",
+      "default": "",
+      "empty": ""
+    },
+    "persistent-workspaces": {
+      "*": [ 1,2,3,4,5 ]
+    }
+  },
+  "clock": {
+    "format": "{:%Y-%m-%d %H:%M:%S} ",
+    "interval": 1,
+  },
+  "bluetooth": {
+    "format-on": "󰂯",
+    "format-off": "BT-off",
+    "format-disabled": "󰂲",
+    "format-connected-battery": "󰂯",
+    "on-click": "blueberry"
+  },
+  "battery": {
+    "interval":1,
+    "states": {
+      "good": 95,
+      "warning": 30,
+      "critical": 20
+    },
+    "format": "{capacity}%",
+    "format-charging": "{capacity}%",
+    "format-plugged": "{capacity}%",
+  },
+  "cpu": {
+    "interval": 1,
+    "format": "C {usage}%",
+    "states": {
+      "warning": 80
+    },
+  },
+  "memory": {
+    "interval": 1,
+    "format": "R {percentage}%",
+    "format-alt": "R {used:0.1f}GB/{total:0.1f}GB",
+    "states": {
+      "warning": 80
+    },
+  },
+  "tray": {
+    "icon-size": 14,
+    "spacing": 10
+  }
+}
