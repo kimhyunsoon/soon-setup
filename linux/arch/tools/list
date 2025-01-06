@@ -1,3 +1,6 @@
+# net-tools
+sudo pacman -S net-tools
+
 # input korean
 paru -S kime
 
@@ -16,7 +19,11 @@ sudo usermod -a -G bluetooth $USER
 # monitor
 sudo paru -S nwg-displays
 nvim /etc/systemd/logind.conf
-# HandleLidSwitch=ignore 주석해제
+# HandleLidSwitch=suspend
+# HandleLidSwitchExternalPower=suspend
+# HandleLidSwitchDocked=ignore
+# IdleAction=ignore
+# IdleActionSec=0
 sudo pacman -S jq
 
 # file manager
@@ -50,3 +57,20 @@ paru -S onagre
 # 기타 등등..
 sudo pacman -S firefox thunderbird chromium fzf docker bashtop neofetch neovim foot
 paru -S wezterm-git slack-desktop-wayland
+
+## 카카오톡
+# bottles 설치
+paru -S bottles
+# 카카오톡 다운로드
+wget https://app-pc.kakaocdn.net/talk/win32/KakaoTalk_Setup.exe
+
+# bottles 내부에서
+새 보틀생성
+exe 파일 설치
+dependencies - cjkfonts 설치
+setting - dpi 조정
+desktop 파일 생성
+
+# beekeeper
+paru -S beekeeper-studio-appimage
+
