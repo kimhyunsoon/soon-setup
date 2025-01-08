@@ -8,7 +8,7 @@ alias grep='grep --color=auto'
 PS1='[\u@\h \W]\$ '
 
 # ble.sh start
-[[ $- == *i* ]] && source $HOME/ble.sh/out/ble.sh --noattach
+[[ $- == *i* ]] && source $HOME/ble.sh/out/ble.sh
 
 # nvm
 export NVM_DIR="$HOME/.nvm"
@@ -81,7 +81,4 @@ if [[ -n "$WEZTERM_PANE" ]]; then
     PROMPT_COMMAND="$PROMPT_COMMAND;update_cwd"
   fi
 fi
-
-# ble.sh end
-[[ ${BLE_VERSION-} ]] && ble-attach
 

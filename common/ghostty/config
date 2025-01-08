@@ -1,0 +1,31 @@
+window-decoration = false
+desktop-notifications = false
+gtk-wide-tabs = false
+gtk-adwaita = false
+mouse-hide-while-typing = true
+clipboard-trim-trailing-spaces = true
+copy-on-select = false
+quit-after-last-window-closed = true
+auto-update = download
+confirm-close-surface = false
+
+theme = Chester
+window-theme = dark
+background = #000000
+background-opacity = 0.8
+selection-background = #666666
+selection-foreground = #ffffff
+
+cursor-color = green
+cursor-style = block
+shell-integration-features = no-cursor
+
+font-family = Hack Nerd Font Mono
+adjust-cell-width = -3
+
+keybind = ctrl+c=copy_to_clipboard
+keybind = ctrl+v=paste_from_clipboard
+keybind = ctrl+a=select_all
+keybind = ctrl+t=new_window
+keybind = ctrl+w=close_window
+keybind = super+c=text:\x03

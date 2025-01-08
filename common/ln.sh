@@ -13,3 +13,5 @@ function linker() {
 linker ./nvim $HOME/.config/nvim
 # wezterm
 linker ./.wezterm.lua $HOME/.wezterm.lua
+# ghostty
+linker ./ghostty $HOME/.config/ghostty

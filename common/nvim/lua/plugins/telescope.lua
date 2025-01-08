@@ -68,15 +68,12 @@ return {
                 local selection = require('telescope.actions.state').get_selected_entry()
                 -- telescope 창 닫기
                 require('telescope.actions').close(prompt_bufnr)
-                
                 -- 새 버퍼 생성
                 vim.cmd('enew')
                 local buf = vim.api.nvim_get_current_buf()
-                
                 -- git show 명령어로 커밋 전체 내용 가져오기
                 local commit_hash = selection.value
                 local result = vim.fn.systemlist('git show ' .. commit_hash)
-                
                 -- 버퍼에 내용 쓰기
                 vim.api.nvim_buf_set_lines(buf, 0, -1, false, result)
                 -- 버퍼를 읽기 전용으로 설정

@@ -43,7 +43,7 @@ paru -S hyprshot
 sudo pacman -S tesseract tesseract-data-eng tesseract-data-kor
 
 # color picker
-sudo pacman -S hyprpicker
+paru -S hyprpicker-git
 
 # clipboard manager
 sudo pacman -S cliphist wofi
@@ -67,7 +67,7 @@ wget https://app-pc.kakaocdn.net/talk/win32/KakaoTalk_Setup.exe
 # bottles 내부에서
 새 보틀생성
 exe 파일 설치
-dependencies - cjkfonts 설치
+dependencies - cjkfonts, vredist2019 설치
 setting - dpi 조정
 desktop 파일 생성
 
