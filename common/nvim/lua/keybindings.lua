@@ -247,8 +247,6 @@ end
 
 
 ------------------------------------------ [common] ------------------------------------------
--- 선택 영역 복사
-vim.keymap.set('v', '<C-c>', 'y', { noremap = true, silent = true, desc = '[common] 선택 영역 복사' })
 -- 단축키 검색
 vim.keymap.set('n', '<leader>fk', '<cmd>Telescope keymaps<CR>', { noremap = true, silent = true, desc = '[common] 단축키 검색' })
 -- 파일 검색
