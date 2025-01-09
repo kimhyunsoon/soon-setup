@@ -47,6 +47,30 @@ ff() {
   fi
 }
 
+# fzf to nvim
+fnvim() {
+  local dir
+  dir=$(find ~ -type d 2> /dev/null | \
+    fzf --preview 'ls -la --color=always {} | head -100' \
+      --preview-window=right:50% \
+      --height=80% \
+      --layout=reverse \
+      --border=rounded \
+      --query="$1" \
+      --color='hl:yellow,hl+:yellow' \
+      --prompt=' ')
+
+  if [[ -n "$dir" ]]; then
+    # CDPATH 설정
+    export CDPATH="$dir"
+    # 디렉토리 변경
+    cd "$dir"
+    # PWD 업데이트
+    export PWD="$dir"
+    # nvim 실행
+    nvim .
+  fi
+}
 # ocr
 ocr() {
   SCREENSHOT_DIR="$HOME/ocr_screenshot"
@@ -82,3 +106,10 @@ if [[ -n "$WEZTERM_PANE" ]]; then
   fi
 fi
 
+# pnpm
+export PNPM_HOME="/home/soon/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

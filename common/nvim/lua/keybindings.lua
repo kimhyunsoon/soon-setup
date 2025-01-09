@@ -229,11 +229,17 @@ vim.keymap.set('v', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
 
 -- x로 잘라내기
 vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
+-- xx로 한 줄 잘라내기
+vim.keymap.set('n', 'xx', '"+dd', { noremap = true, silent = true })
 
--- 빈 동작으로 설정된 키 매핑들 비활성화
-local empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>', 's'}
-for _, key in ipairs(empty_keys) do
+-- 키 매핑 비활성화
+local n_empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>', 's'}
+for _, key in ipairs(n_empty_keys) do
   vim.keymap.set('n', key, '<Nop>', { noremap = true, silent = true })
+end
+local v_empty_keys = {'u', 'U'}
+for _, key in ipairs(v_empty_keys) do
+  vim.keymap.set('v', key, '<Nop>', { noremap = true, silent = true })
 end
 
 -- x 모드에 i 르면 Esc + i 실행
@@ -449,6 +455,12 @@ vim.keymap.set('n', 'O', '<C-i>', { noremap = true, silent = true, desc = '[comm
 vim.keymap.set('n', '<leader>nh', '<cmd>Telescope notify<CR>', { noremap = true, silent = true, desc = '[common] 알림 기록 보기' })
 
 ------------------------------------------ [lsp] ------------------------------------------
+-- LSP 서버 재시작
+vim.keymap.set('n', '<leader>lR', function()
+    vim.cmd.LspRestart()
+    vim.notify('LSP restarted', vim.log.levels.INFO)
+end, { noremap = true, silent = true, desc = '[lsp] LSP 서버 재시작' })
+
 -- 레퍼런스 찾기
 vim.keymap.set('n', 'gr',
   function()
