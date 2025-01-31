@@ -71,6 +71,7 @@ fnvim() {
     nvim .
   fi
 }
+
 # ocr
 ocr() {
   SCREENSHOT_DIR="$HOME/ocr_screenshot"
@@ -113,3 +114,9 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# Created by `pipx` on 2025-01-24 00:34:55
+export PATH="$PATH:/home/soon/.local/bin"
+
+# code (cursor)
+alias code="/opt/cursor-bin/cursor-bin.AppImage"
