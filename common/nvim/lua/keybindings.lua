@@ -31,7 +31,7 @@ end
 local function generate_random_string()
   math.randomseed(os.time())
   local charset = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  local length = 8
+  local length = 9
   local random_string = ''
   for _ = 1, length do
     local random_index = math.random(1, #charset)
