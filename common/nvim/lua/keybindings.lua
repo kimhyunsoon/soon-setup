@@ -528,10 +528,24 @@ vim.keymap.set('n', 'la', vim.lsp.buf.code_action, { noremap = true, silent = tr
 vim.keymap.set('n', 'ld', vim.diagnostic.open_float, { noremap = true, silent = true, desc = '[lsp] 진단 창 열기' })
 
 -- 다음 진단으로 이동
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { noremap = true, silent = true, desc = '[lsp] 다음 진단으로 이동' })
+vim.keymap.set('n', ']d', function()
+  vim.diagnostic.goto_next({ float = false })
+end, { noremap = true, silent = true, desc = '[lsp] 다음 진단으로 이동' })
 
 -- 이전 진단으로 이동
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { noremap = true, silent = true, desc = '[lsp] 이전 진단으로 이동' })
+vim.keymap.set('n', '[d', function()
+  vim.diagnostic.goto_prev({ float = false })
+end, { noremap = true, silent = true, desc = '[lsp] 이전 진단으로 이동' })
+
+-- 다음 에러로 이동
+vim.keymap.set('n', ']e', function()
+  vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR, float = false })
+end, { noremap = true, silent = true, desc = '[lsp] 다음 에러로 이동' })
+
+-- 이전 에러로 이동
+vim.keymap.set('n', '[e', function()
+  vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR, float = false })
+end, { noremap = true, silent = true, desc = '[lsp] 이전 에러로 이동' })
 
 
 ------------------------------------------ [git] ------------------------------------------
