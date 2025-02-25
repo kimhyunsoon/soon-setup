@@ -62,13 +62,16 @@ return {
             root_dir = function(fname)
               local util = require('lspconfig').util
               local project_root = util.find_git_ancestor(fname) or vim.fn.getcwd()
-              local config_path = util.root_pattern('eslint.config.js', '.eslintrc.js', '.eslintrc.json', '.eslintrc')(fname) or
-                                 util.root_pattern('apps/*/eslint.config.js', 'apps/*/.eslintrc.js', 'apps/*/.eslintrc.json', 'apps/*/.eslintrc')(fname)
+              local config_path = util.root_pattern(
+                'eslint.config.js', '.eslintrc.js', '.eslintrc.json', '.eslintrc', '.eslintrc.yml',
+                'packages/*/eslint.config.js', 'packages/*/.eslintrc.js', 'packages/*/.eslintrc.json', 'packages/*/.eslintrc', 'packages/*/.eslintrc.yml',
+                'apps/*/eslint.config.js', 'apps/*/.eslintrc.js', 'apps/*/.eslintrc.json', 'apps/*/.eslintrc', 'apps/*/.eslintrc.yml'
+              )(fname)
               return config_path or project_root
             end,
             settings = {
-              workingDirectory = { mode = "location" },
-              nodePath = vim.fn.getcwd() .. "/node_modules",
+              workingDirectory = { mode = "auto" },
+              nodePath = "",
               format = { enable = true },
               validate = "on",
               codeAction = {
@@ -81,10 +84,37 @@ return {
                 }
               },
               useWorkspaceDependencies = true,
-              workspaceFolder = {
-                uri = vim.fn.getcwd(),
+              experimental = {
+                useFlatConfig = true
               },
-              resolvePluginsRelativeTo = vim.fn.getcwd()
+              packageManager = "pnpm",
+              rulesCustomizations = {},
+              run = "onType"
+            }
+          }
+        end,
+
+        volar = function()
+          return {
+            filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'json' },
+            init_options = {
+              typescript = {
+                tsdk = vim.fn.getcwd() .. '/node_modules/typescript/lib'
+              },
+              languageFeatures = {
+                implementation = true,
+                references = true,
+                definition = true,
+                typeDefinition = true,
+                callHierarchy = true,
+                hover = true,
+                rename = true,
+                renameFileRefactoring = true,
+                signatureHelp = true,
+                codeAction = true,
+                diagnostics = true,
+                semanticTokens = true,
+              }
             }
           }
         end,

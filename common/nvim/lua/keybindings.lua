@@ -250,6 +250,15 @@ for i = 1, 24 do
   vim.keymap.set('i', '<F' .. i .. '>', '', { noremap = true, silent = true })
 end
 
+-- 검색 모드에서 ESC를 누르면 Enter와 동일하게 동작
+vim.keymap.set('c', '<ESC>', function()
+  if vim.fn.getcmdtype() == '/' then
+    return '<CR>'
+  else
+    return '<ESC>'
+  end
+end, { noremap = true, expr = true })
+
 
 
 ------------------------------------------ [common] ------------------------------------------

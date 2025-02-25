@@ -122,3 +122,8 @@ export PATH="$PATH:/home/soon/.local/bin"
 code() {
   /opt/cursor-bin/cursor-bin.AppImage "$@" > /dev/null 2>&1 &
 }
+
+# thunar
+open() {
+  thunar "$@" > /dev/null 2>&1 &
+}
