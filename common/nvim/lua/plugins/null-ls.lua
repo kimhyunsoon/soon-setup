@@ -7,22 +7,6 @@ return {
   config = function()
     local null_ls = require('null-ls')
 
-    local function find_workspace_root(dir)
-      local current_dir = dir
-      while current_dir do
-        local workspace_file = current_dir .. '/pnpm-workspace.yaml'
-        if vim.fn.filereadable(workspace_file) == 1 then
-          return current_dir
-        end
-        local parent = vim.fn.fnamemodify(current_dir, ':h')
-        if parent == current_dir then
-          break
-        end
-        current_dir = parent
-      end
-      return nil
-    end
-
     local function find_prettier_config(dir)
       if not dir then return nil end
       local config_files = {
@@ -53,16 +37,32 @@ return {
       return nil
     end
 
-    local function should_format(utils)
+    local function should_format()
       local buffer_path = vim.api.nvim_buf_get_name(0)
       local buffer_dir = vim.fn.fnamemodify(buffer_path, ':h')
-      if not buffer_dir then return false end
-
-      local workspace_root = find_workspace_root(buffer_dir)
-      if workspace_root then
-        return find_prettier_config(buffer_dir) ~= nil or find_prettier_config(workspace_root) ~= nil
+      if not buffer_dir or buffer_dir == '' then
+        return false
       end
-      return find_prettier_config(buffer_dir) ~= nil
+
+      local current_dir = buffer_dir
+      while current_dir do
+        if find_prettier_config(current_dir) then
+          return true
+        end
+
+        local git_dir = current_dir .. '/.git'
+        if vim.fn.isdirectory(git_dir) == 1 then
+          break
+        end
+
+        local parent_dir = vim.fn.fnamemodify(current_dir, ':h')
+        if parent_dir == current_dir then
+          break
+        end
+        current_dir = parent_dir
+      end
+
+      return false
     end
 
     null_ls.setup({
@@ -82,16 +82,18 @@ return {
         }),
       },
       on_attach = function(client, bufnr)
-        if client.supports_method('textDocument/formatting') then
-          local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
-          vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
-          vim.api.nvim_create_autocmd('BufWritePre', {
-            group = augroup,
-            buffer = bufnr,
-            callback = function()
-              vim.lsp.buf.format({ bufnr = bufnr })
-            end,
-          })
+        if client.name == 'null-ls' then
+          if client.supports_method('textDocument/formatting') then
+            local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
+            vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
+            vim.api.nvim_create_autocmd('BufWritePre', {
+              group = augroup,
+              buffer = bufnr,
+              callback = function()
+                vim.lsp.buf.format({ bufnr = bufnr })
+              end,
+            })
+          end
         end
       end,
     })

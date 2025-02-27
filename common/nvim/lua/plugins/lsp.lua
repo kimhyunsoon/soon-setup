@@ -72,7 +72,7 @@ return {
             settings = {
               workingDirectory = { mode = "auto" },
               nodePath = "",
-              format = { enable = true },
+              format = { enable = false }, -- eslint 포매팅 비활성화
               validate = "on",
               codeAction = {
                 disableRuleComment = {
@@ -115,7 +115,12 @@ return {
                 diagnostics = true,
                 semanticTokens = true,
               }
-            }
+            },
+            on_attach = function(client, bufnr)
+              -- volar 포매팅 비활성화
+              client.server_capabilities.documentFormattingProvider = false
+              client.server_capabilities.documentRangeFormattingProvider = false
+            end
           }
         end,
 
@@ -124,6 +129,11 @@ return {
           if not mason_registry.is_installed('vue-language-server') then
             return {
               filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'json' },
+              on_attach = function(client, bufnr)
+                -- tsserver 포매팅 비활성화
+                client.server_capabilities.documentFormattingProvider = false
+                client.server_capabilities.documentRangeFormattingProvider = false
+              end
             }
           end
 
@@ -138,6 +148,11 @@ return {
               },
             },
             filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'json' },
+            on_attach = function(client, bufnr)
+              -- tsserver 포매팅 비활성화
+              client.server_capabilities.documentFormattingProvider = false
+              client.server_capabilities.documentRangeFormattingProvider = false
+            end
           }
         end,
 

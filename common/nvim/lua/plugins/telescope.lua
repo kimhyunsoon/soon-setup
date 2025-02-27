@@ -47,8 +47,73 @@ return {
             ['<CR>'] = select_one_or_multi,
           }
         },
+        file_ignore_patterns = {
+          "^.git/",          -- git 디렉토리
+          "^node_modules/",  -- node_modules 디렉토리
+          "^.idea/",         -- JetBrains IDE 설정 디렉토리
+          "^.vscode/",       -- VSCode 설정 디렉토리
+          "^.DS_Store$",     -- macOS 숨김 파일
+          "^dist/",          -- 빌드 결과물 디렉토리
+          "^build/",         -- 빌드 결과물 디렉토리
+          "^out/",           -- 빌드 결과물 디렉토리
+          "^.pnpm-store/",   -- pnpm 저장소 디렉토리
+          "^.cache/",        -- 캐시 디렉토리
+          "^.yarn/",         -- Yarn 캐시 디렉토리
+          "^.turbo/",        -- Turborepo 캐시 디렉토리
+          "^.next/",         -- Next.js 빌드 디렉토리
+          "^.nuxt/",         -- Nuxt.js 빌드 디렉토리
+          "^.svelte-kit/",   -- SvelteKit 빌드 디렉토리
+          "^.vercel/",       -- Vercel 배포 캐시 디렉토리
+          "^.netlify/",      -- Netlify 배포 캐시 디렉토리
+        },
+        hidden = true,  -- 숨김 파일 검색 활성화
       },
       pickers = {
+        find_files = {
+          find_command = {
+            "rg",
+            "--files",        -- 파일 목록만 출력
+            "--hidden",       -- 숨김 파일 포함
+            "--no-ignore",    -- .gitignore 및 .ignore 규칙 무시
+            "--glob", "!**/.git/*",       -- .git 디렉토리 제외
+            "--glob", "!**/node_modules/*", -- node_modules 디렉토리 제외
+            "--glob", "!**/.idea/*",      -- .idea 디렉토리 제외
+            "--glob", "!**/.vscode/*",    -- .vscode 디렉토리 제외
+            "--glob", "!**/.pnpm-store/*", -- pnpm 저장소 디렉토리 제외
+            "--glob", "!**/.cache/*",     -- 캐시 디렉토리 제외
+            "--glob", "!**/.yarn/*",      -- Yarn 캐시 디렉토리 제외
+            "--glob", "!**/.turbo/*",    -- Turborepo 캐시 디렉토리 제외
+            "--glob", "!**/.next/*",     -- Next.js 빌드 디렉토리 제외
+            "--glob", "!**/.nuxt/*",     -- Nuxt.js 빌드 디렉토리 제외
+            "--glob", "!**/.svelte-kit/*", -- SvelteKit 빌드 디렉토리 제외
+            "--glob", "!**/.vercel/*",   -- Vercel 배포 캐시 디렉토리 제외
+            "--glob", "!**/.netlify/*",  -- Netlify 배포 캐시 디렉토리 제외
+          },
+        },
+        live_grep = {
+          additional_args = function(opts)
+            return {
+              "--hidden",       -- 숨김 파일 포함
+              "--no-ignore",    -- .gitignore 및 .ignore 규칙 무시
+              "--glob", "!**/.git/*",       -- .git 디렉토리 제외
+              "--glob", "!**/node_modules/*", -- node_modules 디렉토리 제외
+              "--glob", "!**/.idea/*",      -- .idea 디렉토리 제외
+              "--glob", "!**/.vscode/*",    -- .vscode 디렉토리 제외
+              "--glob", "!**/.pnpm-store/*", -- pnpm 저장소 디렉토리 제외
+              "--glob", "!**/.cache/*",     -- 캐시 디렉토리 제외
+              "--glob", "!**/.yarn/*",      -- Yarn 캐시 디렉토리 제외
+              "--glob", "!**/.turbo/*",    -- Turborepo 캐시 디렉토리 제외
+              "--glob", "!**/.next/*",     -- Next.js 빌드 디렉토리 제외
+              "--glob", "!**/.nuxt/*",     -- Nuxt.js 빌드 디렉토리 제외
+              "--glob", "!**/.svelte-kit/*", -- SvelteKit 빌드 디렉토리 제외
+              "--glob", "!**/.vercel/*",   -- Vercel 배포 캐시 디렉토리 제외
+              "--glob", "!**/.netlify/*",  -- Netlify 배포 캐시 디렉토리 제외
+              "--glob", "!**/pnpm-lock.yaml", -- pnpm-lock.yaml 파일 제외
+              "--glob", "!**/package-lock.json", -- package-lock.json 파일 제외
+              "--glob", "!**/yarn.lock",   -- yarn.lock 파일 제외
+            }
+          end,
+        },
         git_status = {
           git_icons ={
             added = "",

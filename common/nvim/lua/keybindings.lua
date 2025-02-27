@@ -259,8 +259,6 @@ vim.keymap.set('c', '<ESC>', function()
   end
 end, { noremap = true, expr = true })
 
-
-
 ------------------------------------------ [common] ------------------------------------------
 -- 단축키 검색
 vim.keymap.set('n', '<leader>fk', '<cmd>Telescope keymaps<CR>', { noremap = true, silent = true, desc = '[common] 단축키 검색' })
