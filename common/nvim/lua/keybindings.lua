@@ -223,9 +223,8 @@ vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { 
 vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
 vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
 
--- 붙여넣기 후 레지스터 업데이트
-vim.keymap.set('n', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
-vim.keymap.set('v', 'p', 'p:let @+=@0<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', 'p', '"_p', { noremap = true, silent = true })
+vim.keymap.set('v', 'p', '"_p', { noremap = true, silent = true })
 
 -- x로 잘라내기
 vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
