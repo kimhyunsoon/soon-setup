@@ -223,8 +223,9 @@ vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { 
 vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
 vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
 
-vim.keymap.set('n', 'p', '"_p', { noremap = true, silent = true })
-vim.keymap.set('v', 'p', '"_p', { noremap = true, silent = true })
+-- 붙여넣을 때 이전 선택 영역이 레지스터에 저장되지 않도록 함
+vim.keymap.set('n', 'p', 'P', { noremap = true, silent = true })
+vim.keymap.set('v', 'p', '"_dP', { noremap = true, silent = true })
 
 -- x로 잘라내기
 vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
