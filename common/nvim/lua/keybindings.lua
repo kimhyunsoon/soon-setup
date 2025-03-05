@@ -448,10 +448,7 @@ vim.keymap.set('n', '<leader>rr', ':RunCode<CR>', { noremap = true, silent = tru
 vim.keymap.set('n', '<leader>tt', ':ToggleTerm<CR>', { noremap = true, silent = true, desc = '[common] 터미널 열기' })
 
 -- 새 버퍼 생성
-vim.keymap.set('n', '<leader>n',
-  function()
-    
-  end, { noremap = true, silent = true, desc = '[common] 새 버퍼 생성' }
+vim.keymap.set('n', '<leader>n', ':enew<CR>', { noremap = true, silent = true, desc = '[common] 새 버퍼 생성' }
 )
 
 -- 이전/다음커서 이동
