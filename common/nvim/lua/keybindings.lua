@@ -40,6 +40,16 @@ local function generate_random_string()
   return random_string
 end
 
+-- 붙여넣기 동작을 전역적으로 수정
+local orig_paste = vim.paste
+vim.paste = function(lines, phase)
+  -- 비주얼 모드에서는 선택 영역을 레지스터에 저장하지 않고 붙여넣기
+  if vim.fn.mode() == 'v' or vim.fn.mode() == 'V' or vim.fn.mode() == '\22' then
+    vim.cmd('normal! "_d')
+    return orig_paste(lines, phase)
+  end
+  return orig_paste(lines, phase)
+end
 
 ------------------------------------------ [editor] ------------------------------------------
 -- Redo
