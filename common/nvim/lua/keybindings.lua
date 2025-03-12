@@ -231,7 +231,16 @@ vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { 
 
 -- 삭제 및 붙여넣기 시 레지스터에 저장하지 않음
 vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
-vim.keymap.set('v', 'd', '"_d', { noremap = true, silent = true })
+vim.keymap.set('v', 'd', function()
+  vim.cmd('normal! "_d')
+  
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local col = cursor[2]
+  
+  if col > 0 then
+    vim.api.nvim_win_set_cursor(0, {cursor[1], col - 1})
+  end
+end, { noremap = true, silent = true })
 vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
 
 -- 붙여넣을 때 이전 선택 영역이 레지스터에 저장되지 않도록 함
