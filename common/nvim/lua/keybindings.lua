@@ -96,7 +96,7 @@ vim.keymap.set('i', '<End>',
 )
 
 -- 코드 접기/펼치기 토글
-vim.keymap.set('n', 'll', 'za', { noremap = true, silent = true, desc = '[editor] 코드 접기/펼치기 토글' })
+vim.keymap.set('n', 'mm', 'za', { noremap = true, silent = true, desc = '[editor] 코드 접기/펼치기 토글' })
 
 -- 문자열 치환
 vim.keymap.set('n', 'ls',
