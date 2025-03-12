@@ -270,6 +270,29 @@ vim.keymap.set('c', '<ESC>', function()
   end
 end, { noremap = true, expr = true })
 
+-- 인서트 모드 진입시 현재 커서의 문자 오른쪽에 커서 생성
+vim.keymap.set('n', 'i', function()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line = vim.api.nvim_get_current_line()
+  local col = cursor[2]
+  local line_length = #line
+  if col < line_length - 1 then
+    vim.api.nvim_win_set_cursor(0, {cursor[1], col + 1})
+    vim.cmd('startinsert')
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('a', true, false, true), 'n', false)
+  end
+end, { noremap = true, silent = true })
+
+-- Visual 모드에서 End 키를 누르면 줄의 맨 끝으로 이동 (개행 제외)
+vim.keymap.set('v', '<End>', function()
+  local line = vim.api.nvim_get_current_line()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line_length = #line
+  vim.api.nvim_win_set_cursor(0, {cursor[1], line_length})
+  vim.api.nvim_feedkeys('', 'n', false)
+end, { noremap = true, silent = true })
+
 ------------------------------------------ [common] ------------------------------------------
 -- 단축키 검색
 vim.keymap.set('n', '<leader>fk', '<cmd>Telescope keymaps<CR>', { noremap = true, silent = true, desc = '[common] 단축키 검색' })
