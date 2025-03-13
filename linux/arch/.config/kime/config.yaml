@@ -85,7 +85,7 @@ engine:
     preferred_direct: true
   hangul:
     layout: dubeolsik
-    word_commit: false
+    word_commit: true
     preedit_johab: Needed
     addons:
       all:
