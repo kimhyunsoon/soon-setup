@@ -78,7 +78,11 @@ return {
             'css',
             'scss',
             'html',
+            'json',
+            'jsonc',
+            'yaml',
           },
+          prefer_local = "node_modules/.bin",
         }),
       },
       on_attach = function(client, bufnr)

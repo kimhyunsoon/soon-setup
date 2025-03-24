@@ -35,3 +35,16 @@ require 'keybindings'
 
 -- Vue 파일에서 TypeScript 지원을 위한 추가 설정
 vim.g.vue_pre_processors = 'detect_on_enter'
+
+-- 300KB 이상 파일에 대해 Treesitter 비활성화
+vim.api.nvim_create_autocmd('BufReadPost', {
+  callback = function(args)
+    local size = vim.fn.getfsize(vim.api.nvim_buf_get_name(args.buf))
+    -- 300KB = 300 * 1024 = 307200 bytes
+    if size > 307200 then
+      vim.cmd('TSBufDisable highlight')
+      vim.cmd('TSBufDisable indent')
+      vim.cmd('TSBufDisable incremental_selection')
+    end
+  end,
+})

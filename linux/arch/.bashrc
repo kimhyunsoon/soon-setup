@@ -127,3 +127,6 @@ code() {
 open() {
   thunar "$@" > /dev/null 2>&1 &
 }
+
+export JAVA_HOME=/usr/lib/jvm/java-23-openjdk
+export PATH=$JAVA_HOME/bin:$PATH

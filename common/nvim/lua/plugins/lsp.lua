@@ -116,7 +116,7 @@ return {
                 semanticTokens = true,
               }
             },
-            on_attach = function(client, bufnr)
+            on_attach = function(client)
               -- volar 포매팅 비활성화
               client.server_capabilities.documentFormattingProvider = false
               client.server_capabilities.documentRangeFormattingProvider = false
@@ -129,11 +129,35 @@ return {
           if not mason_registry.is_installed('vue-language-server') then
             return {
               filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'json' },
-              on_attach = function(client, bufnr)
+              on_attach = function(client)
                 -- tsserver 포매팅 비활성화
                 client.server_capabilities.documentFormattingProvider = false
                 client.server_capabilities.documentRangeFormattingProvider = false
-              end
+              end,
+              settings = {
+                typescript = {
+                  inlayHints = {
+                    includeInlayParameterNameHints = 'all',
+                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayEnumMemberValueHints = true,
+                  }
+                },
+                javascript = {
+                  inlayHints = {
+                    includeInlayParameterNameHints = 'all',
+                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayEnumMemberValueHints = true,
+                  }
+                }
+              }
             }
           end
 
@@ -155,7 +179,6 @@ return {
             end
           }
         end,
-
       }
 
       -- hover 창

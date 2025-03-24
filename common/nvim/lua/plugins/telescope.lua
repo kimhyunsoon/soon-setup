@@ -65,6 +65,9 @@ return {
           "^.svelte-kit/",   -- SvelteKit 빌드 디렉토리
           "^.vercel/",       -- Vercel 배포 캐시 디렉토리
           "^.netlify/",      -- Netlify 배포 캐시 디렉토리
+          "^pnpm-lock.yaml", -- pnpm-lock.yaml 파일
+          "^package-lock.json", -- package-lock.json 파일
+          "^yarn.lock",      -- yarn.lock 파일
         },
         hidden = true,  -- 숨김 파일 검색 활성화
       },
@@ -108,6 +111,9 @@ return {
               "--glob", "!**/.svelte-kit/*", -- SvelteKit 빌드 디렉토리 제외
               "--glob", "!**/.vercel/*",   -- Vercel 배포 캐시 디렉토리 제외
               "--glob", "!**/.netlify/*",  -- Netlify 배포 캐시 디렉토리 제외
+              "--glob", "!**/dist/*",      -- dist 디렉토리 제외
+              "--glob", "!**/build/*",     -- build 디렉토리 제외
+              "--glob", "!**/out/*",       -- out 디렉토리 제외
               "--glob", "!**/pnpm-lock.yaml", -- pnpm-lock.yaml 파일 제외
               "--glob", "!**/package-lock.json", -- package-lock.json 파일 제외
               "--glob", "!**/yarn.lock",   -- yarn.lock 파일 제외
