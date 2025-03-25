@@ -18,5 +18,10 @@ return {
     vim.cmd([[
       highlight Visual guibg=#666666
     ]])
+    vim.defer_fn(function()
+      vim.cmd([[highlight NeoTreeGitUntracked guifg=#a48fd1 gui=NONE]])
+      vim.cmd([[highlight NeoTreeGitStatusUntracked guifg=#a48fd1 gui=NONE]])
+      vim.cmd([[highlight NeoTreeUntracked guifg=#a48fd1 gui=NONE]])
+    end, 100)
   end
 }

@@ -71,8 +71,12 @@ return {
       formatting = {
         format = function(entry, vim_item)
           local kind = vim_item.kind
-          vim_item.kind = string.format('%s %s', kind_icons[kind], kind)
-          vim_item.kind_hl_group = 'CmpItemKind' .. kind
+          if kind_icons[kind] then
+            vim_item.kind = string.format('%s %s', kind_icons[kind], kind)
+          else
+            vim_item.kind = string.format('󰠱 %s', kind)
+          end
+          vim_item.kind_hl_group = 'CmpItemKind' .. (kind or 'Text')
           return vim_item
         end
       },
