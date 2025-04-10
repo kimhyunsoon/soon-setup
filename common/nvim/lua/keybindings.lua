@@ -309,6 +309,8 @@ vim.keymap.set('n', '<leader>fk', '<cmd>Telescope keymaps<CR>', { noremap = true
 vim.keymap.set('n', '<leader>ff', '<cmd>Telescope find_files<CR>', { noremap = true, silent = true, desc = '[common] 파일 검색' })
 -- 파일 내 검색
 vim.keymap.set('n', '<leader>fw', '<cmd>Telescope live_grep<CR>', { noremap = true, silent = true, desc = '[common] 파일 내 검색' })
+-- 파일 심볼 목록 검색
+vim.keymap.set('n', '<leader>fs', '<cmd>Telescope lsp_document_symbols<CR>', { noremap = true, silent = true, desc = '[common] 파일 심볼 목록 검색' })
 -- 파일 탐색기 토글
 vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent = true, desc = '[common] 파일 탐색기 토글' })
 
@@ -474,9 +476,21 @@ vim.keymap.set('n', '<leader>fo', ':!open %:p<cr><cr>', { noremap = true, silent
 -- 현재 파일의 전체 경로를 클립보드에 복사
 vim.keymap.set('n', '<leader>yp',
   function()
-    local command = 'let @+ = expand("%:~")'
+    local path = vim.fn.expand("%:~")
+    local command = 'let @+ = "' .. path .. '"'
     vim.cmd(command)
+    vim.notify('Copied path to clipboard:\n' .. path, vim.log.levels.INFO)
   end, { noremap = true, silent = true, desc = '[common] 파일 경로 복사' }
+)
+
+-- 현재 파일명만 클립보드에 복사
+vim.keymap.set('n', '<leader>yf',
+  function()
+    local filename = vim.fn.expand("%:t")
+    local command = 'let @+ = "' .. filename .. '"'
+    vim.cmd(command)
+    vim.notify('Copied filename to clipboard:\n' .. filename, vim.log.levels.INFO)
+  end, { noremap = true, silent = true, desc = '[common] 파일명 복사' }
 )
 
 -- 랜덤 문자열 생성

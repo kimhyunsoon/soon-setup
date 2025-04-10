@@ -91,6 +91,7 @@ return {
             "--glob", "!**/.svelte-kit/*", -- SvelteKit 빌드 디렉토리 제외
             "--glob", "!**/.vercel/*",   -- Vercel 배포 캐시 디렉토리 제외
             "--glob", "!**/.netlify/*",  -- Netlify 배포 캐시 디렉토리 제외
+            "--glob", "!**/*-[A-Za-z0-9_]*.js", -- 해시가 포함된 JS 파일 제외
           },
         },
         live_grep = {
@@ -98,6 +99,7 @@ return {
             return {
               "--hidden",       -- 숨김 파일 포함
               "--no-ignore",    -- .gitignore 및 .ignore 규칙 무시
+              "--max-filesize", "1M",  -- 1MB 이상 파일 제외
               "--glob", "!**/.git/*",       -- .git 디렉토리 제외
               "--glob", "!**/node_modules/*", -- node_modules 디렉토리 제외
               "--glob", "!**/.idea/*",      -- .idea 디렉토리 제외
@@ -117,6 +119,7 @@ return {
               "--glob", "!**/pnpm-lock.yaml", -- pnpm-lock.yaml 파일 제외
               "--glob", "!**/package-lock.json", -- package-lock.json 파일 제외
               "--glob", "!**/yarn.lock",   -- yarn.lock 파일 제외
+              "--glob", "!**/*-[A-Za-z0-9_]*.js", -- 해시가 포함된 JS 파일 제외
             }
           end,
         },
