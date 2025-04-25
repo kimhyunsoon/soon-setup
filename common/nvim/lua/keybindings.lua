@@ -313,7 +313,7 @@ vim.keymap.set('n', '<leader>fw', '<cmd>Telescope live_grep<CR>', { noremap = tr
 vim.keymap.set('n', '<leader>fs', '<cmd>Telescope lsp_document_symbols<CR>', { noremap = true, silent = true, desc = '[common] 파일 심볼 목록 검색' })
 
 -- 파일 탐색기 열기
-vim.keymap.set('n', '<leader>e', 
+vim.keymap.set('n', '<leader>o',
   function()
     if vim.bo.filetype == 'neo-tree' then
       local win_id = vim.fn.winnr('#')
