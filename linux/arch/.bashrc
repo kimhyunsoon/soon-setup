@@ -14,7 +14,18 @@ trap 'TIMER_START=$(date +%s%N)' DEBUG
 
 # Git 브랜치 함수
 parse_git_branch() {
-  git rev-parse --abbrev-ref HEAD 2>/dev/null | sed 's/.*/ \0/'
+  local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+  if [ -n "$branch" ]; then
+    # 브랜치 이름을 해시하여 0-6 사이의 숫자로 변환
+    local hash=0
+    for (( i=0; i<${#branch}; i++ )); do
+      hash=$(( (hash + $(printf '%d' "'${branch:$i:1}")) % 7 ))
+    done
+    # 해시값에 따라 색상 코드 선택 (31-37)
+    local color=$((hash + 31))
+    # 색상이 적용된 브랜치 이름 반환
+    printf "\033[%sm %s\033[0m" "$color" "$branch"
+  fi
 }
 
 # 프롬프트 표시 전에 실행 시간 계산
@@ -46,7 +57,7 @@ function __prompt_command() {
 
 # PS1 설정 (개행 포함)
 PS1='
-\[\033[38;5;252m\]$PWD\[\033[0m\]\[\033[33m\]$(parse_git_branch)\[\033[0m\] \[\033[38;5;244m\]${TIMER_SHOW}\[\033[0m\]
+\[\033[38;5;252m\]$PWD\[\033[0m\]\[$(parse_git_branch)\] \[\033[38;5;244m\]${TIMER_SHOW}\[\033[0m\]
 $ '
 
 
