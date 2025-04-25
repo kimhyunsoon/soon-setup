@@ -311,11 +311,9 @@ vim.keymap.set('n', '<leader>ff', '<cmd>Telescope find_files<CR>', { noremap = t
 vim.keymap.set('n', '<leader>fw', '<cmd>Telescope live_grep<CR>', { noremap = true, silent = true, desc = '[common] 파일 내 검색' })
 -- 파일 심볼 목록 검색
 vim.keymap.set('n', '<leader>fs', '<cmd>Telescope lsp_document_symbols<CR>', { noremap = true, silent = true, desc = '[common] 파일 심볼 목록 검색' })
--- 파일 탐색기 토글
-vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent = true, desc = '[common] 파일 탐색기 토글' })
 
--- 파일 탐색기 포커스 토글
-vim.keymap.set('n', '<leader>o',
+-- 파일 탐색기 열기
+vim.keymap.set('n', '<leader>e', 
   function()
     if vim.bo.filetype == 'neo-tree' then
       local win_id = vim.fn.winnr('#')
@@ -327,7 +325,7 @@ vim.keymap.set('n', '<leader>o',
     else
       vim.cmd('Neotree focus')
     end
-  end, { noremap = true, silent = true, desc = '[common] 파일 탐색기 포커스 토글' }
+  end, { noremap = true, silent = true, desc = '[common] 파일 탐색기 열기' }
 )
 
 -- 스플릿 창 이동
@@ -471,7 +469,22 @@ vim.api.nvim_create_user_command('Q',
 vim.keymap.set('n', '|', ':vsplit<CR>', { noremap = true, silent = true, desc = '[common] 버퍼 세로 분할' })
 
 -- 현재 파일을 시스템 기본 프로그램으로 열기
-vim.keymap.set('n', '<leader>fo', ':!open %:p<cr><cr>', { noremap = true, silent = true, desc = '[common] 파일 열기' })
+vim.keymap.set('n', '<leader>fo', function()
+  local path = vim.fn.expand('%:p')
+  local os_name = vim.loop.os_uname().sysname
+  
+  if os_name == 'Darwin' then  -- macOS
+    vim.fn.jobstart({'open', path})
+  elseif os_name == 'Linux' then
+    vim.fn.jobstart({'xdg-open', path})
+  elseif os_name == 'Windows' or os_name == 'Windows_NT' then
+    vim.fn.jobstart({'cmd.exe', '/c', 'start', '""', path})
+  else
+    vim.notify('Unsupported OS for opening files', vim.log.levels.ERROR)
+  end
+  
+  vim.notify('Opening file: ' .. path, vim.log.levels.INFO)
+end, { noremap = true, silent = true, desc = '[common] 파일 열기' })
 
 -- 현재 파일의 전체 경로를 클립보드에 복사
 vim.keymap.set('n', '<leader>yp',
