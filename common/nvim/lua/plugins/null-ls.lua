@@ -16,7 +16,9 @@ return {
         '.prettierrc.yaml',
         '.prettierrc.js',
         '.prettierrc.cjs',
+        '.prettierrc.mjs',
         'prettier.config.js',
+        'prettier.config.mjs',
       }
 
       for _, config_file in ipairs(config_files) do
@@ -81,6 +83,7 @@ return {
             'json',
             'jsonc',
             'yaml',
+            'mjs',
           },
           prefer_local = "node_modules/.bin",
         }),

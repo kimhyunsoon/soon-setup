@@ -91,7 +91,7 @@ return {
             "--glob", "!**/.svelte-kit/*", -- SvelteKit 빌드 디렉토리 제외
             "--glob", "!**/.vercel/*",   -- Vercel 배포 캐시 디렉토리 제외
             "--glob", "!**/.netlify/*",  -- Netlify 배포 캐시 디렉토리 제외
-            "--glob", "!**/*-[A-Za-z0-9_]*.js", -- 해시가 포함된 JS 파일 제외
+            -- "--glob", "!**/*-[A-Za-z0-9_]*", -- 해시가 포함된 파일 제외
           },
         },
         live_grep = {
@@ -119,7 +119,7 @@ return {
               "--glob", "!**/pnpm-lock.yaml", -- pnpm-lock.yaml 파일 제외
               "--glob", "!**/package-lock.json", -- package-lock.json 파일 제외
               "--glob", "!**/yarn.lock",   -- yarn.lock 파일 제외
-              "--glob", "!**/*-[A-Za-z0-9_]*.js", -- 해시가 포함된 JS 파일 제외
+              -- "--glob", "!**/*-[A-Za-z0-9_]*", -- 해시가 포함된 파일 제외
             }
           end,
         },

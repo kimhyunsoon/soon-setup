@@ -34,6 +34,7 @@ return {
         'golangci_lint_ls',
         'gopls',
         'clangd',
+        'tailwindcss',
       }
 
       require('mason-lspconfig').setup({
