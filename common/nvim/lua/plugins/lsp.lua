@@ -35,6 +35,7 @@ return {
         'gopls',
         'clangd',
         'tailwindcss',
+        'lemminx',
       }
 
       require('mason-lspconfig').setup({
@@ -53,6 +54,73 @@ return {
       }
 
       local lspconfig = require('lspconfig')
+
+      -- hover 핸들러를 재정의하여 테두리, 자동 포커스, 중복 응답 문제를 모두 해결
+      local original_hover_handler = vim.lsp.handlers["textDocument/hover"]
+      local hover_processed = false
+      local hover_timer = nil
+      
+      vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+        -- 이미 처리된 hover가 있으면 무시
+        if hover_processed then
+          return
+        end
+        
+        -- 기존 타이머 취소
+        if hover_timer then
+          vim.fn.timer_stop(hover_timer)
+        end
+        
+        -- 유효한 결과가 있는 첫 번째 응답만 처리
+        if result and result.contents then
+          hover_processed = true
+          
+          -- 테두리 설정
+          config = vim.tbl_deep_extend("force", { border = "rounded" }, config or {})
+          
+          -- 원래 핸들러 호출
+          original_hover_handler(err, result, ctx, config)
+          
+          -- 정보 창이 표시된 후 포커스를 맞추는 함수
+          vim.schedule(function()
+            vim.defer_fn(function()
+              local wins = vim.api.nvim_list_wins()
+              for _, win in ipairs(wins) do
+                local win_config = vim.api.nvim_win_get_config(win)
+                -- floating window라면 포커스 이동 (조건 단순화)
+                if win_config.relative ~= "" then
+                  vim.api.nvim_set_current_win(win)
+                  break
+                end
+              end
+            end, 10) -- 10ms 지연으로 창이 완전히 생성된 후 포커스
+          end)
+          
+          -- 500ms 후 플래그 리셋
+          hover_timer = vim.fn.timer_start(500, function()
+            hover_processed = false
+            hover_timer = nil
+          end)
+        elseif not result or not result.contents then
+          -- 빈 응답의 경우 짧은 지연 후 처리 (다른 서버의 유효한 응답을 기다림)
+          hover_timer = vim.fn.timer_start(50, function()
+            if not hover_processed then
+              hover_processed = true
+              
+              -- 테두리 설정
+              config = vim.tbl_deep_extend("force", { border = "rounded" }, config or {})
+              
+              -- 원래 핸들러 호출 (No information available 표시)
+              original_hover_handler(err, result, ctx, config)
+              
+              -- 500ms 후 플래그 리셋
+              vim.fn.timer_start(500, function()
+                hover_processed = false
+              end)
+            end
+          end)
+        end
+      end
 
       local custom_server_configs = {
 
@@ -174,6 +242,12 @@ return {
             },
             filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'json' },
             on_attach = function(client, bufnr)
+              -- volar가 활성화된 버퍼에서는 ts_ls의 hover 기능을 비활성화
+              local volar_clients = vim.lsp.get_clients({ name = 'volar', bufnr = bufnr })
+              if #volar_clients > 0 then
+                client.server_capabilities.hoverProvider = false
+              end
+
               -- tsserver 포매팅 비활성화
               client.server_capabilities.documentFormattingProvider = false
               client.server_capabilities.documentRangeFormattingProvider = false
@@ -181,14 +255,6 @@ return {
           }
         end,
       }
-
-      -- hover 창
-      vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
-        vim.lsp.handlers.hover, {
-          border = 'rounded',
-          focusable = false,
-        }
-      )
 
       for _, server in ipairs(servers) do
         local config = {

@@ -84,8 +84,14 @@ return {
             'jsonc',
             'yaml',
             'mjs',
+            'xml',
+            'markdown',
           },
           prefer_local = "node_modules/.bin",
+        }),
+        null_ls.builtins.formatting.xmllint.with({
+          filetypes = { "xml" },
+          extra_args = { "--format", "--noblanks" }
         }),
       },
       on_attach = function(client, bufnr)

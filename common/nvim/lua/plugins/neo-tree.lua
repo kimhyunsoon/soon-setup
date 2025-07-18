@@ -22,14 +22,22 @@ return {
       filesystem = {
         window = {
           mappings = {
-            ['<leader>p'] = 'image_wezterm'
+            ['i'] = 'show_folder_size'
           },
         },
         commands = {
-          image_wezterm = function(state)
+          show_folder_size = function(state)
             local node = state.tree:get_node()
-            if node.type == 'file' then
-              require('image_preview').PreviewImage(node.path)
+            if node.type == 'directory' then
+              local cmd = "du -sh " .. node.path
+              local handle = io.popen(cmd)
+              local result = handle:read("*a")
+              handle:close()
+              
+              vim.notify("Folder Size: " .. result:match("([^%s]+)"), vim.log.levels.INFO)
+            else
+              -- 기조 show_file_details 기능 호출
+              require("neo-tree.sources.common.commands").show_file_details(state)
             end
           end,
         },
@@ -143,7 +151,7 @@ return {
           ['a'] = 'add',
           ['c'] = 'copy',
           ['d'] = 'delete',
-          ['i'] = 'show_file_details',
+          ['i'] = 'show_folder_size',
           ['m'] = 'move',
           ['p'] = 'paste_from_clipboard',
           ['q'] = 'close_window',

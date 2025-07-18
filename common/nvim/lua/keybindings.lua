@@ -43,11 +43,17 @@ end
 -- 붙여넣기 동작을 전역적으로 수정
 local orig_paste = vim.paste
 vim.paste = function(lines, phase)
+  local mode = vim.fn.mode()
+  
   -- 비주얼 모드에서는 선택 영역을 레지스터에 저장하지 않고 붙여넣기
-  if vim.fn.mode() == 'v' or vim.fn.mode() == 'V' or vim.fn.mode() == '\22' then
+  if mode == 'v' or mode == 'V' or mode == '\22' then
+    -- 선택 영역을 레지스터에 저장하지 않고 삭제
     vim.cmd('normal! "_d')
-    return orig_paste(lines, phase)
+    -- 클립보드 내용을 커서 이전에 붙여넣기
+    vim.api.nvim_put(lines, 'c', false, true)
+    return
   end
+  
   return orig_paste(lines, phase)
 end
 
@@ -244,8 +250,8 @@ end, { noremap = true, silent = true })
 vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
 
 -- 붙여넣을 때 이전 선택 영역이 레지스터에 저장되지 않도록 함
-vim.keymap.set('n', 'p', 'P', { noremap = true, silent = true })
-vim.keymap.set('v', 'p', '"_dP', { noremap = true, silent = true })
+vim.keymap.set('n', 'p', 'p', { noremap = true, silent = true })  -- 노말 모드에서 p는 커서 이후에 붙여넣기
+vim.keymap.set('v', 'p', '"_dP', { noremap = true, silent = true })  -- 비주얼 모드에서는 선택 영역 대체
 
 -- x로 잘라내기
 vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
@@ -667,4 +673,9 @@ vim.keymap.set('n', '<leader>gg',
 vim.keymap.set({ 'n', 'v' }, '<leader>i', '<cmd>:CopilotChatToggle<CR>', { noremap = true, silent = true, desc = '[copilot] 채팅 토글' })
 vim.keymap.set('n', '<leader>r', '', { desc = '[copilot] 채팅 초기화' })
 vim.keymap.set('n', '<leader>y', '', { desc = '[copilot] 채팅 제안 수락' })
+
+-- :ws 입력시 nullls(포매팅)을 하지않고 저장
+vim.cmd([[
+  cnoreabbrev ws lua vim.lsp.buf.format = function() end; vim.cmd('w')
+]])
 

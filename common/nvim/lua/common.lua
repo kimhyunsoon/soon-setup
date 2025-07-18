@@ -173,38 +173,15 @@ local function goto_float_window()
   local wins = vim.api.nvim_list_wins()
   for _, win in ipairs(wins) do
     local config = vim.api.nvim_win_get_config(win)
-    if config.relative ~= '' then  -- floating window 확인
+    local buf = vim.api.nvim_win_get_buf(win)
+    local buftype = vim.api.nvim_buf_get_option(buf, 'buftype')
+    
+    -- floating window이면서 알림창이 아닌 경우에만 포커스 이동
+    if config.relative ~= '' and buftype ~= 'nofile' then
       vim.api.nvim_set_current_win(win)
       break
     end
   end
-end
-
--- diagnostic float 명령어 재정의
-local orig_float = vim.diagnostic.open_float
-vim.diagnostic.open_float = function(...)
-  orig_float(...)
-  vim.schedule(goto_float_window)
-end
-
--- lsp hover 명령어 재정의
-local orig_hover = vim.lsp.buf.hover
-vim.lsp.buf.hover = function()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
-  if #clients == 0 then return end
-  
-  -- hover 요청을 보내고 결과를 처리하는 새로운 handler 생성
-  local function handler(err, result, ctx, config)
-    vim.lsp.handlers["textDocument/hover"](err, result, ctx, config)
-    if result then
-      vim.schedule(goto_float_window)
-    end
-  end
-  
-  -- hover 요청 시 새로운 handler 사용
-  local params = vim.lsp.util.make_position_params()
-  vim.lsp.buf_request(bufnr, 'textDocument/hover', params, handler)
 end
 
 -- 자동 주석 비활성화
@@ -222,4 +199,11 @@ vim.notify = function(msg, ...)
     return
   end
   notify(msg, ...)
+end
+
+-- diagnostic float 명령어 재정의
+local orig_float = vim.diagnostic.open_float
+vim.diagnostic.open_float = function(...)
+  orig_float(...)
+  vim.schedule(goto_float_window)
 end

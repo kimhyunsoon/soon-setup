@@ -25,7 +25,9 @@ return {
           'cpp',
           'sql',
           'bash',
-          'dockerfile'
+          'dockerfile',
+          'xml',
+          'yaml',
         },
         highlight = { enable = true },
         indent = { enable = true },
