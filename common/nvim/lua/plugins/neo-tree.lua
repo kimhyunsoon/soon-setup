@@ -1,6 +1,21 @@
 return {
   'nvim-neo-tree/neo-tree.nvim',
   branch = 'v3.x',
+  cmd = "Neotree",
+  keys = {
+    { "<leader>o", function()
+        if vim.bo.filetype == 'neo-tree' then
+          local win_id = vim.fn.winnr('#')
+          if win_id > 0 then
+            vim.cmd(win_id .. 'wincmd w')
+          else
+            vim.cmd('wincmd p')
+          end
+        else
+          vim.cmd('Neotree focus')
+        end
+      end, desc = "Toggle Neo-tree" },
+  },
   dependencies = {
     'nvim-lua/plenary.nvim',
     'nvim-tree/nvim-web-devicons',
@@ -33,7 +48,6 @@ return {
               local handle = io.popen(cmd)
               local result = handle:read("*a")
               handle:close()
-              
               vim.notify("Folder Size: " .. result:match("([^%s]+)"), vim.log.levels.INFO)
             else
               -- 기조 show_file_details 기능 호출

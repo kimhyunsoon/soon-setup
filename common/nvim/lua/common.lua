@@ -28,6 +28,10 @@ vim.opt.number = true
 -- 팝업 메뉴 최대 높이 설정
 vim.opt.pumheight = 10
 
+-- 대용량 파일 처리를 위한 설정
+vim.opt.maxmempattern = 2000000  -- 패턴 매칭 메모리 제한 증가
+vim.opt.synmaxcol = 500  -- 구문 강조 컬럼 제한 (긴 줄에서 성능 향상)
+
 -- diagnostics
 local signs = {
   { name = "DiagnosticSignError", text = "▎" },
@@ -51,8 +55,8 @@ vim.diagnostic.config({
   },
   virtual_text = true,
   severity_sort = true,
-  -- signs = false,
-  signs = true
+  signs = true,
+  update_in_insert = false,
 })
 
 -- undo 파일 저장 디렉토리 설정
@@ -60,34 +64,12 @@ vim.opt.undodir = vim.fn.stdpath('data') .. '/undodir'
 -- undo 파일 사용 활성화
 vim.opt.undofile = true
 
--- 플로팅 창에서 일반 버퍼처럼 복사 가능하도록 설정
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'lspinfo', 'lsp-installer', 'null-ls-info', 'help' },
-  callback = function()
-    vim.keymap.set('n', 'y', '"+y', { buffer = true, remap = false })
-    vim.keymap.set('v', 'y', '"+y', { buffer = true, remap = false })
-  end,
-})
-
--- hover, diagnostic 플로팅 창에서도 복사 가능하도록 설정
-local function set_floating_window_keymap()
-  local wins = vim.api.nvim_list_wins()
-  for _, win in ipairs(wins) do
-    local buf = vim.api.nvim_win_get_buf(win)
-    local win_config = vim.api.nvim_win_get_config(win)
-    if win_config.relative ~= '' then  -- floating window인 경우
-      vim.keymap.set('n', 'y', '"+y', { buffer = buf, remap = false })
-      vim.keymap.set('v', 'y', '"+y', { buffer = buf, remap = false })
-    end
-  end
-end
-
-vim.api.nvim_create_autocmd('WinEnter', {
-  callback = set_floating_window_keymap
-})
+-- autocmd 그룹 생성
+local augroup = vim.api.nvim_create_augroup('CommonSettings', { clear = true })
 
 -- 복사한 텍스트 하이라이트 설정
 vim.api.nvim_create_autocmd('TextYankPost', {
+  group = augroup,
   pattern = '*',
   callback = function()
     vim.highlight.on_yank({
@@ -122,10 +104,15 @@ vim.cmd([[
   set cursorline
 ]])
 
--- 비활성 버퍼의 하이라이트 제거
+-- 윈도우 포커스 관련 autocmd 그룹화
+local focus_group = vim.api.nvim_create_augroup('FocusSettings', { clear = true })
+
+-- 비활성 버퍼의 하이라이트 제거 (대용량 파일 제외)
 vim.api.nvim_create_autocmd('WinLeave', {
+  group = focus_group,
   callback = function()
-    if vim.bo.buftype == '' then
+    local buf = vim.api.nvim_get_current_buf()
+    if vim.bo[buf].buftype == '' and not vim.b[buf].large_file then
       vim.cmd('ownsyntax off')
       vim.cmd('setlocal nocursorline')
       vim.opt_local.hlsearch = false
@@ -133,19 +120,27 @@ vim.api.nvim_create_autocmd('WinLeave', {
   end
 })
 
--- 버퍼 다시 활성화될 때 하이라이트 복원
+-- 버퍼 다시 활성화될 때 하이라이트 복원 (대용량 파일 제외)
 vim.api.nvim_create_autocmd('WinEnter', {
+  group = focus_group,
   callback = function()
-    if vim.bo.buftype == '' then
-      vim.cmd('ownsyntax on')
+    local buf = vim.api.nvim_get_current_buf()
+    if vim.bo[buf].buftype == '' then
+      if not vim.b[buf].large_file then
+        vim.cmd('ownsyntax on')
+      end
       vim.cmd('setlocal cursorline')
       vim.opt_local.hlsearch = true
     end
   end
 })
 
+-- 버퍼 관련 autocmd 그룹화
+local buffer_group = vim.api.nvim_create_augroup('BufferSettings', { clear = true })
+
 -- 커서 위치 저장 및 복원
 vim.api.nvim_create_autocmd('BufReadPost', {
+  group = buffer_group,
   callback = function()
     local line = vim.fn.line
     if line("'\"") > 0 and line("'\"") <= line('$') then
@@ -154,38 +149,9 @@ vim.api.nvim_create_autocmd('BufReadPost', {
   end,
 })
 
--- 버퍼 닫기 전에 커서 위치 저장
-vim.api.nvim_create_autocmd('BufWritePost', {
-  callback = function()
-    vim.cmd('mkview') -- 뷰 저장
-  end,
-})
-
--- 버퍼를 열 때 저장된 뷰 로드
-vim.api.nvim_create_autocmd('BufReadPost', {
-  callback = function()
-    vim.cmd('silent! loadview')
-  end,
-})
-
--- diagnostic float 창에 자동으로 커서 이동
-local function goto_float_window()
-  local wins = vim.api.nvim_list_wins()
-  for _, win in ipairs(wins) do
-    local config = vim.api.nvim_win_get_config(win)
-    local buf = vim.api.nvim_win_get_buf(win)
-    local buftype = vim.api.nvim_buf_get_option(buf, 'buftype')
-    
-    -- floating window이면서 알림창이 아닌 경우에만 포커스 이동
-    if config.relative ~= '' and buftype ~= 'nofile' then
-      vim.api.nvim_set_current_win(win)
-      break
-    end
-  end
-end
-
 -- 자동 주석 비활성화
 vim.api.nvim_create_autocmd('FileType', {
+  group = buffer_group,
   pattern = '*',
   callback = function()
     vim.opt_local.formatoptions:remove({ 'c', 'r', 'o' })
@@ -199,11 +165,4 @@ vim.notify = function(msg, ...)
     return
   end
   notify(msg, ...)
-end
-
--- diagnostic float 명령어 재정의
-local orig_float = vim.diagnostic.open_float
-vim.diagnostic.open_float = function(...)
-  orig_float(...)
-  vim.schedule(goto_float_window)
 end

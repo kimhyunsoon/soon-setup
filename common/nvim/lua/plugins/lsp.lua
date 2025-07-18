@@ -1,6 +1,7 @@
 return {
   {
     'neovim/nvim-lspconfig',
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-buffer',
@@ -59,28 +60,28 @@ return {
       local original_hover_handler = vim.lsp.handlers["textDocument/hover"]
       local hover_processed = false
       local hover_timer = nil
-      
+
       vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
         -- 이미 처리된 hover가 있으면 무시
         if hover_processed then
           return
         end
-        
+
         -- 기존 타이머 취소
         if hover_timer then
           vim.fn.timer_stop(hover_timer)
         end
-        
+
         -- 유효한 결과가 있는 첫 번째 응답만 처리
         if result and result.contents then
           hover_processed = true
-          
+
           -- 테두리 설정
           config = vim.tbl_deep_extend("force", { border = "rounded" }, config or {})
-          
+
           -- 원래 핸들러 호출
           original_hover_handler(err, result, ctx, config)
-          
+
           -- 정보 창이 표시된 후 포커스를 맞추는 함수
           vim.schedule(function()
             vim.defer_fn(function()
@@ -95,29 +96,10 @@ return {
               end
             end, 10) -- 10ms 지연으로 창이 완전히 생성된 후 포커스
           end)
-          
+
           -- 500ms 후 플래그 리셋
           hover_timer = vim.fn.timer_start(500, function()
             hover_processed = false
-            hover_timer = nil
-          end)
-        elseif not result or not result.contents then
-          -- 빈 응답의 경우 짧은 지연 후 처리 (다른 서버의 유효한 응답을 기다림)
-          hover_timer = vim.fn.timer_start(50, function()
-            if not hover_processed then
-              hover_processed = true
-              
-              -- 테두리 설정
-              config = vim.tbl_deep_extend("force", { border = "rounded" }, config or {})
-              
-              -- 원래 핸들러 호출 (No information available 표시)
-              original_hover_handler(err, result, ctx, config)
-              
-              -- 500ms 후 플래그 리셋
-              vim.fn.timer_start(500, function()
-                hover_processed = false
-              end)
-            end
           end)
         end
       end

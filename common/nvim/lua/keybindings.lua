@@ -44,7 +44,6 @@ end
 local orig_paste = vim.paste
 vim.paste = function(lines, phase)
   local mode = vim.fn.mode()
-  
   -- 비주얼 모드에서는 선택 영역을 레지스터에 저장하지 않고 붙여넣기
   if mode == 'v' or mode == 'V' or mode == '\22' then
     -- 선택 영역을 레지스터에 저장하지 않고 삭제
@@ -53,8 +52,41 @@ vim.paste = function(lines, phase)
     vim.api.nvim_put(lines, 'c', false, true)
     return
   end
-  
+
   return orig_paste(lines, phase)
+end
+
+-- 대용량 파일 처리 도구 함수
+local function toggle_large_file_mode()
+  local buf = vim.api.nvim_get_current_buf()
+  local current_mode = vim.b[buf].large_file_manual or false
+
+  if current_mode then
+    -- 일반 모드로 복원
+    vim.b[buf].large_file_manual = false
+    vim.bo[buf].swapfile = true
+    vim.bo[buf].undolevels = 1000
+    vim.wo.foldenable = true
+    vim.cmd('TSBufEnable highlight')
+    vim.notify('일반 파일 모드로 전환됨', vim.log.levels.INFO)
+  else
+    -- 대용량 파일 모드로 전환
+    vim.b[buf].large_file_manual = true
+    vim.bo[buf].swapfile = false
+    vim.bo[buf].undolevels = -1
+    vim.wo.foldenable = false
+    vim.cmd('TSBufDisable highlight')
+    vim.cmd('TSBufDisable indent')
+    vim.cmd('TSBufDisable incremental_selection')
+
+    -- XML 파일의 경우 기본 syntax 활성화
+    local filename = vim.api.nvim_buf_get_name(buf)
+    if filename:match('%.xml$') or filename:match('%.xsd$') or filename:match('%.xsl$') then
+      vim.bo[buf].syntax = 'xml'
+    end
+
+    vim.notify('대용량 파일 모드로 전환됨', vim.log.levels.INFO)
+  end
 end
 
 ------------------------------------------ [editor] ------------------------------------------
@@ -160,6 +192,9 @@ vim.keymap.set('n', 'lw', '<cmd>lua require("treesj").toggle()<CR>', { noremap =
 -- 텍스트 wrap 토글
 vim.keymap.set('n', '<leader>m', '<cmd>set wrap!<CR>', { noremap = true, silent = true, desc = '[editor] 텍스트 wrap 토글' })
 
+-- 대용량 파일 모드 토글
+vim.keymap.set('n', '<leader>L', toggle_large_file_mode, { noremap = true, silent = true, desc = '[editor] 대용량 파일 모드 토글' })
+
 -- ESC를 누르면 검색하이라이트 종료 + hover창 닫기
 vim.keymap.set({ 'n', 'i', 'v' }, '<ESC>', function()
 
@@ -239,10 +274,10 @@ vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { 
 vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
 vim.keymap.set('v', 'd', function()
   vim.cmd('normal! "_d')
-  
+
   local cursor = vim.api.nvim_win_get_cursor(0)
   local col = cursor[2]
-  
+
   if col > 0 then
     vim.api.nvim_win_set_cursor(0, {cursor[1], col - 1})
   end
@@ -309,30 +344,7 @@ vim.keymap.set('v', '<End>', function()
 end, { noremap = true, silent = true })
 
 ------------------------------------------ [common] ------------------------------------------
--- 단축키 검색
-vim.keymap.set('n', '<leader>fk', '<cmd>Telescope keymaps<CR>', { noremap = true, silent = true, desc = '[common] 단축키 검색' })
--- 파일 검색
-vim.keymap.set('n', '<leader>ff', '<cmd>Telescope find_files<CR>', { noremap = true, silent = true, desc = '[common] 파일 검색' })
--- 파일 내 검색
-vim.keymap.set('n', '<leader>fw', '<cmd>Telescope live_grep<CR>', { noremap = true, silent = true, desc = '[common] 파일 내 검색' })
--- 파일 심볼 목록 검색
-vim.keymap.set('n', '<leader>fs', '<cmd>Telescope lsp_document_symbols<CR>', { noremap = true, silent = true, desc = '[common] 파일 심볼 목록 검색' })
-
--- 파일 탐색기 열기
-vim.keymap.set('n', '<leader>o',
-  function()
-    if vim.bo.filetype == 'neo-tree' then
-      local win_id = vim.fn.winnr('#')
-      if win_id > 0 then
-        vim.cmd(win_id .. 'wincmd w')
-      else
-        vim.cmd('wincmd p')
-      end
-    else
-      vim.cmd('Neotree focus')
-    end
-  end, { noremap = true, silent = true, desc = '[common] 파일 탐색기 열기' }
-)
+-- 텔레스코프와 네오트리 키매핑은 lazy loading 설정에서 처리됨
 
 -- 스플릿 창 이동
 vim.keymap.set('n', 'H', '<C-w>h', { noremap = true, silent = true, desc = '[common] 왼쪽 창으로 이동' })
@@ -350,7 +362,7 @@ vim.keymap.set('n', '}', ':bnext<CR>', { noremap = true, silent = true, desc = '
 vim.keymap.set('n', '<leader>c',
   function()
     local current_buf = vim.api.nvim_get_current_buf()
-    
+
     if vim.bo[current_buf].modified then
       if vim.fn.bufname(current_buf) == '' then
         -- 다음 단계로 진행
@@ -362,7 +374,7 @@ vim.keymap.set('n', '<leader>c',
 
         local char = vim.fn.getchar()
         local answer = vim.fn.nr2char(char)
-        
+
         if char == 27 then  -- ESC key
           vim.api.nvim_echo({{'', ''}}, false, {})
           return
@@ -372,22 +384,22 @@ vim.keymap.set('n', '<leader>c',
         -- n을 선택하면 저장하지 않고 계속 진행
       end
     end
-    
+
     -- neo-tree 버퍼인 경우 빠르게 리턴
     if vim.bo[current_buf].filetype == 'neo-tree' then
       return
     end
-    
+
     -- 현재 윈도우 ID 캐싱
     local current_win = vim.api.nvim_get_current_win()
     local wins = vim.api.nvim_list_wins()
-    
+
     -- crunner 창 처리 (한 번의 반복문으로 valid_wins도 같이 처리)
     local valid_wins = {}
     for _, win in ipairs(wins) do
       local buf = vim.api.nvim_win_get_buf(win)
       local ft = vim.bo[buf].filetype
-      
+
       if ft == 'crunner' then
         vim.api.nvim_win_close(win, true)
         return
@@ -395,19 +407,19 @@ vim.keymap.set('n', '<leader>c',
         table.insert(valid_wins, win)
       end
     end
-    
+
     -- 스플릿 창 처리
     if #valid_wins > 1 and current_win ~= valid_wins[1] then
       vim.cmd('quit')
       return
     end
-    
+
     -- 버퍼 처리 로직
     local bufs = vim.api.nvim_list_bufs()
     local valid_buf_count = 0
-    
+
     for _, buf in ipairs(bufs) do
-      if vim.api.nvim_buf_is_valid(buf) 
+      if vim.api.nvim_buf_is_valid(buf)
          and vim.bo[buf].buflisted
          and vim.bo[buf].filetype ~= 'neo-tree' then
         valid_buf_count = valid_buf_count + 1
@@ -416,7 +428,7 @@ vim.keymap.set('n', '<leader>c',
         end
       end
     end
-    
+
     -- 버퍼 닫기 처리
     if valid_buf_count <= 1 then
       vim.cmd('enew')
@@ -478,7 +490,7 @@ vim.keymap.set('n', '|', ':vsplit<CR>', { noremap = true, silent = true, desc = 
 vim.keymap.set('n', '<leader>fo', function()
   local path = vim.fn.expand('%:p')
   local os_name = vim.loop.os_uname().sysname
-  
+
   if os_name == 'Darwin' then  -- macOS
     vim.fn.jobstart({'open', path})
   elseif os_name == 'Linux' then
@@ -488,7 +500,7 @@ vim.keymap.set('n', '<leader>fo', function()
   else
     vim.notify('Unsupported OS for opening files', vim.log.levels.ERROR)
   end
-  
+
   vim.notify('Opening file: ' .. path, vim.log.levels.INFO)
 end, { noremap = true, silent = true, desc = '[common] 파일 열기' })
 
@@ -513,7 +525,7 @@ vim.keymap.set('n', '<leader>yf',
 )
 
 -- 랜덤 문자열 생성
-vim.keymap.set('n', '<leader>rs', function() vim.api.nvim_put({generate_random_string()}, 'c', false, true) end, 
+vim.keymap.set('n', '<leader>rs', function() vim.api.nvim_put({generate_random_string()}, 'c', false, true) end,
   { noremap = true, silent = true, desc = '[common] 랜덤 문자열 생성' })
 
 -- 현재 파일 코드 실행
@@ -531,7 +543,7 @@ vim.keymap.set('n', 'o', '<C-o>', { noremap = true, silent = true, desc = '[comm
 vim.keymap.set('n', 'O', '<C-i>', { noremap = true, silent = true, desc = '[common] 다음 커서로 이동' })
 
 
-vim.keymap.set('n', '<leader>nh', '<cmd>Telescope notify<CR>', { noremap = true, silent = true, desc = '[common] 알림 기록 보기' })
+-- 알림 기록은 telescope lazy loading 설정에서 처리됨
 
 ------------------------------------------ [lsp] ------------------------------------------
 -- LSP 서버 재시작
@@ -540,24 +552,7 @@ vim.keymap.set('n', '<leader>lR', function()
     vim.notify('LSP restarted', vim.log.levels.INFO)
 end, { noremap = true, silent = true, desc = '[lsp] LSP 서버 재시작' })
 
--- 레퍼런스 찾기
-vim.keymap.set('n', 'gr',
-  function()
-    require('telescope.builtin').lsp_references({
-      include_declaration = false,
-      show_line = false,
-    })
-  end, { noremap = true, silent = true, desc = '[lsp] 레퍼런스 찾기' }
-)
-
--- 정의로 이동
-vim.keymap.set('n', 'gd',
-  function()
-    require('telescope.builtin').lsp_definitions({
-      show_line = false,
-    })
-  end, { noremap = true, silent = true, desc = '[lsp] 정의로 이동' }
-)
+-- LSP 레퍼런스와 정의는 telescope lazy loading 설정에서 처리됨
 
 -- 정보 창 열기
 vim.keymap.set('n', 'lk', vim.lsp.buf.hover, { noremap = true, silent = true, desc = '[lsp] 정보 창 열기' })
@@ -604,7 +599,23 @@ vim.keymap.set('n', 'lr',
 vim.keymap.set('n', 'la', vim.lsp.buf.code_action, { noremap = true, silent = true, desc = '[lsp] 코드 수정 제안' })
 
 -- 진단 열기
-vim.keymap.set('n', 'ld', vim.diagnostic.open_float, { noremap = true, silent = true, desc = '[lsp] 진단 창 열기' })
+vim.keymap.set('n', 'ld', function()
+  vim.diagnostic.open_float()
+  -- 진단 창이 생성된 후 포커스 이동
+  vim.schedule(function()
+    vim.defer_fn(function()
+      local wins = vim.api.nvim_list_wins()
+      for _, win in ipairs(wins) do
+        local win_config = vim.api.nvim_win_get_config(win)
+        -- floating window라면 포커스 이동
+        if win_config.relative ~= "" then
+          vim.api.nvim_set_current_win(win)
+          break
+        end
+      end
+    end, 10)
+  end)
+end, { noremap = true, silent = true, desc = '[lsp] 진단 창 열기' })
 
 -- 다음 진단으로 이동
 vim.keymap.set('n', ']d', function()
@@ -640,26 +651,7 @@ vim.keymap.set('n', 'gl', function() require('gitsigns').blame_line{ full = true
 -- Git diff 보기
 vim.keymap.set('n', '<leader>gd', function() require('gitsigns').diffthis() end, { noremap = true, silent = true, desc = '[git] Git diff 보기' })
 
--- 수정된 파일 탐색
-vim.keymap.set('n', '<leader>gs', require('telescope.builtin').git_status, {
-  noremap = true,
-  silent = true,
-  desc = '[git] 수정된 파일 탐색',
-})
-
--- Staged 파일 탐색
-vim.keymap.set('n', '<leader>gc', require('telescope.builtin').git_commits, {
-  noremap = true,
-  silent = true,
-  desc = '[git] Git Commit 탐색',
-})
-
--- Git 브랜치 탐색
-vim.keymap.set('n', '<leader>gb', require('telescope.builtin').git_branches, {
-  noremap = true,
-  silent = true,
-  desc = '[git] Git 브랜치 탐색',
-})
+-- Git 관련 키매핑은 telescope lazy loading 설정에서 처리됨
 
 -- Git Graph 열기
 vim.keymap.set('n', '<leader>gg',

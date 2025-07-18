@@ -1,5 +1,6 @@
 return {
   'hrsh7th/nvim-cmp',
+  event = "InsertEnter",
   config = function()
     local cmp = require('cmp')
     vim.api.nvim_set_hl(0, 'CmpItemKindText', { fg = '#e2e2e3' })
@@ -52,6 +53,14 @@ return {
       completion = {
         completeopt = 'menu,menuone,noinsert,noselect'
       },
+      performance = {
+        debounce = 60,
+        throttle = 30,
+        fetching_timeout = 500,
+        confirm_resolve_timeout = 80,
+        async_budget = 1,
+        max_view_entries = 200,
+      },
       mapping = {
         ['<CR>'] = function(fallback)
           if cmp.visible() then
@@ -69,7 +78,7 @@ return {
         ['<Down>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
       },
       formatting = {
-        format = function(entry, vim_item)
+        format = function(_, vim_item)
           local kind = vim_item.kind
           if kind_icons[kind] then
             vim_item.kind = string.format('%s %s', kind_icons[kind], kind)
@@ -81,8 +90,8 @@ return {
         end
       },
       sources = cmp.config.sources({
-        { name = 'nvim_lsp' },
-        { name = 'copilot' },
+        { name = 'nvim_lsp', max_item_count = 50 },
+        { name = 'copilot', max_item_count = 20 },
       }),
       window = {
         completion = {

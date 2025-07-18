@@ -15,6 +15,19 @@ end
 
 return {
   'nvim-telescope/telescope.nvim', tag = '0.1.6',
+  cmd = "Telescope",
+  keys = {
+    { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
+    { "<leader>fw", "<cmd>Telescope live_grep<cr>", desc = "Live grep" },
+    { "<leader>fs", "<cmd>Telescope lsp_document_symbols<cr>", desc = "Document symbols" },
+    { "<leader>fk", "<cmd>Telescope keymaps<cr>", desc = "Keymaps" },
+    { "<leader>gs", function() require('telescope.builtin').git_status() end, desc = "Git status" },
+    { "<leader>gc", function() require('telescope.builtin').git_commits() end, desc = "Git commits" },
+    { "<leader>gb", function() require('telescope.builtin').git_branches() end, desc = "Git branches" },
+    { "<leader>nh", "<cmd>Telescope notify<cr>", desc = "Notifications" },
+    { "gr", function() require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false }) end, desc = "LSP references" },
+    { "gd", function() require('telescope.builtin').lsp_definitions({ show_line = false }) end, desc = "LSP definitions" },
+  },
   dependencies = {
     'nvim-lua/plenary.nvim',
     'nvim-telescope/telescope-ui-select.nvim',
@@ -30,6 +43,9 @@ return {
         entry_prefix = '   ',
         path_display = { 'truncate' },
         sorting_strategy = 'ascending',
+        cache_picker = {
+          num_pickers = 10,
+        },
         borderchars = {
           prompt = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
           results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
@@ -41,6 +57,12 @@ return {
           width = 0.8,
           height = 0.6,
           preview_cutoff = 120,
+        },
+        preview = {
+          timeout = 250,
+          filesize_limit = 1,  -- 1MB 이상 파일은 미리보기 비활성화
+          treesitter = false,  -- 미리보기에서 treesitter 비활성화
+          highlight_limit = 5000,  -- 5000줄 이상 파일은 하이라이트 비활성화
         },
         mappings = {
           i = {
@@ -73,6 +95,12 @@ return {
       },
       pickers = {
         find_files = {
+          preview = {
+            timeout = 200,
+            filesize_limit = 0.5,  -- find_files에서는 더 작은 파일만 미리보기
+            treesitter = false,
+            highlight_limit = 3000,
+          },
           find_command = {
             "rg",
             "--files",        -- 파일 목록만 출력
@@ -91,11 +119,16 @@ return {
             "--glob", "!**/.svelte-kit/*", -- SvelteKit 빌드 디렉토리 제외
             "--glob", "!**/.vercel/*",   -- Vercel 배포 캐시 디렉토리 제외
             "--glob", "!**/.netlify/*",  -- Netlify 배포 캐시 디렉토리 제외
-            -- "--glob", "!**/*-[A-Za-z0-9_]*", -- 해시가 포함된 파일 제외
           },
         },
         live_grep = {
-          additional_args = function(opts)
+          preview = {
+            timeout = 300,
+            filesize_limit = 1,
+            treesitter = false,
+            highlight_limit = 4000,
+          },
+          additional_args = function()
             return {
               "--hidden",       -- 숨김 파일 포함
               "--no-ignore",    -- .gitignore 및 .ignore 규칙 무시
@@ -119,7 +152,6 @@ return {
               "--glob", "!**/pnpm-lock.yaml", -- pnpm-lock.yaml 파일 제외
               "--glob", "!**/package-lock.json", -- package-lock.json 파일 제외
               "--glob", "!**/yarn.lock",   -- yarn.lock 파일 제외
-              -- "--glob", "!**/*-[A-Za-z0-9_]*", -- 해시가 포함된 파일 제외
             }
           end,
         },

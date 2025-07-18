@@ -1,5 +1,11 @@
 {
-    "diagnostics.globals": [
-        "initial_text"
+  "diagnostics.globals": [
+    "vim",
+    "vim.notify",
+    "initial_text"
+  ],
+    "diagnostics.disable": [
+      "need-check-nil",
+      "duplicate-set-field"
     ]
 }

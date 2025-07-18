@@ -1,6 +1,7 @@
 return {
   {
     'nvim-treesitter/nvim-treesitter',
+    event = { "BufReadPre", "BufNewFile" },
     build = ':TSUpdate',
     config = function()
       require('nvim-treesitter.configs').setup({
@@ -29,9 +30,18 @@ return {
           'xml',
           'yaml',
         },
-        highlight = { enable = true },
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
         indent = { enable = true },
         autotag = { enable = true },
+        incremental_selection = {
+          enable = false,
+        },
+        textobjects = {
+          enable = false,
+        },
       })
     end,
   }
