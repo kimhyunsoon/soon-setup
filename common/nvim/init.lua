@@ -150,3 +150,35 @@ vim.api.nvim_create_autocmd('BufReadPre', {
     end
   end,
 })
+
+-- 하이라이팅 유지를 위한 설정
+vim.api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
+  group = vim.api.nvim_create_augroup('KeepSyntaxHighlight', { clear = true }),
+  callback = function(args)
+    local buf = args.buf
+    local ft = vim.bo[buf].filetype
+
+    -- 일반 파일 타입인 경우 하이라이팅 강제 복구
+    if ft ~= '' and ft ~= 'neo-tree' and ft ~= 'TelescopePrompt' and ft ~= 'copilot-chat' and ft ~= 'lazy' then
+      vim.defer_fn(function()
+        if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_get_current_buf() == buf then
+          -- 1. syntax 강제 재설정
+          vim.cmd('syntax on')
+          vim.cmd('syntax enable')
+
+          -- 2. filetype 재설정
+          vim.bo[buf].filetype = ft
+
+          -- 3. treesitter 강제 재활성화
+          pcall(vim.cmd, 'TSBufEnable highlight')
+
+          -- 4. colorscheme 재적용
+          local colorscheme = vim.g.colors_name
+          if colorscheme then
+            vim.cmd('colorscheme ' .. colorscheme)
+          end
+        end
+      end, 50)  -- 50ms 지연 후 실행
+    end
+  end,
+})

@@ -344,7 +344,7 @@ vim.keymap.set('v', '<End>', function()
 end, { noremap = true, silent = true })
 
 ------------------------------------------ [common] ------------------------------------------
--- 텔레스코프와 네오트리 키매핑은 lazy loading 설정에서 처리됨
+-- 텔레스코프와 네오트리 키매핑은 telescope.lua와 neo-tree.lua에서 처리됨
 
 -- 스플릿 창 이동
 vim.keymap.set('n', 'H', '<C-w>h', { noremap = true, silent = true, desc = '[common] 왼쪽 창으로 이동' })
@@ -543,16 +543,51 @@ vim.keymap.set('n', 'o', '<C-o>', { noremap = true, silent = true, desc = '[comm
 vim.keymap.set('n', 'O', '<C-i>', { noremap = true, silent = true, desc = '[common] 다음 커서로 이동' })
 
 
--- 알림 기록은 telescope lazy loading 설정에서 처리됨
+-- 알림 기록은 telescope.lua에서 처리됨
 
 ------------------------------------------ [lsp] ------------------------------------------
 -- LSP 서버 재시작
 vim.keymap.set('n', '<leader>lR', function()
+    -- LSP 재시작
     vim.cmd.LspRestart()
-    vim.notify('LSP restarted', vim.log.levels.INFO)
+    
+    -- Treesitter 새로고침
+    vim.cmd('TSDisable highlight')
+    vim.cmd('TSEnable highlight')
+    
+    -- Gitsigns 새로고침
+    require('gitsigns').refresh()
+    
+    -- Lint 재시작
+    local lint_ok, lint = pcall(require, 'lint')
+    if lint_ok then
+      lint.try_lint()
+    end
+    
+    -- Conform (prettier 등 포맷터) 재시작
+    local conform_ok, conform = pcall(require, 'conform')
+    if conform_ok then
+      conform.setup(conform.get_config())
+    end
+    
+    -- null-ls (prettier 등 포맷터) 재시작
+    local null_ls_ok, null_ls = pcall(require, 'null-ls')
+    if null_ls_ok then
+      local buf = vim.api.nvim_get_current_buf()
+      -- null-ls 버퍼에서 분리 후 다시 연결
+      null_ls.disable({ bufnr = buf })
+      null_ls.enable({ bufnr = buf })
+    end
+    
+    -- 현재 버퍼 다시 로드 (변경사항이 없는 경우에만)
+    if not vim.bo.modified then
+      vim.cmd('edit')
+    end
+    
+    vim.notify('LSP, Treesitter, Gitsigns, Lint, Prettier refreshed', vim.log.levels.INFO)
 end, { noremap = true, silent = true, desc = '[lsp] LSP 서버 재시작' })
 
--- LSP 레퍼런스와 정의는 telescope lazy loading 설정에서 처리됨
+-- LSP 레퍼런스와 정의는 telescope.lua에서 처리됨
 
 -- 정보 창 열기
 vim.keymap.set('n', 'lk', vim.lsp.buf.hover, { noremap = true, silent = true, desc = '[lsp] 정보 창 열기' })
@@ -645,13 +680,10 @@ vim.keymap.set('n', ']g', function() require('gitsigns').next_hunk() end, { nore
 -- 이전 Git 변경사항으로 이동
 vim.keymap.set('n', '[g', function() require('gitsigns').prev_hunk() end, { noremap = true, silent = true, desc = '[git] 이전 Git 변경사항으로 이동' })
 
--- Git blame 보기
-vim.keymap.set('n', 'gl', function() require('gitsigns').blame_line{ full = true, float = true } end, { noremap = true, silent = true, desc = '[git] Git blame 보기' })
+-- Git blame 토글
+vim.keymap.set('n', 'gl', function() require('gitsigns').toggle_current_line_blame() end, { noremap = true, silent = true, desc = '[git] Git blame 토글' })
 
--- Git diff 보기
-vim.keymap.set('n', '<leader>gd', function() require('gitsigns').diffthis() end, { noremap = true, silent = true, desc = '[git] Git diff 보기' })
-
--- Git 관련 키매핑은 telescope lazy loading 설정에서 처리됨
+-- 일부 Git 키매핑은 telescope.lua에서 처리됨
 
 -- Git Graph 열기
 vim.keymap.set('n', '<leader>gg',
@@ -660,14 +692,8 @@ vim.keymap.set('n', '<leader>gg',
   end, { noremap = true, silent = true, desc = '[git] Git Graph 열기' }
 )
 
-
------------------------------------------- [Copilot] ------------------------------------------
-vim.keymap.set({ 'n', 'v' }, '<leader>i', '<cmd>:CopilotChatToggle<CR>', { noremap = true, silent = true, desc = '[copilot] 채팅 토글' })
-vim.keymap.set('n', '<leader>r', '', { desc = '[copilot] 채팅 초기화' })
-vim.keymap.set('n', '<leader>y', '', { desc = '[copilot] 채팅 제안 수락' })
-
 -- :ws 입력시 nullls(포매팅)을 하지않고 저장
 vim.cmd([[
-  cnoreabbrev ws lua vim.lsp.buf.format = function() end; vim.cmd('w')
+  cnoreabbrev ws lua local original = vim.lsp.buf.format; vim.lsp.buf.format = function() end; vim.cmd('w'); vim.lsp.buf.format = original
 ]])
 

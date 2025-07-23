@@ -1,9 +1,10 @@
 return {
   'nvim-neo-tree/neo-tree.nvim',
   branch = 'v3.x',
-  cmd = "Neotree",
+  cmd = 'Neotree',
   keys = {
-    { "<leader>o", function()
+    {
+      '<leader>o', function()
         if vim.bo.filetype == 'neo-tree' then
           local win_id = vim.fn.winnr('#')
           if win_id > 0 then
@@ -14,7 +15,8 @@ return {
         else
           vim.cmd('Neotree focus')
         end
-      end, desc = "Toggle Neo-tree" },
+      end, desc = '[common] Neo Tree 토글'
+    },
   },
   dependencies = {
     'nvim-lua/plenary.nvim',
@@ -44,15 +46,26 @@ return {
           show_folder_size = function(state)
             local node = state.tree:get_node()
             if node.type == 'directory' then
-              local cmd = "du -sh " .. node.path
+              local cmd = 'du -sh ' .. node.path
               local handle = io.popen(cmd)
-              local result = handle:read("*a")
+              local result = handle:read('*a')
               handle:close()
-              vim.notify("Folder Size: " .. result:match("([^%s]+)"), vim.log.levels.INFO)
+              vim.notify('Folder Size: ' .. result:match('([^%s]+)'), vim.log.levels.INFO)
             else
               -- 기조 show_file_details 기능 호출
-              require("neo-tree.sources.common.commands").show_file_details(state)
+              require('neo-tree.sources.common.commands').show_file_details(state)
             end
+          end,
+          copy_name_to_clipboard = function(state)
+            local node = state.tree:get_node()
+            local name = vim.fn.fnamemodify(node.path, ':t')
+            vim.fn.setreg('+', name)
+            vim.notify('Copied File name: ' .. name, vim.log.levels.INFO)
+          end,
+          copy_path_to_clipboard = function(state)
+            local node = state.tree:get_node()
+            vim.fn.setreg('+', node.path)
+            vim.notify('Copied Path: ' .. node.path, vim.log.levels.INFO)
           end,
         },
         filtered_items = {
@@ -171,7 +184,8 @@ return {
           ['q'] = 'close_window',
           ['r'] = 'rename',
           ['x'] = 'cut_to_clipboard',
-          ['y'] = 'copy_to_clipboard',
+          ['y'] = 'copy_name_to_clipboard',
+          ['Y'] = 'copy_path_to_clipboard',
         },
         enable_normal_mode_for_inputs = false,
         popup_border_style = 'rounded',

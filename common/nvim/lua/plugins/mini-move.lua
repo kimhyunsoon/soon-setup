@@ -1,14 +1,14 @@
 return {
   'echasnovski/mini.move',
   keys = {
-    { '<A-h>', mode = 'n', desc = '한 줄 왼쪽으로' },
-    { '<A-j>', mode = 'n', desc = '한 줄 아래로' },
-    { '<A-k>', mode = 'n', desc = '한 줄 위로' },
-    { '<A-l>', mode = 'n', desc = '한 줄 오른쪽으로' },
-    { '<A-h>', mode = 'v', desc = '선택 영역 왼쪽으로' },
-    { '<A-j>', mode = 'v', desc = '선택 영역 아래로' },
-    { '<A-k>', mode = 'v', desc = '선택 영역 위로' },
-    { '<A-l>', mode = 'v', desc = '선택 영역 오른쪽으로' },
+    { '<A-h>', mode = 'n', desc = '[editor] 한 줄 왼쪽으로' },
+    { '<A-j>', mode = 'n', desc = '[editor] 한 줄 아래로' },
+    { '<A-k>', mode = 'n', desc = '[editor] 한 줄 위로' },
+    { '<A-l>', mode = 'n', desc = '[editor] 한 줄 오른쪽으로' },
+    { '<A-h>', mode = 'v', desc = '[editor] 선택 영역 왼쪽으로' },
+    { '<A-j>', mode = 'v', desc = '[editor] 선택 영역 아래로' },
+    { '<A-k>', mode = 'v', desc = '[editor] 선택 영역 위로' },
+    { '<A-l>', mode = 'v', desc = '[editor] 선택 영역 오른쪽으로' },
   },
   opts = {
     mappings = {
