@@ -59,16 +59,40 @@ return {
       function() require('telescope.builtin').git_status() end,
       desc = '[git] 변경사항',
     },
-         {
-       '<leader>gc',
-       function() require('telescope.builtin').git_commits() end,
-       desc = '[git] 커밋 목록'
-     },
-     {
-       '<leader>gf',
-       function() require('telescope.builtin').git_bcommits() end,
-       desc = '[git] 현재 파일 커밋 목록'
-     },
+    {
+    '<leader>gc',
+      function()
+        require('telescope.builtin').git_commits({
+          entry_maker = function(entry)
+            local hash = entry:match('^(%w+)')
+            local rest = entry:match('^%w+%s*(.+)') or ''
+            return {
+              display = rest,
+              value = hash,
+             ordinal = entry,
+           }
+        end,
+      })
+      end,
+      desc = '[git] 커밋 목록'
+    },
+    {
+      '<leader>gf',
+      function()
+        require('telescope.builtin').git_bcommits({
+          entry_maker = function(entry)
+            local hash = entry:match('^(%w+)')
+            local rest = entry:match('^%w+%s*(.+)') or ''
+            return {
+              display = rest,
+              value = hash,
+              ordinal = entry,
+            }
+          end,
+        })
+      end,
+      desc = '[git] 현재 파일 커밋 목록'
+    },
     {
       '<leader>gb',
       function() require('telescope.builtin').git_branches() end,
