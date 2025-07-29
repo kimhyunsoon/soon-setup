@@ -6,11 +6,9 @@
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 
-# 명령어 시작 시간을 저장할 변수
+# 명령어 시간 측정 변수
 TIMER_START=0
-
-# 명령어 실행 전 타이머 시작
-trap 'TIMER_START=$(date +%s%N)' DEBUG
+TIMER_SHOW=""
 
 # Git 브랜치 함수
 parse_git_branch() {
@@ -28,10 +26,13 @@ parse_git_branch() {
   fi
 }
 
-# 프롬프트 표시 전에 실행 시간 계산
-PROMPT_COMMAND=__prompt_command
+# 명령어 실행 전 타이머 시작
+preexec() {
+  TIMER_START=$(date +%s%N)
+}
 
-function __prompt_command() {
+# 프롬프트 표시 전에 실행 시간 계산
+precmd() {
   local EXIT="$?"
   # 실행 시간 계산
   if [ $TIMER_START -ne 0 ]; then
@@ -51,9 +52,21 @@ function __prompt_command() {
       local SEC=$(((MS % 60000) / 1000))
       TIMER_SHOW="${MIN}m ${SEC}s"
     fi
+  else
+    TIMER_SHOW=""
   fi
   TIMER_START=0
 }
+
+# ble.sh 호환 설정
+if [[ ${BLE_VERSION-} ]]; then
+  blehook PRECMD+=precmd
+  blehook PREEXEC+=preexec
+else
+  # ble.sh가 없는 경우 기본 bash 설정
+  trap 'preexec' DEBUG
+  PROMPT_COMMAND=precmd
+fi
 
 # PS1 설정 (개행 포함)
 PS1='
