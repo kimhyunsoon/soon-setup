@@ -507,7 +507,7 @@ end, { noremap = true, silent = true, desc = '[common] 파일 열기' })
 -- 현재 파일의 전체 경로를 클립보드에 복사
 vim.keymap.set('n', '<leader>yp',
   function()
-    local path = vim.fn.expand("%:~")
+    local path = vim.fn.expand('%:~')
     local command = 'let @+ = "' .. path .. '"'
     vim.cmd(command)
     vim.notify('Copied path to clipboard:\n' .. path, vim.log.levels.INFO)
@@ -517,7 +517,7 @@ vim.keymap.set('n', '<leader>yp',
 -- 현재 파일명만 클립보드에 복사
 vim.keymap.set('n', '<leader>yf',
   function()
-    local filename = vim.fn.expand("%:t")
+    local filename = vim.fn.expand('%:t')
     local command = 'let @+ = "' .. filename .. '"'
     vim.cmd(command)
     vim.notify('Copied filename to clipboard:\n' .. filename, vim.log.levels.INFO)
@@ -550,26 +550,26 @@ vim.keymap.set('n', 'O', '<C-i>', { noremap = true, silent = true, desc = '[comm
 vim.keymap.set('n', '<leader>lR', function()
     -- LSP 재시작
     vim.cmd.LspRestart()
-    
+
     -- Treesitter 새로고침
     vim.cmd('TSDisable highlight')
     vim.cmd('TSEnable highlight')
-    
+
     -- Gitsigns 새로고침
     require('gitsigns').refresh()
-    
+
     -- Lint 재시작
     local lint_ok, lint = pcall(require, 'lint')
     if lint_ok then
       lint.try_lint()
     end
-    
+
     -- Conform (prettier 등 포맷터) 재시작
     local conform_ok, conform = pcall(require, 'conform')
     if conform_ok then
       conform.setup(conform.get_config())
     end
-    
+
     -- null-ls (prettier 등 포맷터) 재시작
     local null_ls_ok, null_ls = pcall(require, 'null-ls')
     if null_ls_ok then
@@ -578,12 +578,12 @@ vim.keymap.set('n', '<leader>lR', function()
       null_ls.disable({ bufnr = buf })
       null_ls.enable({ bufnr = buf })
     end
-    
+
     -- 현재 버퍼 다시 로드 (변경사항이 없는 경우에만)
     if not vim.bo.modified then
       vim.cmd('edit')
     end
-    
+
     vim.notify('LSP, Treesitter, Gitsigns, Lint, Prettier refreshed', vim.log.levels.INFO)
 end, { noremap = true, silent = true, desc = '[lsp] LSP 서버 재시작' })
 
@@ -643,7 +643,7 @@ vim.keymap.set('n', 'ld', function()
       for _, win in ipairs(wins) do
         local win_config = vim.api.nvim_win_get_config(win)
         -- floating window라면 포커스 이동
-        if win_config.relative ~= "" then
+        if win_config.relative ~= '' then
           vim.api.nvim_set_current_win(win)
           break
         end
@@ -696,4 +696,63 @@ vim.keymap.set('n', '<leader>gg',
 vim.cmd([[
   cnoreabbrev ws lua local original = vim.lsp.buf.format; vim.lsp.buf.format = function() end; vim.cmd('w'); vim.lsp.buf.format = original
 ]])
+
+local last_normal_buf = nil
+
+vim.api.nvim_create_autocmd('BufEnter', {
+  callback = function()
+    local buf = vim.api.nvim_get_current_buf()
+    if vim.bo[buf].buftype == '' and vim.bo[buf].filetype ~= '' then
+      last_normal_buf = buf
+    end
+  end,
+})
+
+-- lk(vim.lsp.buf.hover) 모달에서 gd, gr 키 매핑
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'qf', 'lsp_hover', 'lspinfo' },
+  callback = function()
+    vim.keymap.set('n', 'gd', function()
+      if last_normal_buf then
+        vim.api.nvim_set_current_buf(last_normal_buf)
+        vim.schedule(function()
+          require('telescope.builtin').lsp_definitions()
+        end)
+      end
+    end, { buffer = true, noremap = true, silent = true })
+    vim.keymap.set('n', 'gr', function()
+      if last_normal_buf then
+        vim.api.nvim_set_current_buf(last_normal_buf)
+        vim.schedule(function()
+          require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
+        end)
+      end
+    end, { buffer = true, noremap = true, silent = true })
+  end,
+})
+
+vim.api.nvim_create_autocmd('WinEnter', {
+  callback = function()
+    local buf = vim.api.nvim_get_current_buf()
+    local buf_name = vim.api.nvim_buf_get_name(buf)
+    if buf_name:match('://') or vim.bo[buf].buftype == 'nofile' then
+      vim.keymap.set('n', 'gd', function()
+        if last_normal_buf then
+          vim.api.nvim_set_current_buf(last_normal_buf)
+          vim.schedule(function()
+            require('telescope.builtin').lsp_definitions()
+          end)
+        end
+      end, { buffer = true, noremap = true, silent = true })
+      vim.keymap.set('n', 'gr', function()
+        if last_normal_buf then
+          vim.api.nvim_set_current_buf(last_normal_buf)
+          vim.schedule(function()
+            require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
+          end)
+        end
+      end, { buffer = true, noremap = true, silent = true })
+    end
+  end,
+})
 

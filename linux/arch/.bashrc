@@ -153,3 +153,7 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 export ANDROID_SDK_ROOT=$HOME/android-sdk
 export PATH=$PATH:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools
+
+# Task Master aliases added on 7/28/2025
+alias tm='task-master'
+alias taskmaster='task-master'

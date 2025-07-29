@@ -4,8 +4,17 @@ local select_one_or_multi = function(prompt_bufnr)
   if not vim.tbl_isempty(multi) then
     require('telescope.actions').close(prompt_bufnr)
     for _, j in pairs(multi) do
-      if j.path ~= nil then
-        vim.cmd(string.format('%s %s', 'edit', j.path))
+      local file_path = j.path or j.filename
+      if picker.picker_name == 'git_status' then
+        file_path = j.value
+      end
+
+      if file_path then
+        if j.lnum then
+          vim.cmd(string.format('%s +%d %s', 'edit', j.lnum, file_path))
+        else
+          vim.cmd(string.format('%s %s', 'edit', file_path))
+        end
       end
     end
   else
@@ -52,7 +61,7 @@ return {
       require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false }) end,
       desc = '[lsp] 참조 찾기'
     },
-    { "gd", function() require('telescope.builtin').lsp_definitions() end, desc = "[lsp] 정의로 이동" },
+    { 'gd', function() require('telescope.builtin').lsp_definitions() end, desc = '[lsp] 정의로 이동' },
     -- git
     {
       '<leader>gs',
@@ -233,7 +242,29 @@ return {
           end,
         },
         git_status = {
-          git_icons ={
+          mappings = {
+            i = {
+              ['<Tab>'] = function(prompt_bufnr)
+                require('telescope.actions').toggle_selection(prompt_bufnr)
+                require('telescope.actions').move_selection_next(prompt_bufnr)
+              end,
+              ['<S-Tab>'] = function(prompt_bufnr)
+                require('telescope.actions').toggle_selection(prompt_bufnr)
+                require('telescope.actions').move_selection_previous(prompt_bufnr)
+              end,
+            },
+            n = {
+              ['<Tab>'] = function(prompt_bufnr)
+                require('telescope.actions').toggle_selection(prompt_bufnr)
+                require('telescope.actions').move_selection_next(prompt_bufnr)
+              end,
+              ['<S-Tab>'] = function(prompt_bufnr)
+                require('telescope.actions').toggle_selection(prompt_bufnr)
+                require('telescope.actions').move_selection_previous(prompt_bufnr)
+              end,
+            },
+          },
+          git_icons = {
             added = '',
             changed = '',
             copied = '',
