@@ -1,7 +1,8 @@
 return {
   'norcalli/nvim-colorizer.lua',
+  event = { 'BufReadPost', 'BufNewFile' },
+  ft = { 'css', 'scss', 'html', 'javascript', 'typescript', 'vue', 'svelte' },
   config = function()
-    vim.opt.termguicolors = true
-    require('colorizer').setup({ '*', '!vim' })
-  end
+    require('colorizer').setup()
+  end,
 }

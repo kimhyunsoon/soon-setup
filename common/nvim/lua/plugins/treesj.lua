@@ -1,5 +1,6 @@
 return {
   'Wansmer/treesj',
+  keys = { 'lw' },
   config = function()
     require('treesj').setup({
       use_default_keymaps = false,  -- 기본 키맵 비활성화 (keybindings.lua에서 관리)

@@ -7,8 +7,8 @@ vim.cmd('set shiftwidth=2')
 -- 최대 탭 수를 1로 제한
 vim.opt.tabpagemax = 1
 
--- 탭라인 숨기기
-vim.opt.showtabline = 0
+-- 탭라인 항상 표시 (mini.tabline 사용)
+vim.opt.showtabline = 2
 
 -- leader <space>
 vim.g.mapleader= ' '
@@ -28,9 +28,15 @@ vim.opt.number = true
 -- 팝업 메뉴 최대 높이 설정
 vim.opt.pumheight = 10
 
--- 대용량 파일 처리를 위한 설정
+-- 성능 최적화 설정
 vim.opt.maxmempattern = 2000000  -- 패턴 매칭 메모리 제한 증가
 vim.opt.synmaxcol = 500  -- 구문 강조 컬럼 제한 (긴 줄에서 성능 향상)
+vim.opt.updatetime = 100  -- CursorHold 이벤트 빈도 감소
+vim.opt.timeoutlen = 300  -- 키 시퀀스 대기 시간 단축
+vim.opt.ttimeoutlen = 10  -- 키 코드 시퀀스 대기 시간 단축
+vim.opt.redrawtime = 1500  -- 구문 강조 시간 제한
+vim.opt.regexpengine = 1  -- 구 정규 표현식 엔진 사용 (더 빠름)
+vim.opt.lazyredraw = true  -- 매크로 실행 중 화면 재그리기 지연
 
 -- diagnostics
 local signs = {
@@ -67,17 +73,12 @@ vim.opt.undofile = true
 -- autocmd 그룹 생성
 local augroup = vim.api.nvim_create_augroup('CommonSettings', { clear = true })
 
--- 복사한 텍스트 하이라이트 설정
+-- 복사한 텍스트 하이라이트 설정 (성능 최적화)
 vim.api.nvim_create_autocmd('TextYankPost', {
   group = augroup,
   pattern = '*',
   callback = function()
-    vim.highlight.on_yank({
-      higroup = 'YankHighlight',
-      timeout = 200,
-      on_macro = true,
-      on_visual = true,
-    })
+    vim.highlight.on_yank({ timeout = 150 })
   end,
 })
 
@@ -104,36 +105,8 @@ vim.cmd([[
   set cursorline
 ]])
 
--- 윈도우 포커스 관련 autocmd 그룹화
-local focus_group = vim.api.nvim_create_augroup('FocusSettings', { clear = true })
-
--- 비활성 버퍼의 하이라이트 제거 (대용량 파일 제외)
-vim.api.nvim_create_autocmd('WinLeave', {
-  group = focus_group,
-  callback = function()
-    local buf = vim.api.nvim_get_current_buf()
-    if vim.bo[buf].buftype == '' and not vim.b[buf].large_file then
-      vim.cmd('ownsyntax off')
-      vim.cmd('setlocal nocursorline')
-      vim.opt_local.hlsearch = false
-    end
-  end
-})
-
--- 버퍼 다시 활성화될 때 하이라이트 복원 (대용량 파일 제외)
-vim.api.nvim_create_autocmd('WinEnter', {
-  group = focus_group,
-  callback = function()
-    local buf = vim.api.nvim_get_current_buf()
-    if vim.bo[buf].buftype == '' then
-      if not vim.b[buf].large_file then
-        vim.cmd('ownsyntax on')
-      end
-      vim.cmd('setlocal cursorline')
-      vim.opt_local.hlsearch = true
-    end
-  end
-})
+-- 성능 최적화: 기본 cursorline만 사용
+vim.opt.cursorline = true
 
 -- 버퍼 관련 autocmd 그룹화
 local buffer_group = vim.api.nvim_create_augroup('BufferSettings', { clear = true })

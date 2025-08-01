@@ -47,6 +47,16 @@ require('lazy').setup({ import = 'plugins' }, {
         'man',
         'optwin',
         'syntax',
+        '2html_plugin',
+        'getscriptPlugin',
+        'logiPat',
+        'matchit',
+        'netrw',
+        'netrwFileHandlers',
+        'netrwSettings',
+        'rrhelper',
+        'shada_plugin',
+        'spec',
       },
     },
   },
@@ -56,12 +66,7 @@ require('lazy').setup({ import = 'plugins' }, {
   },
 })
 
--- 복사 하이라이트 설정
-vim.api.nvim_create_autocmd('TextYankPost', {
-  callback = function()
-    vim.highlight.on_yank({ higroup = 'IncSearch', timeout = 200 })
-  end,
-})
+
 
 -- 키매핑
 require 'keybindings'
@@ -69,25 +74,17 @@ require 'keybindings'
 -- Vue 파일에서 TypeScript 지원을 위한 추가 설정
 vim.g.vue_pre_processors = 'detect_on_enter'
 
--- nvim 시작 시 자동으로 Neo-tree 열기
+-- nvim 시작 시 자동으로 Neo-tree 열기 (최적화됨)
 vim.api.nvim_create_autocmd('VimEnter', {
   callback = function()
-    -- 인자 없이 nvim 실행했거나 디렉토리를 열었을 때만
     if vim.fn.argc() == 0 or vim.fn.isdirectory(vim.fn.argv(0)) == 1 then
-      -- 잠깐 대기 후 Neo-tree 열기 (플러그인 로드 대기)
       vim.defer_fn(function()
-        -- Neo-tree가 로드되었는지 확인
-        local ok, _ = pcall(require, 'neo-tree')
-        if ok then
-          vim.cmd('Neotree show')
-          -- 빈 버퍼 생성 후 포커스 이동
-          if vim.fn.bufname() == '' and vim.fn.line('$') == 1 and vim.fn.getline(1) == '' then
-            vim.cmd('enew')
-          end
-          -- Neo-tree가 아닌 윈도우로 포커스 이동
-          vim.cmd('wincmd l')
+        pcall(vim.cmd, 'Neotree show')
+        if vim.fn.bufname() == '' and vim.fn.line('$') == 1 and vim.fn.getline(1) == '' then
+          vim.cmd('enew')
         end
-      end, 50)
+        vim.cmd('wincmd l')
+      end, 100)
     end
   end,
 })
@@ -151,34 +148,10 @@ vim.api.nvim_create_autocmd('BufReadPre', {
   end,
 })
 
--- 하이라이팅 유지를 위한 설정
-vim.api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
-  group = vim.api.nvim_create_augroup('KeepSyntaxHighlight', { clear = true }),
-  callback = function(args)
-    local buf = args.buf
-    local ft = vim.bo[buf].filetype
-
-    -- 일반 파일 타입인 경우 하이라이팅 강제 복구
-    if ft ~= '' and ft ~= 'neo-tree' and ft ~= 'TelescopePrompt' and ft ~= 'copilot-chat' and ft ~= 'lazy' then
-      vim.defer_fn(function()
-        if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_get_current_buf() == buf then
-          -- 1. syntax 강제 재설정
-          vim.cmd('syntax on')
-          vim.cmd('syntax enable')
-
-          -- 2. filetype 재설정
-          vim.bo[buf].filetype = ft
-
-          -- 3. treesitter 강제 재활성화
-          pcall(vim.cmd, 'TSBufEnable highlight')
-
-          -- 4. colorscheme 재적용
-          local colorscheme = vim.g.colors_name
-          if colorscheme then
-            vim.cmd('colorscheme ' .. colorscheme)
-          end
-        end
-      end, 50)  -- 50ms 지연 후 실행
-    end
+-- 간소화된 하이라이팅 설정 (성능 개선)
+vim.api.nvim_create_autocmd('BufEnter', {
+  once = true,
+  callback = function()
+    vim.cmd('syntax on')
   end,
 })

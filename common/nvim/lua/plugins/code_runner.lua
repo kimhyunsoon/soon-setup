@@ -1,15 +1,15 @@
 return {
   'CRAG666/code_runner.nvim',
-  init = function()
+  cmd = 'RunCode',
+  keys = { '<leader>rr' },
+  config = function()
     require('code_runner').setup({
       filetype = {
         javascript = 'node',
         typescript = 'ts-node',
         python = 'python3',
-        c = 'cd $dir && gcc $fileName -o /tmp/$fileNameWithoutExt && /tmp/$fileNameWithoutExt',
+        lua = 'lua',
       },
-      mode = 'term',
-      focus = false,
     })
-  end
+  end,
 }

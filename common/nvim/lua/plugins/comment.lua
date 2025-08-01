@@ -1,5 +1,8 @@
 return {
   'numToStr/Comment.nvim',
-  opts = {}
+  keys = { '<leader>/' },
+  config = function()
+    require('Comment').setup()
+  end,
 }
 

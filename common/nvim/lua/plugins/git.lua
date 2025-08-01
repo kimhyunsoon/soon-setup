@@ -27,6 +27,8 @@ return {
   },
   {
     'isakbm/gitgraph.nvim',
+    cmd = 'GitGraph',
+    keys = { '<leader>gg' },
     opts = {
       symbols = {
         merge_commit = '',
