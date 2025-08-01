@@ -249,22 +249,28 @@ vim.keymap.set('v', '<leader>/',
   end, { noremap = true, silent = true, desc = '[editor] 선택 영역 주석 토글' }
 )
 
--- 이전 빈 줄로 이동
-vim.keymap.set({ 'n', 'v' }, '[[',
+-- smooth scroll up (C-u + zz)
+vim.keymap.set({ 'n', 'v' }, '{',
   function()
-    if vim.fn.search('^$', 'bW') == 0 then
-      vim.cmd('normal! gg')
+    if _G.smooth_scroll_up then
+      _G.smooth_scroll_up()
+    else
+      -- neoscroll이 로드되지 않은 경우 fallback
+      vim.cmd('normal! zz')
     end
-  end, { noremap = true, silent = true, desc = '[editor] 이전 빈 줄로 이동' }
+  end, { noremap = true, silent = true, desc = '[editor] 위로 스크롤 (C-u + zz)' }
 )
 
--- 다음 빈 줄로 이동
-vim.keymap.set({'n', 'v'}, ']]',
+-- smooth scroll down (C-d + zz)
+vim.keymap.set({'n', 'v'}, '}',
   function()
-    if vim.fn.search('^$', 'W') == 0 then
-      vim.cmd('normal! G')
+    if _G.smooth_scroll_down then
+      _G.smooth_scroll_down()
+    else
+      -- neoscroll이 로드되지 않은 경우 fallback
+      vim.cmd('normal! zz')
     end
-  end, { noremap = true, silent = true, desc = '[editor] 다음 빈 줄로 이동' }
+  end, { noremap = true, silent = true, desc = '[editor] 아래로 스크롤 (C-d + zz)' }
 )
 
 -- 프로젝트에서 문자열 검색 및 치환
@@ -353,7 +359,7 @@ vim.keymap.set('n', 'K', '<C-w>k', { noremap = true, silent = true, desc = '[com
 vim.keymap.set('n', 'J', '<C-w>j', { noremap = true, silent = true, desc = '[common] 아래 창으로 이동' })
 
 -- 이전 버퍼로 이동
-vim.keymap.set('n', '{', function()
+vim.keymap.set('n', '[[', function()
   if vim.bo.filetype == 'neo-tree' then
     return
   end
@@ -361,7 +367,7 @@ vim.keymap.set('n', '{', function()
 end, { noremap = true, silent = true, desc = '[common] 이전 버퍼로 이동' })
 
 -- 다음 버퍼로 이동
-vim.keymap.set('n', '}', function()
+vim.keymap.set('n', ']]', function()
   if vim.bo.filetype == 'neo-tree' then
     return
   end

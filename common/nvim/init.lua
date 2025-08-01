@@ -80,10 +80,10 @@ vim.api.nvim_create_autocmd('VimEnter', {
     if vim.fn.argc() == 0 or vim.fn.isdirectory(vim.fn.argv(0)) == 1 then
       vim.defer_fn(function()
         pcall(vim.cmd, 'Neotree show')
-        if vim.fn.bufname() == '' and vim.fn.line('$') == 1 and vim.fn.getline(1) == '' then
-          vim.cmd('enew')
-        end
-        vim.cmd('wincmd l')
+          if vim.fn.bufname() == '' and vim.fn.line('$') == 1 and vim.fn.getline(1) == '' then
+            vim.cmd('enew')
+          end
+          vim.cmd('wincmd l')
       end, 100)
     end
   end,
@@ -152,6 +152,6 @@ vim.api.nvim_create_autocmd('BufReadPre', {
 vim.api.nvim_create_autocmd('BufEnter', {
   once = true,
   callback = function()
-    vim.cmd('syntax on')
+          vim.cmd('syntax on')
   end,
 })
