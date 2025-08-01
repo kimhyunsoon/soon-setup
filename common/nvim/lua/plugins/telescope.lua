@@ -65,7 +65,32 @@ return {
     -- git
     {
       '<leader>gs',
-      function() require('telescope.builtin').git_status() end,
+      function()
+        require('telescope.builtin').git_status({
+          git_command = { 'git', 'status', '--porcelain' },
+                    entry_maker = function(entry)
+            local status = entry:sub(1, 2)
+            local file_path = entry:sub(4)
+
+            -- staged only 파일 제외
+            if status:sub(1, 1) ~= ' ' and status:sub(2, 2) == ' ' then
+              return nil
+            end
+
+            -- deleted 파일 제외
+            if status:match(' D') or status:match('D ') then
+              return nil
+            end
+
+            return {
+              value = file_path,
+              display = file_path,
+              ordinal = file_path,
+              path = file_path,
+            }
+          end,
+        })
+      end,
       desc = '[git] 변경사항',
     },
     {
@@ -264,15 +289,7 @@ return {
               end,
             },
           },
-          git_icons = {
-            added = '',
-            changed = '',
-            copied = '',
-            deleted = '',
-            renamed = '',
-            unmerged = '',
-            untracked = '',
-          },
+
         },
         git_commits = {
           mappings = {
