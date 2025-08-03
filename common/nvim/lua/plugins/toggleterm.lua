@@ -4,19 +4,13 @@ return {
   event = 'VeryLazy',
   config = function()
     require('toggleterm').setup({
-      highlights = {
-        FloatBorder = { guifg = '#888888' },
-      },
       hide_numbers = true,
-      start_in_insert = true,
+      start_in_insert = false,
       insert_mappings = true,
-      direction = 'float',
+      direction = 'horizontal',
       close_on_exit = true,
       auto_scroll = true,
-      float_opts = {
-        width = 100,
-        height = 20,
-      },
+      size = 15,
     })
   end,
 }

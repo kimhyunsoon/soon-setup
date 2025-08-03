@@ -547,8 +547,25 @@ vim.keymap.set('n', '<leader>rs', function() vim.api.nvim_put({generate_random_s
 -- 현재 파일 코드 실행
 vim.keymap.set('n', '<leader>rr', ':RunCode<CR>', { noremap = true, silent = true, desc = '[common] 코드 실행' })
 
--- 터미널 열기
-vim.keymap.set('n', '<leader>tt', ':ToggleTerm<CR>', { noremap = true, silent = true, desc = '[common] 터미널 열기' })
+-- 터미널 열기 (분할 없이 새 버퍼)
+vim.keymap.set('n', '<leader>tt', ':terminal<CR>', { noremap = true, silent = true, desc = '[common] 터미널 열기' })
+
+-- 터미널 버퍼 설정
+vim.api.nvim_create_autocmd('TermOpen', {
+  callback = function()
+    local buf = vim.api.nvim_get_current_buf()
+    local opts = { buffer = buf, noremap = true, silent = true }
+
+    -- ESC로 터미널 insert 모드 종료
+    vim.keymap.set('t', '<ESC>', '<C-\\><C-n>', opts)
+
+    -- 터미널 버퍼에서 줄번호 비활성화하고 왼쪽 패딩 추가
+    vim.opt_local.number = false
+    vim.opt_local.relativenumber = false
+    vim.opt_local.signcolumn = 'yes:1'  -- 왼쪽에 1칸 여백
+    vim.opt_local.scrolloff = 0  -- 터미널에서 scrolloff 비활성화
+  end,
+})
 
 -- 새 버퍼 생성
 vim.keymap.set('n', '<leader>n', ':enew<CR>', { noremap = true, silent = true, desc = '[common] 새 버퍼 생성' }
