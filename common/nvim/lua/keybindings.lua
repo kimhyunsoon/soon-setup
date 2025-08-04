@@ -250,7 +250,7 @@ vim.keymap.set('v', '<leader>/',
 )
 
 -- smooth scroll up (C-u + zz)
-vim.keymap.set({ 'n', 'v' }, '{',
+vim.keymap.set({ 'n', 'v' }, '[[',
   function()
     if _G.smooth_scroll_up then
       _G.smooth_scroll_up()
@@ -262,7 +262,7 @@ vim.keymap.set({ 'n', 'v' }, '{',
 )
 
 -- smooth scroll down (C-d + zz)
-vim.keymap.set({'n', 'v'}, '}',
+vim.keymap.set({'n', 'v'}, ']]',
   function()
     if _G.smooth_scroll_down then
       _G.smooth_scroll_down()
@@ -359,7 +359,7 @@ vim.keymap.set('n', 'K', '<C-w>k', { noremap = true, silent = true, desc = '[com
 vim.keymap.set('n', 'J', '<C-w>j', { noremap = true, silent = true, desc = '[common] 아래 창으로 이동' })
 
 -- 이전 버퍼로 이동
-vim.keymap.set('n', '[[', function()
+vim.keymap.set('n', '{', function()
   if vim.bo.filetype == 'neo-tree' then
     return
   end
@@ -367,7 +367,7 @@ vim.keymap.set('n', '[[', function()
 end, { noremap = true, silent = true, desc = '[common] 이전 버퍼로 이동' })
 
 -- 다음 버퍼로 이동
-vim.keymap.set('n', ']]', function()
+vim.keymap.set('n', '}', function()
   if vim.bo.filetype == 'neo-tree' then
     return
   end
@@ -547,8 +547,48 @@ vim.keymap.set('n', '<leader>rs', function() vim.api.nvim_put({generate_random_s
 -- 현재 파일 코드 실행
 vim.keymap.set('n', '<leader>rr', ':RunCode<CR>', { noremap = true, silent = true, desc = '[common] 코드 실행' })
 
--- 터미널 열기 (분할 없이 새 버퍼)
-vim.keymap.set('n', '<leader>tt', ':terminal<CR>', { noremap = true, silent = true, desc = '[common] 터미널 열기' })
+-- 터미널 열기
+vim.keymap.set('n', '<leader>tt', function()
+
+  -- 새 버퍼 생성하고 터미널 열기
+  vim.cmd('enew')
+  local term_buf = vim.api.nvim_get_current_buf()
+
+  -- 터미널 열기
+  vim.fn.termopen(vim.env.SHELL or 'bash', {
+    on_exit = function(_)
+      vim.schedule(function()
+        -- 터미널 버퍼가 유효한지 확인
+        if vim.api.nvim_buf_is_valid(term_buf) then
+          -- 다른 버퍼들 찾기
+          local bufs = vim.api.nvim_list_bufs()
+          local valid_bufs = {}
+
+          for _, buf in ipairs(bufs) do
+            if vim.api.nvim_buf_is_valid(buf)
+               and vim.bo[buf].buflisted
+               and buf ~= term_buf
+               and vim.bo[buf].filetype ~= 'neo-tree' then
+              table.insert(valid_bufs, buf)
+            end
+          end
+
+          -- 다른 버퍼가 있으면 전환, 없으면 새 버퍼 생성
+          if #valid_bufs > 0 then
+            vim.api.nvim_set_current_buf(valid_bufs[1])
+          else
+            vim.cmd('enew')
+          end
+
+          -- 터미널 버퍼 삭제
+          if vim.api.nvim_buf_is_valid(term_buf) then
+            vim.api.nvim_buf_delete(term_buf, { force = true })
+          end
+        end
+      end)
+    end
+  })
+end, { noremap = true, silent = true, desc = '[common] 터미널 열기' })
 
 -- 터미널 버퍼 설정
 vim.api.nvim_create_autocmd('TermOpen', {
@@ -564,6 +604,9 @@ vim.api.nvim_create_autocmd('TermOpen', {
     vim.opt_local.relativenumber = false
     vim.opt_local.signcolumn = 'yes:1'  -- 왼쪽에 1칸 여백
     vim.opt_local.scrolloff = 0  -- 터미널에서 scrolloff 비활성화
+
+    -- 터미널 종료를 안전하게 처리
+    vim.opt_local.bufhidden = 'wipe'
   end,
 })
 
