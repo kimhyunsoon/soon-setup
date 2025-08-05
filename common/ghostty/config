@@ -20,8 +20,12 @@ cursor-color = green
 cursor-style = block
 shell-integration-features = no-cursor
 
+font-family = Maple Mono NL CN Light
 font-family = Hack Nerd Font Mono
+font-family = Noto Sans Mono CJK KR
+font-size = 12
 adjust-cell-width = -3
+adjust-cell-height = -4
 
 keybind = ctrl+c=copy_to_clipboard
 keybind = ctrl+v=paste_from_clipboard

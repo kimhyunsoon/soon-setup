@@ -112,13 +112,13 @@ return {
             filetypes = { "javascript", "javascriptreact", "javascript.jsx", "typescript", "typescriptreact", "typescript.tsx", "vue" },
             root_dir = function(fname)
               local util = require('lspconfig').util
-              local project_root = util.find_git_ancestor(fname) or vim.fn.getcwd()
               local config_path = util.root_pattern(
-                'eslint.config.js', '.eslintrc.js', '.eslintrc.json', '.eslintrc', '.eslintrc.yml',
-                'packages/*/eslint.config.js', 'packages/*/.eslintrc.js', 'packages/*/.eslintrc.json', 'packages/*/.eslintrc', 'packages/*/.eslintrc.yml',
-                'apps/*/eslint.config.js', 'apps/*/.eslintrc.js', 'apps/*/.eslintrc.json', 'apps/*/.eslintrc', 'apps/*/.eslintrc.yml'
+                'eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.mjs', '.eslintrc.json', '.eslintrc', '.eslintrc.yml', '.eslintrc.yaml',
+                'packages/*/eslint.config.js', 'packages/*/eslint.config.mjs', 'packages/*/eslint.config.cjs', 'packages/*/.eslintrc.js', 'packages/*/.eslintrc.cjs', 'packages/*/.eslintrc.mjs', 'packages/*/.eslintrc.json', 'packages/*/.eslintrc', 'packages/*/.eslintrc.yml', 'packages/*/.eslintrc.yaml',
+                'apps/*/eslint.config.js', 'apps/*/eslint.config.mjs', 'apps/*/eslint.config.cjs', 'apps/*/.eslintrc.js', 'apps/*/.eslintrc.cjs', 'apps/*/.eslintrc.mjs', 'apps/*/.eslintrc.json', 'apps/*/.eslintrc', 'apps/*/.eslintrc.yml', 'apps/*/.eslintrc.yaml'
               )(fname)
-              return config_path or project_root
+              -- ESLint 설정 파일이 있는 경우에만 활성화
+              return config_path
             end,
             settings = {
               workingDirectory = { mode = "auto" },

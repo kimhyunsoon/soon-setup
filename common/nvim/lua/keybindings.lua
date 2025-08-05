@@ -48,8 +48,8 @@ vim.paste = function(lines, phase)
   if mode == 'v' or mode == 'V' or mode == '\22' then
     -- 선택 영역을 레지스터에 저장하지 않고 삭제
     vim.cmd('normal! "_d')
-    -- 클립보드 내용을 커서 이전에 붙여넣기
-    vim.api.nvim_put(lines, 'c', false, true)
+    -- 클립보드 내용을 커서 위치에 붙여넣기 (커서는 텍스트 시작점에 위치)
+    vim.api.nvim_put(lines, 'c', false, false)
     return
   end
 
@@ -234,20 +234,7 @@ vim.keymap.set({ 'n', 'i', 'v' }, '<ESC>', function()
   end
 end, { noremap = true, silent = true })
 
--- 주석 토글
-vim.keymap.set('n', '<leader>/',
-  function()
-    require('Comment.api').toggle.linewise.current()
-  end, { noremap = true, silent = true, desc = '[editor] 주석 토글' }
-)
--- 선택 영역 주석 토글
-vim.keymap.set('v', '<leader>/',
-  function()
-    local esc = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
-    vim.api.nvim_feedkeys(esc, 'x', false)
-    require('Comment.api').toggle.linewise(vim.fn.visualmode())
-  end, { noremap = true, silent = true, desc = '[editor] 선택 영역 주석 토글' }
-)
+-- 주석 토글 키맵은 comment.lua에서 처리됨
 
 -- smooth scroll up (C-u + zz)
 vim.keymap.set({ 'n', 'v' }, '[[',
@@ -292,7 +279,66 @@ vim.keymap.set('n', 'dd', '"_dd', { noremap = true, silent = true })
 
 -- 붙여넣을 때 이전 선택 영역이 레지스터에 저장되지 않도록 함
 vim.keymap.set('n', 'p', 'p', { noremap = true, silent = true })  -- 노말 모드에서 p는 커서 이후에 붙여넣기
-vim.keymap.set('v', 'p', '"_dP', { noremap = true, silent = true })  -- 비주얼 모드에서는 선택 영역 대체
+vim.keymap.set('v', 'p', 'P', { noremap = true, silent = true })  -- 비주얼 모드에서 대체된 텍스트를 레지스터에 저장하지 않음
+
+-- 선택 영역을 감싸는 함수
+local function surround_selection(open_char, close_char)
+  return function()
+    -- 현재 선택 영역의 시작과 끝 위치 가져오기
+    local mode = vim.fn.mode()
+    if mode ~= 'v' and mode ~= 'V' and mode ~= '\22' then
+      return
+    end
+
+    -- 현재 선택 영역 정보
+    local start_pos = vim.fn.getpos('.')
+    local end_pos = vim.fn.getpos('v')
+
+    -- 시작과 끝 위치 정렬 (작은 것이 start가 되도록)
+    if start_pos[2] > end_pos[2] or (start_pos[2] == end_pos[2] and start_pos[3] > end_pos[3]) then
+      start_pos, end_pos = end_pos, start_pos
+    end
+
+    -- 선택된 텍스트 가져오기
+    local start_line = start_pos[2] - 1
+    local start_col = start_pos[3] - 1
+    local end_line = end_pos[2] - 1
+    local end_col = end_pos[3]
+
+    -- 현재 선택된 텍스트 가져오기
+    local lines = vim.api.nvim_buf_get_text(0, start_line, start_col, end_line, end_col, {})
+    if #lines == 0 then return end
+
+    -- 선택된 텍스트를 감싸기
+    if #lines == 1 then
+      -- 단일 라인인 경우
+      local wrapped_text = open_char .. lines[1] .. close_char
+      vim.api.nvim_buf_set_text(0, start_line, start_col, end_line, end_col, {wrapped_text})
+    else
+      -- 다중 라인인 경우
+      lines[1] = open_char .. lines[1]
+      lines[#lines] = lines[#lines] .. close_char
+      vim.api.nvim_buf_set_text(0, start_line, start_col, end_line, end_col, lines)
+    end
+
+    -- 비주얼 모드 종료
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+  end
+end
+
+-- 비주얼 모드에서 따옴표로 감싸기
+vim.keymap.set('v', "'", surround_selection("'", "'"), { noremap = true, silent = true })  -- 선택 영역을 '로 감싸기
+vim.keymap.set('v', '"', surround_selection('"', '"'), { noremap = true, silent = true })  -- 선택 영역을 "로 감싸기
+
+-- 비주얼 모드에서 브래킷으로 감싸기
+vim.keymap.set('v', '{', surround_selection('{', '}'), { noremap = true, silent = true })  -- 선택 영역을 {}로 감싸기
+vim.keymap.set('v', '}', surround_selection('{', '}'), { noremap = true, silent = true })
+vim.keymap.set('v', '[', surround_selection('[', ']'), { noremap = true, silent = true })  -- 선택 영역을 []로 감싸기
+vim.keymap.set('v', ']', surround_selection('[', ']'), { noremap = true, silent = true })
+vim.keymap.set('v', '(', surround_selection('(', ')'), { noremap = true, silent = true })  -- 선택 영역을 ()로 감싸기
+vim.keymap.set('v', ')', surround_selection('(', ')'), { noremap = true, silent = true })
+vim.keymap.set('v', '<', surround_selection('<', '>'), { noremap = true, silent = true })  -- 선택 영역을 < >로 감싸기
+vim.keymap.set('v', '>', surround_selection('<', '>'), { noremap = true, silent = true })
 
 -- x로 잘라내기
 vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
@@ -604,9 +650,6 @@ vim.api.nvim_create_autocmd('TermOpen', {
     vim.opt_local.relativenumber = false
     vim.opt_local.signcolumn = 'yes:1'  -- 왼쪽에 1칸 여백
     vim.opt_local.scrolloff = 0  -- 터미널에서 scrolloff 비활성화
-
-    -- 터미널 종료를 안전하게 처리
-    vim.opt_local.bufhidden = 'wipe'
   end,
 })
 
