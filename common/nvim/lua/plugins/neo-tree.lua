@@ -52,7 +52,7 @@ return {
               handle:close()
               vim.notify('Folder Size: ' .. result:match('([^%s]+)'), vim.log.levels.INFO)
             else
-              -- 기조 show_file_details 기능 호출
+              -- show_file_details 기능 호출
               require('neo-tree.sources.common.commands').show_file_details(state)
             end
           end,

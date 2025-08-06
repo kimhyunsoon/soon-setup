@@ -189,9 +189,6 @@ vim.keymap.set('n', 'ls',
 -- 코드 Split-Jion 토글
 vim.keymap.set('n', 'lw', '<cmd>lua require("treesj").toggle()<CR>', { noremap = true, silent = true, desc = '[editor] 코드 Split-Join 토글' })
 
--- 텍스트 wrap 토글
-vim.keymap.set('n', '<leader>m', '<cmd>set wrap!<CR>', { noremap = true, silent = true, desc = '[editor] 텍스트 wrap 토글' })
-
 -- 대용량 파일 모드 토글
 vim.keymap.set('n', '<leader>L', toggle_large_file_mode, { noremap = true, silent = true, desc = '[editor] 대용량 파일 모드 토글' })
 
@@ -340,22 +337,29 @@ vim.keymap.set('v', ')', surround_selection('(', ')'), { noremap = true, silent 
 vim.keymap.set('v', '<', surround_selection('<', '>'), { noremap = true, silent = true })  -- 선택 영역을 < >로 감싸기
 vim.keymap.set('v', '>', surround_selection('<', '>'), { noremap = true, silent = true })
 
+-- 대소문자 토글
+vim.keymap.set('v', 'u', function()
+  vim.cmd('normal! y')
+  local content = vim.fn.getreg('"')
+  vim.cmd('normal! gv' .. (content:match('%a') and content == content:lower() and 'gU' or 'gu'))
+end, { noremap = true, silent = true, desc = '[editor] 선택 영역 대소문자 토글' })
+
 -- x로 잘라내기
 vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
 -- xx로 한 줄 잘라내기
 vim.keymap.set('n', 'xx', '"+dd', { noremap = true, silent = true })
 
 -- 키 매핑 비활성화
-local n_empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>', 's'}
+local n_empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>', 's', '][', '[]'}
 for _, key in ipairs(n_empty_keys) do
   vim.keymap.set('n', key, '<Nop>', { noremap = true, silent = true })
 end
-local v_empty_keys = {'u', 'U'}
+local v_empty_keys = {'u', '/'}
 for _, key in ipairs(v_empty_keys) do
   vim.keymap.set('v', key, '<Nop>', { noremap = true, silent = true })
 end
 
--- x 모드에 i 르면 Esc + i 실행
+-- x 모드에 i 누르면 Esc + i 실행
 vim.keymap.set('x', 'i', '<Esc>i', { noremap = true, silent = true })
 
 -- 인서트 모드에 F1~F24 키를 무시
@@ -363,12 +367,12 @@ for i = 1, 24 do
   vim.keymap.set('i', '<F' .. i .. '>', '', { noremap = true, silent = true })
 end
 
--- 검색 모드에서 ESC를 누르면 Enter와 동일하게 동작
+-- 검색 모드에서만 ESC를 누르면 Enter와 동일하게 동작
 vim.keymap.set('c', '<ESC>', function()
-  if vim.fn.getcmdtype() == '/' then
+  if vim.fn.getcmdtype() == '/' or vim.fn.getcmdtype() == '?' then
     return '<CR>'
   else
-    return '<ESC>'
+    return '<C-c>'
   end
 end, { noremap = true, expr = true })
 
@@ -391,7 +395,15 @@ vim.keymap.set('v', '<End>', function()
   local line = vim.api.nvim_get_current_line()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_length = #line
-  vim.api.nvim_win_set_cursor(0, {cursor[1], line_length})
+
+  -- 빈 줄이 아닌 경우, 마지막 문자 위치로 이동 (0-based이므로 -1)
+  if line_length > 0 then
+    vim.api.nvim_win_set_cursor(0, {cursor[1], line_length - 1})
+  else
+    -- 빈 줄인 경우 첫 번째 컬럼으로 이동
+    vim.api.nvim_win_set_cursor(0, {cursor[1], 0})
+  end
+
   vim.api.nvim_feedkeys('', 'n', false)
 end, { noremap = true, silent = true })
 
@@ -424,6 +436,13 @@ end, { noremap = true, silent = true, desc = '[common] 다음 버퍼로 이동' 
 vim.keymap.set('n', '<leader>c',
   function()
     local current_buf = vim.api.nvim_get_current_buf()
+    local buf_name = vim.api.nvim_buf_get_name(current_buf)
+
+    -- Git diff view 처리
+    if vim.wo.diff or buf_name:match('^:0:') or (vim.bo[current_buf].buftype == 'nofile' and buf_name:match('^:')) then
+      vim.cmd('diffoff')
+      return
+    end
 
     if vim.bo[current_buf].modified then
       if vim.fn.bufname(current_buf) == '' then
@@ -801,6 +820,9 @@ vim.keymap.set('n', '[g', function() require('gitsigns').prev_hunk() end, { nore
 -- Git blame 토글
 vim.keymap.set('n', 'gl', function() require('gitsigns').toggle_current_line_blame() end, { noremap = true, silent = true, desc = '[git] Git blame 토글' })
 
+-- Git diff view
+vim.keymap.set('n', '<leader>gd', function() require('gitsigns').diffthis() end, { noremap = true, silent = true, desc = '[git] 현재 파일 Git diff view' })
+
 -- 일부 Git 키매핑은 telescope.lua에서 처리됨
 
 -- Git Graph 열기
@@ -884,4 +906,3 @@ vim.api.nvim_create_autocmd('WinEnter', {
     end
   end,
 })
-

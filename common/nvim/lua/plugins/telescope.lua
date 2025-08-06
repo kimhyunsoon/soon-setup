@@ -42,7 +42,7 @@ return {
       '<cmd>Telescope lsp_document_symbols<cr>',
       desc = '[common] 심볼 찾기',
     },
-         {
+    {
        '<leader>fk',
        function()
          -- 모든 플러그인 키매핑이 로드되도록 강제 로드
@@ -170,10 +170,7 @@ return {
           preview_cutoff = 120,
         },
         preview = {
-          timeout = 250,
-          filesize_limit = 1,  -- 1MB 이상 파일은 미리보기 비활성화
-          treesitter = false,  -- 미리보기에서 treesitter 비활성화
-          highlight_limit = 5000,  -- 5000줄 이상 파일은 하이라이트 비활성화
+          filesize_limit = 0.5555,
         },
         mappings = {
           i = {
@@ -206,12 +203,6 @@ return {
       },
       pickers = {
         find_files = {
-          preview = {
-            timeout = 200,
-            filesize_limit = 0.5,  -- find_files에서는 더 작은 파일만 미리보기
-            treesitter = false,
-            highlight_limit = 3000,
-          },
           find_command = {
             'rg',
             '--files',        -- 파일 목록만 출력
@@ -230,15 +221,10 @@ return {
             '--glob', '!**/.svelte-kit/*', -- SvelteKit 빌드 디렉토리 제외
             '--glob', '!**/.vercel/*',   -- Vercel 배포 캐시 디렉토리 제외
             '--glob', '!**/.netlify/*',  -- Netlify 배포 캐시 디렉토리 제외
+            '--glob', '!**/*.min.*',    -- 압축 파일 제외
           },
         },
         live_grep = {
-          preview = {
-            timeout = 300,
-            filesize_limit = 1,
-            treesitter = false,
-            highlight_limit = 4000,
-          },
           additional_args = function()
             return {
               '--hidden',       -- 숨김 파일 포함
@@ -263,6 +249,7 @@ return {
               '--glob', '!**/pnpm-lock.yaml', -- pnpm-lock.yaml 파일 제외
               '--glob', '!**/package-lock.json', -- package-lock.json 파일 제외
               '--glob', '!**/yarn.lock',   -- yarn.lock 파일 제외
+              '--glob', '!**/*.min.*',    -- 압축 파일 제외
             }
           end,
         },
@@ -336,12 +323,15 @@ return {
                 local result = vim.fn.systemlist('git show ' .. commit_hash .. ':' .. vim.fn.expand('%:.'))
                 -- 현재 버퍼의 내용을 덮어쓰기
                 vim.api.nvim_buf_set_lines(0, 0, -1, false, result)
-                                 -- 파일 수정됨 표시
+                 -- 파일 수정됨 표시
                  vim.bo.modified = true
                  vim.notify('File changed to commit ' .. commit_hash:sub(1, 8), vim.log.levels.INFO)
               end,
             },
           },
+        },
+        lsp_definitions = {
+          show_line = false,
         },
       },
     })

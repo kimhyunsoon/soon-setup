@@ -13,7 +13,7 @@ return {
         show_buffer_close_icons = false,
         indicator = { style = 'none' },
         buffer_close_icon = '',
-        diagnostics = false,
+        diagnostics = true,
         separator = false,
         text_align = 'center',
         offsets = {

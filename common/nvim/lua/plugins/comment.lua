@@ -1,6 +1,6 @@
 return {
   'numToStr/Comment.nvim',
-  keys = { '<leader>/' },
+  event = 'VeryLazy',
   config = function()
     require('Comment').setup()
     -- 주석 토글 키맵 설정

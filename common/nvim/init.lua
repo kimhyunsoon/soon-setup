@@ -27,7 +27,6 @@ require('lazy').setup({ import = 'plugins' }, {
       disabled_plugins = {
         'gzip',
         'matchit',
-        'matchparen',
         'netrwPlugin',
         'tarPlugin',
         'tohtml',
@@ -74,7 +73,7 @@ require 'keybindings'
 -- Vue 파일에서 TypeScript 지원을 위한 추가 설정
 vim.g.vue_pre_processors = 'detect_on_enter'
 
--- nvim 시작 시 자동으로 Neo-tree 열기 (최적화됨)
+-- nvim 시작 시 자동으로 Neo-tree 열기
 vim.api.nvim_create_autocmd('VimEnter', {
   callback = function()
     if vim.fn.argc() == 0 or vim.fn.isdirectory(vim.fn.argv(0)) == 1 then
@@ -148,10 +147,8 @@ vim.api.nvim_create_autocmd('BufReadPre', {
   end,
 })
 
--- 간소화된 하이라이팅 설정 (성능 개선)
+-- 간소화된 하이라이팅 설정
 vim.api.nvim_create_autocmd('BufEnter', {
   once = true,
-  callback = function()
-          vim.cmd('syntax on')
-  end,
+  callback = function() vim.cmd('syntax on') end,
 })

@@ -1,6 +1,9 @@
 return {
   'hrsh7th/nvim-cmp',
   event = "InsertEnter",
+  dependencies = {
+    'roobert/tailwindcss-colorizer-cmp.nvim',
+  },
   config = function()
     local cmp = require('cmp')
     vim.api.nvim_set_hl(0, 'CmpItemKindText', { fg = '#e2e2e3' })
@@ -78,7 +81,7 @@ return {
         ['<Down>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
       },
       formatting = {
-        format = function(_, vim_item)
+        format = function(entry, vim_item)
           local kind = vim_item.kind
           if kind_icons[kind] then
             vim_item.kind = string.format('%s %s', kind_icons[kind], kind)
@@ -86,6 +89,13 @@ return {
             vim_item.kind = string.format('󰠱 %s', kind)
           end
           vim_item.kind_hl_group = 'CmpItemKind' .. (kind or 'Text')
+
+          -- tailwindcss-colorizer-cmp 적용
+          local ok, tailwind = pcall(require, 'tailwindcss-colorizer-cmp')
+          if ok then
+            return tailwind.formatter(entry, vim_item)
+          end
+
           return vim_item
         end
       },
