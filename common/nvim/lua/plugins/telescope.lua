@@ -39,7 +39,14 @@ return {
     },
     {
       '<leader>fs',
-      '<cmd>Telescope lsp_document_symbols<cr>',
+      function()
+        local clients = vim.lsp.get_clients({ bufnr = 0 })
+        if #clients == 0 then
+          vim.notify('LSP 클라이언트가 연결되지 않았습니다', vim.log.levels.WARN)
+          return
+        end
+        require('telescope.builtin').lsp_document_symbols()
+      end,
       desc = '[common] 심볼 찾기',
     },
     {

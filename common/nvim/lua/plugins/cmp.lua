@@ -6,6 +6,9 @@ return {
   },
   config = function()
     local cmp = require('cmp')
+    local common = require('common')
+    local symbols = common.symbols
+
     vim.api.nvim_set_hl(0, 'CmpItemKindText', { fg = '#e2e2e3' })
     vim.api.nvim_set_hl(0, 'CmpItemKindKeyword', { fg = '#b39df3' })
     vim.api.nvim_set_hl(0, 'CmpItemKindConstant', { fg = '#e2e2e3' })
@@ -23,34 +26,6 @@ return {
     vim.api.nvim_set_hl(0, 'CmpItemKindFolder', { fg = '#9ed072' })
     vim.api.nvim_set_hl(0, 'CmpItemKindCopilot', { fg = '#b39df3' })
 
-    local kind_icons = {
-      Text = '󰉿',
-      Method = '󰆧',
-      Function = '󰊕',
-      Constructor = '󰒓',
-      Field = '',
-      Variable = '󰀫',
-      Class = '󰠱',
-      Interface = '󰜰',
-      Module = '󰕳',
-      Property = '󰜢',
-      Unit = '󰑭',
-      Value = '󰎠',
-      Enum = '󰕘',
-      Keyword = '󰌋',
-      Snippet = '󰃐',
-      Color = '󰏘',
-      File = '󰈙',
-      Reference = '',
-      Folder = '󰉋',
-      EnumMember = '',
-      Constant = '󰏿',
-      Struct = '󰙅',
-      Event = '󰂚',
-      Operator = '󰆕',
-      Copilot = '',
-      TypeParameter = '󰅲',
-    }
     cmp.setup({
       preselect = cmp.PreselectMode.None,
       completion = {
@@ -83,8 +58,8 @@ return {
       formatting = {
         format = function(entry, vim_item)
           local kind = vim_item.kind
-          if kind_icons[kind] then
-            vim_item.kind = string.format('%s %s', kind_icons[kind], kind)
+          if symbols[kind] then
+            vim_item.kind = string.format('%s %s', symbols[kind], kind)
           else
             vim_item.kind = string.format('󰠱 %s', kind)
           end

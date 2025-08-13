@@ -1,3 +1,42 @@
+-- 심볼
+local symbols = {
+  Text = '󰉿',
+  Unit = '󰑭',
+  Value = '󰎠',
+  Keyword = '󰌋',
+  Snippet = '󰃐',
+  Color = '󰏘',
+  Reference = '',
+  Folder = '󰉋',
+  Copilot = '',
+  File = '',
+  Module = '',
+  Namespace = '',
+  Package = '',
+  Class = '',
+  Method = '',
+  Property = '',
+  Field = '',
+  Constructor = '',
+  Enum = '',
+  Interface = '',
+  Function = '',
+  Variable = '',
+  Constant = '',
+  String = '',
+  Number = '',
+  Boolean = '',
+  Array = '',
+  Object = '',
+  Key = '',
+  Null = '',
+  EnumMember = '',
+  Struct = '',
+  Event = '',
+  Operator = '',
+  TypeParameter = ''
+}
+
 -- 탭 문자 설정
 vim.cmd('set expandtab')
 vim.cmd('set tabstop=2')
@@ -148,3 +187,8 @@ vim.notify = function(msg, ...)
   end
   notify(msg, ...)
 end
+
+-- symbols 내보내기
+return {
+  symbols = symbols
+}

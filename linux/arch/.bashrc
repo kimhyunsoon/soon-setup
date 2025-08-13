@@ -97,7 +97,7 @@ fcd() {
       --query="$1" \
       --color='hl:yellow,hl+:yellow' \
       --prompt=' ')
-  
+
   if [[ -n "$dir" ]]; then
     cd "$dir"
   fi
@@ -153,7 +153,7 @@ export PATH="$PATH:/home/soon/.local/bin"
 
 # code (cursor)
 code() {
-  nohup /opt/cursor-bin/cursor-bin.AppImage "$@" > /dev/null 2>&1 &
+  nohup /usr/bin/cursor "$@" > /dev/null 2>&1 &
   disown
 }
 

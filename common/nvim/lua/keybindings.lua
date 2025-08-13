@@ -257,6 +257,10 @@ vim.keymap.set({'n', 'v'}, ']]',
   end, { noremap = true, silent = true, desc = '[editor] 아래로 스크롤 (C-d + zz)' }
 )
 
+-- 기본 내장 동작 무효화: '[' 또는 ']' 단독 입력 후 타임아웃으로 인한 파일 처음/끝 점프 방지
+vim.keymap.set('n', '[', '<Nop>', { noremap = true, silent = true })
+vim.keymap.set('n', ']', '<Nop>', { noremap = true, silent = true })
+
 -- 프로젝트에서 문자열 검색 및 치환
 vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { noremap = true, silent = true, desc = '[editor] 프로젝트에서 문자열 검색 및 치환' })
 
@@ -350,7 +354,7 @@ vim.keymap.set('v', 'x', '"+d', { noremap = true, silent = true })
 vim.keymap.set('n', 'xx', '"+dd', { noremap = true, silent = true })
 
 -- 키 매핑 비활성화
-local n_empty_keys = {'c', 'a', 'cc', 'o', 't', '<A-\\>', 's', '][', '[]'}
+local n_empty_keys = {'[', ']', 'c', 'a', 'cc', 'o', 't', '<A-\\>', 's', '][', '[]'}
 for _, key in ipairs(n_empty_keys) do
   vim.keymap.set('n', key, '<Nop>', { noremap = true, silent = true })
 end
@@ -684,50 +688,78 @@ vim.keymap.set('n', 'O', '<C-i>', { noremap = true, silent = true, desc = '[comm
 -- 알림 기록은 telescope.lua에서 처리됨
 
 ------------------------------------------ [lsp] ------------------------------------------
--- LSP 서버 재시작
-vim.keymap.set('n', '<leader>lR', function()
-    -- LSP 재시작
-    vim.cmd.LspRestart()
-
-    -- Treesitter 새로고침
-    vim.cmd('TSDisable highlight')
-    vim.cmd('TSEnable highlight')
-
-    -- Gitsigns 새로고침
-    require('gitsigns').refresh()
-
-    -- Lint 재시작
-    local lint_ok, lint = pcall(require, 'lint')
-    if lint_ok then
-      lint.try_lint()
-    end
-
-    -- Conform (prettier 등 포맷터) 재시작
-    local conform_ok, conform = pcall(require, 'conform')
-    if conform_ok then
-      conform.setup(conform.get_config())
-    end
-
-    -- null-ls (prettier 등 포맷터) 재시작
-    local null_ls_ok, null_ls = pcall(require, 'null-ls')
-    if null_ls_ok then
-      local buf = vim.api.nvim_get_current_buf()
-      -- null-ls 버퍼에서 분리 후 다시 연결
-      null_ls.disable({ bufnr = buf })
-      null_ls.enable({ bufnr = buf })
-    end
-
-    -- 현재 버퍼 다시 로드 (변경사항이 없는 경우에만)
-    if not vim.bo.modified then
-      vim.cmd('edit')
-    end
-
-    vim.notify('LSP, Treesitter, Gitsigns, Lint, Prettier refreshed', vim.log.levels.INFO)
-end, { noremap = true, silent = true, desc = '[lsp] LSP 서버 재시작' })
 
 -- LSP 레퍼런스와 정의는 telescope.lua에서 처리됨
 
+-- lk 키맵 재정의하여 커서 위치 저장
+local last_normal_buf = nil
+local hover_cursor_pos = nil
 
+vim.api.nvim_create_autocmd('BufEnter', {
+  callback = function()
+    local buf = vim.api.nvim_get_current_buf()
+    if vim.bo[buf].buftype == '' and vim.bo[buf].filetype ~= '' then
+      last_normal_buf = buf
+    end
+  end,
+})
+
+vim.keymap.set('n', 'lk', function()
+  hover_cursor_pos = vim.api.nvim_win_get_cursor(0)
+  vim.lsp.buf.hover()
+end, { noremap = true, silent = true, desc = '[lsp] 정보 창 열기' })
+
+-- lk(vim.lsp.buf.hover) 모달에서 gd, gr 키 매핑
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'qf', 'lsp_hover', 'lspinfo' },
+  callback = function()
+    vim.keymap.set('n', 'gd', function()
+      if last_normal_buf and hover_cursor_pos then
+        vim.api.nvim_set_current_buf(last_normal_buf)
+        vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+        vim.schedule(function()
+          require('telescope.builtin').lsp_definitions()
+        end)
+      end
+    end, { buffer = true, noremap = true, silent = true })
+    vim.keymap.set('n', 'gr', function()
+      if last_normal_buf and hover_cursor_pos then
+        vim.api.nvim_set_current_buf(last_normal_buf)
+        vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+        vim.schedule(function()
+          require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
+        end)
+      end
+    end, { buffer = true, noremap = true, silent = true })
+  end,
+})
+
+vim.api.nvim_create_autocmd('WinEnter', {
+  callback = function()
+    local buf = vim.api.nvim_get_current_buf()
+    local buf_name = vim.api.nvim_buf_get_name(buf)
+    if buf_name:match('://') or vim.bo[buf].buftype == 'nofile' then
+      vim.keymap.set('n', 'gd', function()
+        if last_normal_buf and hover_cursor_pos then
+          vim.api.nvim_set_current_buf(last_normal_buf)
+          vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+          vim.schedule(function()
+            require('telescope.builtin').lsp_definitions()
+          end)
+        end
+      end, { buffer = true, noremap = true, silent = true })
+      vim.keymap.set('n', 'gr', function()
+        if last_normal_buf and hover_cursor_pos then
+          vim.api.nvim_set_current_buf(last_normal_buf)
+          vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+          vim.schedule(function()
+            require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
+          end)
+        end
+      end, { buffer = true, noremap = true, silent = true })
+    end
+  end,
+})
 
 -- 식별자 변경
 vim.keymap.set('n', 'lr',
@@ -809,8 +841,67 @@ vim.keymap.set('n', '[e', function()
   vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR, float = false })
 end, { noremap = true, silent = true, desc = '[lsp] 이전 에러로 이동' })
 
+ -- 다음/이전 심볼로 이동
+ local function flatten_document_symbols(items, out)
+   out = out or {}
+   if not items then return out end
+   for _, item in ipairs(items) do
+     if item.selectionRange then
+       table.insert(out, {
+         name = item.name,
+         line = item.selectionRange.start.line,
+         character = item.selectionRange.start.character,
+       })
+       if item.children then
+         flatten_document_symbols(item.children, out)
+       end
+     elseif item.location and item.location.range then
+       table.insert(out, {
+         name = item.name,
+         line = item.location.range.start.line,
+         character = item.location.range.start.character,
+       })
+     end
+   end
+   return out
+ end
 
------------------------------------------- [git] ------------------------------------------
+-- 다음/이전 심볼로 이동
+vim.keymap.set('n', ']s', function()
+  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  vim.lsp.buf_request(0, 'textDocument/documentSymbol', vim.lsp.util.make_position_params(), function(err, result)
+    if err or not result then return end
+
+    local symbols = flatten_document_symbols(result)
+    table.sort(symbols, function(a, b) return a.line < b.line end)
+
+    for _, symbol in ipairs(symbols) do
+      if symbol.line > current_line then
+        vim.api.nvim_win_set_cursor(0, { symbol.line + 1, symbol.character })
+        return
+      end
+    end
+  end)
+end, { noremap = true, silent = true, desc = '[lsp] 다음 심볼로 이동' })
+
+vim.keymap.set('n', '[s', function()
+  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  vim.lsp.buf_request(0, 'textDocument/documentSymbol', vim.lsp.util.make_position_params(), function(err, result)
+    if err or not result then return end
+
+    local symbols = flatten_document_symbols(result)
+    table.sort(symbols, function(a, b) return a.line > b.line end)
+
+    for _, symbol in ipairs(symbols) do
+      if symbol.line < current_line then
+        vim.api.nvim_win_set_cursor(0, { symbol.line + 1, symbol.character })
+        return
+      end
+    end
+  end)
+end, { noremap = true, silent = true, desc = '[lsp] 이전 심볼로 이동' })
+
+ ------------------------------------------ [git] ------------------------------------------
 -- 다음 Git 변경사항으로 이동
 vim.keymap.set('n', ']g', function() require('gitsigns').next_hunk() end, { noremap = true, silent = true, desc = '[git] 다음 Git 변경사항으로 이동' })
 
@@ -836,73 +927,3 @@ vim.keymap.set('n', '<leader>gg',
 vim.cmd([[
   cnoreabbrev ws lua local original = vim.lsp.buf.format; vim.lsp.buf.format = function() end; vim.cmd('w'); vim.lsp.buf.format = original
 ]])
-
-local last_normal_buf = nil
-local hover_cursor_pos = nil
-
-vim.api.nvim_create_autocmd('BufEnter', {
-  callback = function()
-    local buf = vim.api.nvim_get_current_buf()
-    if vim.bo[buf].buftype == '' and vim.bo[buf].filetype ~= '' then
-      last_normal_buf = buf
-    end
-  end,
-})
-
--- lk 키맵 재정의하여 커서 위치 저장
-vim.keymap.set('n', 'lk', function()
-  hover_cursor_pos = vim.api.nvim_win_get_cursor(0)
-  vim.lsp.buf.hover()
-end, { noremap = true, silent = true, desc = '[lsp] 정보 창 열기' })
-
--- lk(vim.lsp.buf.hover) 모달에서 gd, gr 키 매핑
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'qf', 'lsp_hover', 'lspinfo' },
-  callback = function()
-    vim.keymap.set('n', 'gd', function()
-      if last_normal_buf and hover_cursor_pos then
-        vim.api.nvim_set_current_buf(last_normal_buf)
-        vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
-        vim.schedule(function()
-          require('telescope.builtin').lsp_definitions()
-        end)
-      end
-    end, { buffer = true, noremap = true, silent = true })
-    vim.keymap.set('n', 'gr', function()
-      if last_normal_buf and hover_cursor_pos then
-        vim.api.nvim_set_current_buf(last_normal_buf)
-        vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
-        vim.schedule(function()
-          require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
-        end)
-      end
-    end, { buffer = true, noremap = true, silent = true })
-  end,
-})
-
-vim.api.nvim_create_autocmd('WinEnter', {
-  callback = function()
-    local buf = vim.api.nvim_get_current_buf()
-    local buf_name = vim.api.nvim_buf_get_name(buf)
-    if buf_name:match('://') or vim.bo[buf].buftype == 'nofile' then
-      vim.keymap.set('n', 'gd', function()
-        if last_normal_buf and hover_cursor_pos then
-          vim.api.nvim_set_current_buf(last_normal_buf)
-          vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
-          vim.schedule(function()
-            require('telescope.builtin').lsp_definitions()
-          end)
-        end
-      end, { buffer = true, noremap = true, silent = true })
-      vim.keymap.set('n', 'gr', function()
-        if last_normal_buf and hover_cursor_pos then
-          vim.api.nvim_set_current_buf(last_normal_buf)
-          vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
-          vim.schedule(function()
-            require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
-          end)
-        end
-      end, { buffer = true, noremap = true, silent = true })
-    end
-  end,
-})

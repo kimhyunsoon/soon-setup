@@ -31,7 +31,56 @@ return {
     })
 
     local components = require('neo-tree.sources.common.components')
+
+    -- 동일 창(분할 없이)으로 포커스를 옮기고 파일을 여는 헬퍼
+    local function focus_normal_win()
+      local prev_winnr = vim.fn.winnr('#')
+      local function is_normal_win(win)
+        local buf = vim.api.nvim_win_get_buf(win)
+        local ft = vim.bo[buf].filetype
+        local bt = vim.bo[buf].buftype
+        return ft ~= 'neo-tree' and bt ~= 'terminal' and bt ~= 'nofile'
+      end
+      if prev_winnr > 0 then
+        local prev_winid = vim.fn.win_getid(prev_winnr)
+        if prev_winid ~= 0 and is_normal_win(prev_winid) then
+          vim.api.nvim_set_current_win(prev_winid)
+          return
+        end
+      end
+      if vim.bo.filetype == 'neo-tree' then
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          if is_normal_win(win) then
+            vim.api.nvim_set_current_win(win)
+            break
+          end
+        end
+      end
+    end
+
+    local function open_file_no_split(path)
+      focus_normal_win()
+      vim.cmd('edit ' .. vim.fn.fnameescape(path))
+    end
+
+    -- NeoTreeGitUntracked 하이라이트 오버라이드
+    local function apply_neo_tree_git_hl()
+      vim.schedule(function()
+        pcall(vim.cmd, 'highlight clear NeoTreeGitUntracked')
+        -- 보라색에 링크함
+        pcall(vim.cmd, 'highlight! link NeoTreeGitUntracked Label')
+      end)
+    end
+    apply_neo_tree_git_hl()
+    vim.api.nvim_create_autocmd({ 'User', 'ColorScheme' }, {
+      pattern = { 'NeoTree*' },
+      callback = apply_neo_tree_git_hl,
+    })
+
     require('neo-tree').setup({
+      -- 파일은 항상 마지막(네오트리가 아닌) 창에서 열고, 분할을 피함
+      open_files_in_last_window = true,
+      open_files_do_not_replace_types = { 'neo-tree' },
       close_if_last_window = true,
       popup_border_style = 'rounded',
       enable_git_status = true,
@@ -167,9 +216,30 @@ return {
           ['<space>'] = false,
            ['<leader>p'] = false,
           ['.'] = 'set_root',
-          ['<2-LeftMouse>'] = 'open',
+          ['<2-LeftMouse>'] = function(state)
+            local node = state.tree:get_node()
+            if not node then return end
+            if node.type == 'file' then
+              open_file_no_split(node.path)
+            elseif node.type == 'directory' or node.type == 'message' then
+              require('neo-tree.sources.filesystem.commands').toggle_node(state)
+            else
+              require('neo-tree.sources.common.commands').open(state)
+            end
+          end,
           ['<bs>'] = 'navigate_up',
-          ['<cr>'] = 'open',
+          -- 엔터로 열 때도 항상 같은 창(분할 없이)에서 열리도록 강제
+          ['<cr>'] = function(state)
+            local node = state.tree:get_node()
+            if not node then return end
+            if node.type == 'file' then
+              open_file_no_split(node.path)
+            elseif node.type == 'directory' or node.type == 'message' then
+              require('neo-tree.sources.filesystem.commands').toggle_node(state)
+            else
+              require('neo-tree.sources.common.commands').open(state)
+            end
+          end,
           ['<esc>'] = 'cancel',
           ['?'] = 'show_help',
           ['R'] = 'refresh',
