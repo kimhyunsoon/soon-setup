@@ -37,14 +37,10 @@ return {
       '<cmd>Telescope live_grep<cr>',
       desc = '[common] 문자열 찾기',
     },
+
     {
       '<leader>fs',
       function()
-        local clients = vim.lsp.get_clients({ bufnr = 0 })
-        if #clients == 0 then
-          vim.notify('LSP 클라이언트가 연결되지 않았습니다', vim.log.levels.WARN)
-          return
-        end
         require('telescope.builtin').lsp_document_symbols()
       end,
       desc = '[common] 심볼 찾기',
@@ -75,7 +71,7 @@ return {
       function()
         require('telescope.builtin').git_status({
           git_command = { 'git', 'status', '--porcelain' },
-                    entry_maker = function(entry)
+          entry_maker = function(entry)
             local status = entry:sub(1, 2)
             local file_path = entry:sub(4)
 

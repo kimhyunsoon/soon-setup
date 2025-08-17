@@ -691,9 +691,8 @@ vim.keymap.set('n', 'O', '<C-i>', { noremap = true, silent = true, desc = '[comm
 
 -- LSP 레퍼런스와 정의는 telescope.lua에서 처리됨
 
--- lk 키맵 재정의하여 커서 위치 저장
+-- lk 키맵 재정의하여 마지막 버퍼 저장
 local last_normal_buf = nil
-local hover_cursor_pos = nil
 
 vim.api.nvim_create_autocmd('BufEnter', {
   callback = function()
@@ -705,8 +704,10 @@ vim.api.nvim_create_autocmd('BufEnter', {
 })
 
 vim.keymap.set('n', 'lk', function()
-  hover_cursor_pos = vim.api.nvim_win_get_cursor(0)
   vim.lsp.buf.hover()
+  vim.schedule(function()
+    vim.lsp.buf.hover()
+  end)
 end, { noremap = true, silent = true, desc = '[lsp] 정보 창 열기' })
 
 -- lk(vim.lsp.buf.hover) 모달에서 gd, gr 키 매핑
@@ -714,18 +715,24 @@ vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'qf', 'lsp_hover', 'lspinfo' },
   callback = function()
     vim.keymap.set('n', 'gd', function()
-      if last_normal_buf and hover_cursor_pos then
+      -- hover 모달 내 현재 커서 위치의 심볼 가져오기
+      local hover_symbol = vim.fn.expand('<cword>')
+      if last_normal_buf and hover_symbol and hover_symbol ~= '' then
         vim.api.nvim_set_current_buf(last_normal_buf)
-        vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+        -- 모달에서 선택한 심볼을 원래 버퍼에서 찾기
+        vim.fn.search('\\<' .. vim.fn.escape(hover_symbol, '\\') .. '\\>', 'w')
         vim.schedule(function()
           require('telescope.builtin').lsp_definitions()
         end)
       end
     end, { buffer = true, noremap = true, silent = true })
     vim.keymap.set('n', 'gr', function()
-      if last_normal_buf and hover_cursor_pos then
+      -- hover 모달 내 현재 커서 위치의 심볼 가져오기
+      local hover_symbol = vim.fn.expand('<cword>')
+      if last_normal_buf and hover_symbol and hover_symbol ~= '' then
         vim.api.nvim_set_current_buf(last_normal_buf)
-        vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+        -- 모달에서 선택한 심볼을 원래 버퍼에서 찾기
+        vim.fn.search('\\<' .. vim.fn.escape(hover_symbol, '\\') .. '\\>', 'w')
         vim.schedule(function()
           require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
         end)
@@ -740,18 +747,24 @@ vim.api.nvim_create_autocmd('WinEnter', {
     local buf_name = vim.api.nvim_buf_get_name(buf)
     if buf_name:match('://') or vim.bo[buf].buftype == 'nofile' then
       vim.keymap.set('n', 'gd', function()
-        if last_normal_buf and hover_cursor_pos then
+        -- hover 모달 내 현재 커서 위치의 심볼 가져오기
+        local hover_symbol = vim.fn.expand('<cword>')
+        if last_normal_buf and hover_symbol and hover_symbol ~= '' then
           vim.api.nvim_set_current_buf(last_normal_buf)
-          vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+          -- 모달에서 선택한 심볼을 원래 버퍼에서 찾기
+          vim.fn.search('\\<' .. vim.fn.escape(hover_symbol, '\\') .. '\\>', 'w')
           vim.schedule(function()
             require('telescope.builtin').lsp_definitions()
           end)
         end
       end, { buffer = true, noremap = true, silent = true })
       vim.keymap.set('n', 'gr', function()
-        if last_normal_buf and hover_cursor_pos then
+        -- hover 모달 내 현재 커서 위치의 심볼 가져오기
+        local hover_symbol = vim.fn.expand('<cword>')
+        if last_normal_buf and hover_symbol and hover_symbol ~= '' then
           vim.api.nvim_set_current_buf(last_normal_buf)
-          vim.api.nvim_win_set_cursor(0, hover_cursor_pos)
+          -- 모달에서 선택한 심볼을 원래 버퍼에서 찾기
+          vim.fn.search('\\<' .. vim.fn.escape(hover_symbol, '\\') .. '\\>', 'w')
           vim.schedule(function()
             require('telescope.builtin').lsp_references({ include_declaration = false, show_line = false })
           end)
