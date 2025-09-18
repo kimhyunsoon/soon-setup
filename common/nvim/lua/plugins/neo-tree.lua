@@ -6,11 +6,15 @@ return {
     {
       '<leader>o', function()
         if vim.bo.filetype == 'neo-tree' then
-          local win_id = vim.fn.winnr('#')
-          if win_id > 0 then
-            vim.cmd(win_id .. 'wincmd w')
-          else
-            vim.cmd('wincmd p')
+          vim.cmd('Neotree close')
+          -- 일반 에디터 버퍼로 포커스 이동
+          for _, win in ipairs(vim.api.nvim_list_wins()) do
+            local buf = vim.api.nvim_win_get_buf(win)
+            local ft = vim.bo[buf].filetype
+            if ft ~= 'neo-tree' and vim.bo[buf].buftype == '' then
+              vim.api.nvim_set_current_win(win)
+              break
+            end
           end
         else
           vim.cmd('Neotree focus')

@@ -48,6 +48,11 @@ return {
       group = vim.api.nvim_create_augroup('FormatOnSave', { clear = true }),
       pattern = '*',
       callback = function()
+        -- :ws로 저장한 경우 포매팅 건너뛰기
+        if vim.g.format_disable_once then
+          vim.g.format_disable_once = false
+          return
+        end
         vim.cmd('FormatWrite')
       end,
     })

@@ -132,7 +132,7 @@ return {
                 rename = true,
                 renameFileRefactoring = true,
                 signatureHelp = true,
-                codeAction = true,
+                codeAction = false,
                 diagnostics = true,
                 semanticTokens = true,
               }
@@ -142,6 +142,8 @@ return {
               -- volar 포매팅 비활성화
               client.server_capabilities.documentFormattingProvider = false
               client.server_capabilities.documentRangeFormattingProvider = false
+              -- volar code action 비활성화
+              client.server_capabilities.codeActionProvider = false
             end
           }
         end,

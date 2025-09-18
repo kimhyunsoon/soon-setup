@@ -936,7 +936,7 @@ vim.keymap.set('n', '<leader>gg',
   end, { noremap = true, silent = true, desc = '[git] Git Graph 열기' }
 )
 
--- :ws 입력시 nullls(포매팅)을 하지않고 저장
+-- :ws 입력시 formatter(포매팅)을 하지않고 저장
 vim.cmd([[
-  cnoreabbrev ws lua local original = vim.lsp.buf.format; vim.lsp.buf.format = function() end; vim.cmd('w'); vim.lsp.buf.format = original
+  cnoreabbrev ws lua vim.g.format_disable_once = true; vim.cmd('w')
 ]])

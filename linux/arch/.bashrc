@@ -157,6 +157,12 @@ code() {
   disown
 }
 
+# studio-3t
+3t() {
+  GDK_SCALE=2 GDK_DPI_SCALE=0.75 /usr/bin/studio-3t "$@" > ~/studio3t.log 2>&1 &
+  disown
+}
+
 # thunar
 open() {
   thunar "$@" > /dev/null 2>&1 &

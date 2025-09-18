@@ -70,7 +70,6 @@ vim.opt.updatetime = 250  -- CursorHold 이벤트 빈도
 vim.opt.timeoutlen = 300  -- 키 시퀀스 대기 시간 단축
 vim.opt.ttimeoutlen = 10  -- 키 코드 시퀀스 대기 시간 단축
 vim.opt.redrawtime = 1500  -- 구문 강조 시간 제한
-vim.opt.regexpengine = 1  -- 구 정규 표현식 엔진 사용
 vim.opt.ttyfast = true  -- 빠른 터미널 연결
 vim.opt.history = 1000  -- 명령어 히스토리 제한
 vim.opt.backup = false  -- 백업 파일 생성 비활성화
