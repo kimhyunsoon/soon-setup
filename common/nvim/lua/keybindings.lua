@@ -812,9 +812,6 @@ vim.keymap.set('n', 'lr',
   end, { noremap = true, silent = true, desc = '[lsp] 식별자 변경' }
 )
 
--- 코드 수정 제안
-vim.keymap.set('n', 'la', vim.lsp.buf.code_action, { noremap = true, silent = true, desc = '[lsp] 코드 수정 제안' })
-
 -- 진단 열기
 vim.keymap.set('n', 'ld', function()
   vim.diagnostic.open_float()

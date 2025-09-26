@@ -159,7 +159,7 @@ code() {
 
 # studio-3t
 3t() {
-  GDK_SCALE=2 GDK_DPI_SCALE=0.75 /usr/bin/studio-3t "$@" > ~/studio3t.log 2>&1 &
+  GDK_SCALE=1 GDK_DPI_SCALE=1.4 /usr/bin/studio-3t "$@" > ~/studio3t.log 2>&1 &
   disown
 }
 

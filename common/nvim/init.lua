@@ -98,12 +98,12 @@ vim.api.nvim_create_autocmd('BufReadPre', {
     local filename = vim.api.nvim_buf_get_name(buf)
     local size = vim.fn.getfsize(filename)
 
-    if size > 5242880 then  -- 2MB 이상
+    if size > 2621440 then  -- 1MB 이상
       -- 매우 큰 파일: Treesitter 비활성화하되 기본 syntax highlighting 유지
       vim.b[buf].large_file = true
       vim.bo[buf].swapfile = false
       vim.bo[buf].bufhidden = 'unload'
-      vim.bo[buf].undolevels = 100  -- undo 완전 비활성화 대신 제한
+      vim.bo[buf].undolevels = 100
       vim.wo.foldenable = false
       vim.wo.wrap = false
 

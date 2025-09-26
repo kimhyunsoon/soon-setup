@@ -65,6 +65,7 @@ return {
       desc = '[lsp] 참조 찾기'
     },
     { 'gd', function() require('telescope.builtin').lsp_definitions() end, desc = '[lsp] 정의로 이동' },
+    { 'la', function() vim.lsp.buf.code_action() end, desc = '[lsp] 코드 수정 제안' },
     -- git
     {
       '<leader>gs',
@@ -148,7 +149,6 @@ return {
     'tsakirist/telescope-lazy.nvim',
   },
   config = function()
-    require('telescope').load_extension('ui-select')
     require('telescope').setup({
       defaults = {
         prompt_prefix = '  ',
@@ -337,7 +337,13 @@ return {
           show_line = false,
         },
       },
+      extensions = {
+        ['ui-select'] = {
+          require('telescope.themes').get_dropdown {}
+        }
+      },
     })
+    require('telescope').load_extension('ui-select')
     vim.cmd([[
       highlight! link TelescopeSelection TabLine
     ]])

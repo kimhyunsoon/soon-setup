@@ -1,9 +1,7 @@
 return {
   'mhartington/formatter.nvim',
-  event = { 'BufWritePre' },
+  event = { 'BufWritePost' },
   config = function()
-    local util = require('formatter.util')
-
     require('formatter').setup({
       logging = false,
       filetype = {
@@ -26,8 +24,8 @@ return {
           function()
             return {
               exe = 'xmllint',
-              args = { '--format', '--noblanks', util.escape_path(util.get_current_buffer_file_path()) },
-              stdin = false,
+              args = { '--format', '-' },
+              stdin = true,
             }
           end,
         },
