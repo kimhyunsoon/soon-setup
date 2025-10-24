@@ -15,3 +15,8 @@ linker ./nvim $HOME/.config/nvim
 linker ./.wezterm.lua $HOME/.wezterm.lua
 # ghostty
 linker ./ghostty $HOME/.config/ghostty
+
+# claude
+linker ./claude/CLAUDE.md $HOME/.claude/CLAUDE.md
+linker ./claude/settings.json $HOME/.claude/settings.json
+linker ./claude/statusline-command.sh $HOME/.claude/statusline-command.sh

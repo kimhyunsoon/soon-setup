@@ -34,3 +34,4 @@ keybind = ctrl+a=select_all
 keybind = ctrl+t=new_window
 keybind = ctrl+w=close_window
 keybind = super+c=text:\x03
+keybind = shift+enter=text:\x1b\r
