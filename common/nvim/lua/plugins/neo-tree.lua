@@ -260,6 +260,73 @@ return {
           ['x'] = 'cut_to_clipboard',
           ['y'] = 'copy_name_to_clipboard',
           ['Y'] = 'copy_path_to_clipboard',
+          -- 버퍼 이동 키맵핑
+          ['{'] = function()
+            -- 일반 버퍼로 포커스 이동 후 bprevious 실행
+            for _, win in ipairs(vim.api.nvim_list_wins()) do
+              local buf = vim.api.nvim_win_get_buf(win)
+              local ft = vim.bo[buf].filetype
+              if ft ~= 'neo-tree' and vim.bo[buf].buftype == '' then
+                vim.api.nvim_set_current_win(win)
+                vim.cmd('bprevious')
+                return
+              end
+            end
+          end,
+          ['}'] = function()
+            -- 일반 버퍼로 포커스 이동 후 bnext 실행
+            for _, win in ipairs(vim.api.nvim_list_wins()) do
+              local buf = vim.api.nvim_win_get_buf(win)
+              local ft = vim.bo[buf].filetype
+              if ft ~= 'neo-tree' and vim.bo[buf].buftype == '' then
+                vim.api.nvim_set_current_win(win)
+                vim.cmd('bnext')
+                return
+              end
+            end
+          end,
+          -- 터미널 열기
+          ['<leader>tt'] = function()
+            -- 일반 버퍼로 포커스 이동
+            for _, win in ipairs(vim.api.nvim_list_wins()) do
+              local buf = vim.api.nvim_win_get_buf(win)
+              local ft = vim.bo[buf].filetype
+              if ft ~= 'neo-tree' and vim.bo[buf].buftype == '' then
+                vim.api.nvim_set_current_win(win)
+                break
+              end
+            end
+
+            -- 터미널 열기
+            vim.cmd('enew')
+            local term_buf = vim.api.nvim_get_current_buf()
+            vim.fn.termopen(vim.env.SHELL or 'bash', {
+              on_exit = function(_)
+                vim.schedule(function()
+                  if vim.api.nvim_buf_is_valid(term_buf) then
+                    local bufs = vim.api.nvim_list_bufs()
+                    local valid_bufs = {}
+                    for _, buf in ipairs(bufs) do
+                      if vim.api.nvim_buf_is_valid(buf)
+                         and vim.bo[buf].buflisted
+                         and buf ~= term_buf
+                         and vim.bo[buf].filetype ~= 'neo-tree' then
+                        table.insert(valid_bufs, buf)
+                      end
+                    end
+                    if #valid_bufs > 0 then
+                      vim.api.nvim_set_current_buf(valid_bufs[1])
+                    else
+                      vim.cmd('enew')
+                    end
+                    if vim.api.nvim_buf_is_valid(term_buf) then
+                      vim.api.nvim_buf_delete(term_buf, { force = true })
+                    end
+                  end
+                end)
+              end
+            })
+          end,
         },
         enable_normal_mode_for_inputs = false,
         popup_border_style = 'rounded',

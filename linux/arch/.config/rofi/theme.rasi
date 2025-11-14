@@ -1,0 +1,81 @@
+* {
+  background-color: transparent;
+  text-color: #f2f2f2;
+
+  bg: rgba(0, 0, 0, 1);
+  bg-solid: rgba(0, 0, 0, 1);
+  border-color: rgba(255, 255, 255, 0.2);
+  selected-bg: rgba(255, 255, 255, 0.2);
+
+  spacing: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+window {
+  background-color: transparent;
+  border: 1px;
+  border-color: @border-color;
+  width: 700px;
+}
+
+mainbox {
+  background-color: @bg;
+  padding: 0;
+}
+
+inputbar {
+  background-color: @bg-solid;
+  padding: 8px;
+  spacing: 0;
+  border: none;
+  children: [ entry ];
+}
+
+prompt {
+  enabled: false;
+}
+
+entry {
+  background-color: transparent;
+  text-color: @text-color;
+  placeholder: "";
+}
+
+listview {
+  background-color: transparent;
+  scrollbar: false;
+  spacing: 0;
+  padding: 0;
+  border: none;
+  dynamic: true;
+  fixed-height: false;
+}
+
+element {
+  background-color: transparent;
+  padding: 8px;
+  text-color: @text-color;
+  children: [ element-icon, element-text ];
+}
+
+element selected {
+  background-color: @selected-bg;
+  text-color: @text-color;
+}
+
+element-text {
+  background-color: transparent;
+  text-color: inherit;
+}
+
+element-icon {
+  background-color: transparent;
+  size: 1.2em;
+  padding: 0 8px 0 0;
+}
+
+element-index {
+  enabled: false;
+}

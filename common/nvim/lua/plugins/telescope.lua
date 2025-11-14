@@ -1,3 +1,41 @@
+local image_extensions = { 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg', 'ico' }
+
+local function is_image_file(filepath)
+  if not filepath then return false end
+  local lower_path = filepath:lower()
+  for _, ext in ipairs(image_extensions) do
+    if lower_path:match('%.' .. ext .. '$') then
+      return true
+    end
+  end
+  return false
+end
+
+local svg_validation_cache = {}
+
+local function is_valid_svg(filepath)
+  if not filepath:lower():match('%.svg$') then return true end
+  if svg_validation_cache[filepath] ~= nil then return svg_validation_cache[filepath] end
+
+  local tmpfile = os.tmpname() .. '.png'
+  local cmd = string.format(
+    'timeout 0.5 magick convert %s -flatten -background none PNG32:%s 2>&1',
+    vim.fn.shellescape(filepath), vim.fn.shellescape(tmpfile)
+  )
+  local result = vim.fn.system(cmd)
+
+  local is_valid = vim.v.shell_error == 0
+    and not result:match('[Ee]rror')
+    and vim.fn.filereadable(tmpfile) == 1
+    and vim.fn.getfsize(tmpfile) > 0
+
+  pcall(os.remove, tmpfile)
+  svg_validation_cache[filepath] = is_valid
+  return is_valid
+end
+
+
+-- telescope 검색 결과에서 파일 열기 시 해당 위치로 스크롤
 local select_one_or_multi = function(prompt_bufnr)
   local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr)
   local multi = picker:get_multi_selection()
@@ -12,13 +50,51 @@ local select_one_or_multi = function(prompt_bufnr)
       if file_path then
         if j.lnum then
           vim.cmd(string.format('%s +%d %s', 'edit', j.lnum, file_path))
+          if j.col then
+            local buf = vim.api.nvim_get_current_buf()
+            local line_count = vim.api.nvim_buf_line_count(buf)
+            if j.lnum <= line_count then
+              local line = vim.api.nvim_buf_get_lines(buf, j.lnum - 1, j.lnum, false)[1]
+              if line then
+                local col = math.min(j.col - 1, #line)
+                vim.api.nvim_win_set_cursor(0, {j.lnum, col})
+              end
+            end
+          end
         else
           vim.cmd(string.format('%s %s', 'edit', file_path))
         end
       end
     end
   else
-    require('telescope.actions').select_default(prompt_bufnr)
+    local selection = require('telescope.actions.state').get_selected_entry()
+    require('telescope.actions').close(prompt_bufnr)
+
+    local file_path = selection.path or selection.filename
+    if picker.picker_name == 'git_status' then
+      file_path = selection.value
+    end
+
+    if file_path then
+      if selection.lnum then
+        vim.cmd(string.format('%s +%d %s', 'edit', selection.lnum, file_path))
+        if selection.col then
+          vim.schedule(function()
+            local buf = vim.api.nvim_get_current_buf()
+            local line_count = vim.api.nvim_buf_line_count(buf)
+            if selection.lnum <= line_count then
+              local line = vim.api.nvim_buf_get_lines(buf, selection.lnum - 1, selection.lnum, false)[1]
+              if line then
+                local col = math.min(selection.col - 1, #line)
+                vim.api.nvim_win_set_cursor(0, {selection.lnum, col})
+              end
+            end
+          end)
+        end
+      else
+        vim.cmd(string.format('%s %s', 'edit', file_path))
+      end
+    end
   end
 end
 
@@ -149,8 +225,149 @@ return {
     'tsakirist/telescope-lazy.nvim',
   },
   config = function()
+    local previewers = require('telescope.previewers')
+
+    local IMAGE_PREVIEW_ERROR_MESSAGE = "Image preview is not available"
+    local current_image = nil
+
+    -- image.nvim 에러 처리
+    local original_notify = vim.notify
+    vim.notify = function(msg, level, opts)
+      if type(msg) == 'string' and (
+         msg:match('magick_cli%.lua')
+         or msg:match('negative or zero image size')
+         or msg:match('no decode delegate')
+         or (msg:match('Error executing callback') and msg:match('image'))
+      ) then
+        return
+      end
+      return original_notify(msg, level, opts)
+    end
+
+    -- 이미지 클리어 헬퍼 함수
+    local function clear_images()
+      pcall(function()
+        local ok, image = pcall(require, 'image')
+        if ok then image.clear() end
+      end)
+      if current_image then
+        pcall(function() current_image:clear() end)
+        current_image = nil
+      end
+    end
+
+    -- SVG를 텍스트로 표시
+    local function show_svg_as_text(filepath, bufnr)
+      clear_images()
+
+      local file = io.open(filepath, 'r')
+      if not file then return false end
+
+      local lines = {}
+      for line in file:lines() do
+        table.insert(lines, line)
+        if #lines > 3000 then break end
+      end
+      file:close()
+
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_buf_set_option(bufnr, 'filetype', 'xml')
+    end
+
+    -- 이미지 파일 fallback 처리
+    local function show_image_fallback(is_svg, filepath, bufnr)
+      if is_svg then
+        show_svg_as_text(filepath, bufnr)
+      else
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { IMAGE_PREVIEW_ERROR_MESSAGE })
+      end
+    end
+
+    -- Kitty 프로토콜 지원 확인
+    local function supports_kitty_protocol()
+      local term = os.getenv('TERM') or ''
+      return term:match('kitty') or term:match('ghostty') or os.getenv('KITTY_WINDOW_ID') ~= nil
+    end
+
+    local buffer_previewer_maker = function(filepath, bufnr, opts)
+      opts = opts or {}
+      local is_svg = filepath:lower():match('%.svg$')
+
+      if is_image_file(filepath) then
+        if is_svg and not is_valid_svg(filepath) then
+          show_svg_as_text(filepath, bufnr)
+          return
+        end
+
+        if not supports_kitty_protocol() then
+          show_image_fallback(is_svg, filepath, bufnr)
+          return
+        end
+
+        local has_image, image = pcall(require, 'image')
+        if not has_image then
+          show_image_fallback(is_svg, filepath, bufnr)
+          return
+        end
+
+        vim.schedule(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) then return end
+
+          clear_images()
+
+          local winid
+          for _, win in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(win) == bufnr then
+              winid = win
+              break
+            end
+          end
+
+          if not winid then
+            show_image_fallback(is_svg, filepath, bufnr)
+            return
+          end
+
+          vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+          vim.api.nvim_buf_set_option(bufnr, 'filetype', 'image')
+
+          local success, img = pcall(function()
+            return image.from_file(filepath, {
+              window = winid,
+              buffer = bufnr,
+              with_virtual_padding = true,
+              inline = true,
+              x = 0,
+              y = 0,
+              width = vim.api.nvim_win_get_width(winid),
+              height = vim.api.nvim_win_get_height(winid),
+            })
+          end)
+
+          if success and img then
+            local render_ok = pcall(function()
+              current_image = img
+              img:render()
+            end)
+
+            if not render_ok then
+              current_image = nil
+              show_image_fallback(is_svg, filepath, bufnr)
+            end
+          else
+            show_image_fallback(is_svg, filepath, bufnr)
+          end
+        end)
+        return
+      end
+
+      clear_images()
+      previewers.buffer_previewer_maker(filepath, bufnr, opts)
+    end
+
     require('telescope').setup({
       defaults = {
+        buffer_previewer_maker = buffer_previewer_maker,
         prompt_prefix = '  ',
         selection_caret = '  ',
         multi_icon = '  ',
@@ -174,11 +391,6 @@ return {
         },
         preview = {
           filesize_limit = 0.5555,
-        },
-        mappings = {
-          i = {
-            ['<CR>'] = select_one_or_multi,
-          }
         },
         file_ignore_patterns = {
           '^.git/',          -- git 디렉토리
@@ -206,6 +418,11 @@ return {
       },
       pickers = {
         find_files = {
+          mappings = {
+            i = {
+              ['<CR>'] = select_one_or_multi,
+            }
+          },
           find_command = {
             'rg',
             '--files',        -- 파일 목록만 출력
@@ -228,6 +445,11 @@ return {
           },
         },
         live_grep = {
+          mappings = {
+            i = {
+              ['<CR>'] = select_one_or_multi,
+            }
+          },
           additional_args = function()
             return {
               '--hidden',       -- 숨김 파일 포함
@@ -259,6 +481,7 @@ return {
         git_status = {
           mappings = {
             i = {
+              ['<CR>'] = select_one_or_multi,
               ['<Tab>'] = function(prompt_bufnr)
                 require('telescope.actions').toggle_selection(prompt_bufnr)
                 require('telescope.actions').move_selection_next(prompt_bufnr)
@@ -334,7 +557,26 @@ return {
           },
         },
         lsp_definitions = {
+          mappings = {
+            i = {
+              ['<CR>'] = select_one_or_multi,
+            }
+          },
           show_line = false,
+        },
+        lsp_references = {
+          mappings = {
+            i = {
+              ['<CR>'] = select_one_or_multi,
+            }
+          },
+        },
+        lsp_document_symbols = {
+          mappings = {
+            i = {
+              ['<CR>'] = select_one_or_multi,
+            }
+          },
         },
       },
       extensions = {
@@ -347,5 +589,19 @@ return {
     vim.cmd([[
       highlight! link TelescopeSelection TabLine
     ]])
+
+    -- Telescope 종료 시 이미지 클리어
+    vim.api.nvim_create_autocmd('FileType', {
+      pattern = 'TelescopePrompt',
+      callback = function(args)
+        vim.api.nvim_create_autocmd('BufLeave', {
+          buffer = args.buf,
+          once = true,
+          callback = function()
+            vim.schedule(clear_images)
+          end,
+        })
+      end,
+    })
   end
 }

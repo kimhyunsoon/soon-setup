@@ -5,7 +5,7 @@
   "reload_style_on_change": true,
   "modules-left": ["hyprland/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu","memory","disk","tray","bluetooth","battery"],
+  "modules-right": ["cpu","memory","disk","tray","battery"],
   "hyprland/workspaces": {
     "format": "{icon}",
     "format-icons": {
@@ -20,13 +20,6 @@
   "clock": {
     "format": "{:%Y-%m-%d %H:%M:%S}",
     "interval": 1
-  },
-  "bluetooth": {
-    "format-on": "󰂯",
-    "format-off": "BT-off",
-    "format-disabled": "󰂲",
-    "format-connected-battery": "󰂯",
-    "on-click": "blueberry"
   },
   "battery": {
     "interval":1,
@@ -64,7 +57,7 @@
     }
   },
   "tray": {
-    "icon-size": 14,
+    "icon-size": 16,
     "spacing": 10
   }
 }

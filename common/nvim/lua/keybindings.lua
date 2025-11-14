@@ -421,20 +421,10 @@ vim.keymap.set('n', 'K', '<C-w>k', { noremap = true, silent = true, desc = '[com
 vim.keymap.set('n', 'J', '<C-w>j', { noremap = true, silent = true, desc = '[common] 아래 창으로 이동' })
 
 -- 이전 버퍼로 이동
-vim.keymap.set('n', '{', function()
-  if vim.bo.filetype == 'neo-tree' then
-    return
-  end
-  vim.cmd('bprevious')
-end, { noremap = true, silent = true, desc = '[common] 이전 버퍼로 이동' })
+vim.keymap.set('n', '{', ':bprevious<CR>', { noremap = true, silent = true, desc = '[common] 이전 버퍼로 이동' })
 
 -- 다음 버퍼로 이동
-vim.keymap.set('n', '}', function()
-  if vim.bo.filetype == 'neo-tree' then
-    return
-  end
-  vim.cmd('bnext')
-end, { noremap = true, silent = true, desc = '[common] 다음 버퍼로 이동' })
+vim.keymap.set('n', '}', ':bnext<CR>', { noremap = true, silent = true, desc = '[common] 다음 버퍼로 이동' })
 
 -- 현재 버퍼 닫기
 vim.keymap.set('n', '<leader>c',

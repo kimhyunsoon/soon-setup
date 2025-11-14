@@ -1,0 +1,14 @@
+configuration {
+  modi: "drun";
+  show-icons: true;
+  display-drun: "";
+  drun-display-format: "{name}";
+  font: "Noto Sans CJK KR 14";
+  matching: "fuzzy";
+  sort: false;
+  lines: 10;
+  dynamic: true;
+  width: 30;
+}
+
+@theme "theme.rasi"

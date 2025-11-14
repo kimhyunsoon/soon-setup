@@ -27,7 +27,7 @@ nvim /etc/systemd/logind.conf
 sudo pacman -S jq
 
 # file manager
-sudo pacman -S thunar thunar-archive-plugin thunar-media-tags-plugin thunar-volman gvfs
+sudo pacman -S nautilus
 
 # wifi manager
 sudo pacman -S network-manager-applet
@@ -45,14 +45,11 @@ sudo pacman -S tesseract tesseract-data-eng tesseract-data-kor
 # color picker
 paru -S hyprpicker-git
 
-# clipboard manager
-sudo pacman -S cliphist wofi
+# clipboard manager + app launcher
+sudo pacman -S cliphist rofi
 
 # zip
-sudo pacman -S unzip zip unrar p7zip xarchiver thunar-archive-plugin file-roller
-
-# app launcher
-paru -S onagre
+sudo pacman -S unzip zip unrar p7zip xarchiver file-roller
 
 # 기타 등등..
 sudo pacman -S firefox thunderbird chromium fzf docker bashtop neofetch neovim foot
@@ -73,4 +70,3 @@ desktop 파일 생성
 
 # beekeeper
 paru -S beekeeper-studio-appimage
-

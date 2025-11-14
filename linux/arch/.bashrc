@@ -88,7 +88,7 @@ export NVM_DIR="$HOME/.nvm"
 # fzf to dir
 fcd() {
   local dir
-  dir=$(find ~ -type d 2> /dev/null | \
+  dir=$(fd --type d --hidden . ~ 2> /dev/null | \
     fzf --preview 'ls -la --color=always {} | head -100' \
       --preview-window=right:50% \
       --height=80% \
@@ -97,16 +97,13 @@ fcd() {
       --query="$1" \
       --color='hl:yellow,hl+:yellow' \
       --prompt=' ')
-
-  if [[ -n "$dir" ]]; then
-    cd "$dir"
-  fi
+  [[ -n "$dir" ]] && cd "$dir"
 }
 
 # fzf to file
 ff() {
   local file
-  file=$(find ~ -type f 2> /dev/null | \
+  file=$(fd --type f --hidden . ~ 2> /dev/null | \
     fzf --height=80% \
       --layout=reverse \
       --border=rounded \
@@ -165,7 +162,7 @@ code() {
 
 # thunar
 open() {
-  thunar "$@" > /dev/null 2>&1 &
+  nautilus "$@" > /dev/null 2>&1 &
 }
 
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
@@ -173,7 +170,3 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 export ANDROID_SDK_ROOT=$HOME/android-sdk
 export PATH=$PATH:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools
-
-# Task Master aliases added on 7/28/2025
-alias tm='task-master'
-alias taskmaster='task-master'
