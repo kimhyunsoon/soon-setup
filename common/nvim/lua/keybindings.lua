@@ -233,28 +233,16 @@ end, { noremap = true, silent = true })
 
 -- 주석 토글 키맵은 comment.lua에서 처리됨
 
--- smooth scroll up (C-u + zz)
+-- 50줄씩 위로 스크롤
 vim.keymap.set({ 'n', 'v' }, '[[',
-  function()
-    if _G.smooth_scroll_up then
-      _G.smooth_scroll_up()
-    else
-      -- neoscroll이 로드되지 않은 경우 fallback
-      vim.cmd('normal! zz')
-    end
-  end, { noremap = true, silent = true, desc = '[editor] 위로 스크롤 (C-u + zz)' }
+  function() _G.smooth_scroll(true)
+  end, { noremap = true, silent = true, desc = '[editor] 50줄 위로 스크롤' }
 )
 
--- smooth scroll down (C-d + zz)
+-- 50줄씩 아래로 스크롤
 vim.keymap.set({'n', 'v'}, ']]',
-  function()
-    if _G.smooth_scroll_down then
-      _G.smooth_scroll_down()
-    else
-      -- neoscroll이 로드되지 않은 경우 fallback
-      vim.cmd('normal! zz')
-    end
-  end, { noremap = true, silent = true, desc = '[editor] 아래로 스크롤 (C-d + zz)' }
+  function() _G.smooth_scroll(false)
+  end, { noremap = true, silent = true, desc = '[editor] 50줄 아래로 스크롤' }
 )
 
 -- 기본 내장 동작 무효화: '[' 또는 ']' 단독 입력 후 타임아웃으로 인한 파일 처음/끝 점프 방지

@@ -113,14 +113,6 @@ return {
       '<cmd>Telescope live_grep<cr>',
       desc = '[common] 문자열 찾기',
     },
-
-    {
-      '<leader>fs',
-      function()
-        require('telescope.builtin').lsp_document_symbols()
-      end,
-      desc = '[common] 심볼 찾기',
-    },
     {
        '<leader>fk',
        function()
