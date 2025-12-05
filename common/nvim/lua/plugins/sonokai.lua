@@ -3,6 +3,7 @@ return {
   name = 'sonokai',
   priority = 1000,
   config = function()
+    vim.opt.termguicolors = true
     vim.g.sonokai_style = 'default'
     vim.g.sonokai_better_performance = 1
     vim.g.sonokai_transparent_background = 2

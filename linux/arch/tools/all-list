@@ -85,7 +85,10 @@ unzip 6.0-21
 vi 1:070224-6
 vulkan-radeon 1:24.3.3-1
 waybar 0.11.0-5
-wezterm-git 20250103.121535.8e9cf912-1
+thunar 4.20.1-1
+thunar-archive-plugin 0.5.3-1
+thunar-media-tags-plugin 0.5.0-1
+thunar-volman 4.20.0-2
 wget 1.25.0-1
 wine 9.22-1
 wine-gecko 2.47.4-2
@@ -97,5 +100,4 @@ xf86-video-amdgpu 23.0.0-2
 xorg-xrandr 1.5.3-1
 xorg-xwayland 24.1.4-1
 rofi
-nautilus
 magick

@@ -196,6 +196,7 @@ return {
 
               local scopes = {}
               local current = node
+              local last_name = nil
 
               while current and #scopes < 3 do
                 local node_type = current:type()
@@ -204,9 +205,10 @@ return {
                 if icon then
                   local name = get_symbol_name(current, bufnr)
 
-                  if name ~= '' then
+                  if name ~= '' and name ~= last_name then
                     local hl_name = 'LualineSymbol' .. node_type:gsub('_', '')
                     table.insert(scopes, 1, { icon = icon, name = name, hl = hl_name })
+                    last_name = name
                   end
                 end
 

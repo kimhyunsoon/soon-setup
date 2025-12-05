@@ -162,7 +162,7 @@ code() {
 
 # thunar
 open() {
-  nautilus "$@" > /dev/null 2>&1 &
+  thunar "$@" > /dev/null 2>&1 &
 }
 
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
@@ -170,3 +170,5 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 export ANDROID_SDK_ROOT=$HOME/android-sdk
 export PATH=$PATH:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools
+
+export TERMINAL=ghostty

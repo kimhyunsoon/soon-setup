@@ -27,7 +27,7 @@ nvim /etc/systemd/logind.conf
 sudo pacman -S jq
 
 # file manager
-sudo pacman -S nautilus
+sudo pacman -S thunar thunar-archive-plugin thunar-media-tags-plugin thunar-volman gvfs
 
 # wifi manager
 sudo pacman -S network-manager-applet

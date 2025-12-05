@@ -249,9 +249,6 @@ vim.keymap.set({'n', 'v'}, ']]',
 vim.keymap.set('n', '[', '<Nop>', { noremap = true, silent = true })
 vim.keymap.set('n', ']', '<Nop>', { noremap = true, silent = true })
 
--- 프로젝트에서 문자열 검색 및 치환
-vim.keymap.set('n', '<leader>ss', '<cmd>lua require("spectre").toggle()<CR>', { noremap = true, silent = true, desc = '[editor] 프로젝트에서 문자열 검색 및 치환' })
-
 -- 삭제 및 붙여넣기 시 레지스터에 저장하지 않음
 vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
 vim.keymap.set('v', 'd', function()
