@@ -9,6 +9,7 @@ alias grep='grep --color=auto'
 # 명령어 시간 측정 변수
 TIMER_START=0
 TIMER_SHOW=""
+TIMER_READY=1
 
 # Git 브랜치 함수
 parse_git_branch() {
@@ -26,16 +27,17 @@ parse_git_branch() {
   fi
 }
 
-# 명령어 실행 전 타이머 시작
+# 명령어 실행 전 타이머 시작 (ble.sh용)
 preexec() {
   TIMER_START=$(date +%s%N)
+  TIMER_READY=0
 }
 
 # 프롬프트 표시 전에 실행 시간 계산
 precmd() {
   local EXIT="$?"
   # 실행 시간 계산
-  if [ $TIMER_START -ne 0 ]; then
+  if [[ $TIMER_READY == 0 && $TIMER_START -ne 0 ]]; then
     local TIMER_END=$(date +%s%N)
     local TIMER_DIFF=$((TIMER_END - TIMER_START))
     # 나노초를 밀리초로 변환
@@ -52,10 +54,9 @@ precmd() {
       local SEC=$(((MS % 60000) / 1000))
       TIMER_SHOW="${MIN}m ${SEC}s"
     fi
-  else
-    TIMER_SHOW=""
   fi
   TIMER_START=0
+  TIMER_READY=1
 }
 
 # ble.sh 호환 설정
@@ -64,7 +65,7 @@ if [[ ${BLE_VERSION-} ]]; then
   blehook PREEXEC+=preexec
 else
   # ble.sh가 없는 경우 기본 bash 설정
-  trap 'preexec' DEBUG
+  trap '[[ $TIMER_READY == 1 ]] && TIMER_START=$(date +%s%N) && TIMER_READY=0' DEBUG
   PROMPT_COMMAND=precmd
 fi
 
@@ -172,3 +173,9 @@ export ANDROID_SDK_ROOT=$HOME/android-sdk
 export PATH=$PATH:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools
 
 export TERMINAL=ghostty
+
+# sudo 다음 명령어에도 alias 적용
+alias sudo='sudo '
+
+# 강제 재부팅 (--force --force: 즉시 재부팅, 프로그램 대기 없음)
+alias reboot='systemctl reboot --force --force'
