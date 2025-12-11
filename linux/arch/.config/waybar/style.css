@@ -49,7 +49,7 @@ tooltip {
 }
 #workspaces button {
   all:unset;
-  padding: 0px 4px;
+  padding: 0px 6px;
   color: #888888;
   transition: all .5s ease;
 }
@@ -70,17 +70,14 @@ tooltip {
 }
 #workspaces button:nth-child(3),
 #workspaces button:nth-child(6) {
-  margin-right: 6px;
+  margin-right: 10px;
 }
 
-#bluetooth{
-  padding: 0px 5px;
-  transition: all .3s ease;
-}
 #network{
   padding: 0px 5px;
   transition: all .3s ease;
 }
+
 #battery{
   padding: 0px 5px;
   transition: all .3s ease;

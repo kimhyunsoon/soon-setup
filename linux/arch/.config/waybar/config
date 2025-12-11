@@ -1,13 +1,12 @@
 {
   "layer": "top",
   "position": "top",
-  "output": ["eDP-1", "DP-1", "HDMI-A-1"],
   "reload_style_on_change": true,
   "modules-left": ["hyprland/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu","memory","disk","tray","battery"],
+  "modules-right": ["cpu","memory","tray","battery"],
   "hyprland/workspaces": {
-    "format": "{icon}",
+    "format": "<span font='12'>{icon}</span>",
     "format-icons": {
       "active": "",
       "default": "",
@@ -35,24 +34,15 @@
   },
   "cpu": {
     "interval": 1,
-    "format": "C {usage}%",
+    "format": "{usage}%",
     "states": {
       "warning": 80
     }
   },
   "memory": {
     "interval": 1,
-    "format": "R {percentage}%",
-    "format-alt": "R {used:0.1f}GB/{total:0.1f}GB",
-    "states": {
-      "warning": 80
-    }
-  },
-  "disk": {
-    "interval": 30,
-    "format": " D {percentage_used}%",
-    "format-alt": " D {used}/{total}",
-    "path": "/",
+    "format": "{percentage}%",
+    "format-alt": "{used:0.1f}GiB/{total:0.1f}GiB",
     "states": {
       "warning": 80
     }
