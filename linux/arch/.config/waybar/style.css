@@ -84,11 +84,15 @@ tooltip {
 
 }
 #battery.charging {
-  color: #26A65B;
+  color: #00ff00;
+}
+
+#battery.discharging {
+  color: #ffbe61;
 }
 
 #battery.warning:not(.charging) {
-  color: #ffbe61;
+  color: #ff8c32;
 }
 
 #battery.critical:not(.charging) {
@@ -116,7 +120,7 @@ tooltip {
 #custom-colorpicker{
   padding: 0px 5px;
 }
-#cpu,#memory,#temperature{
+#cpu,#memory,#temperature, #disk{
   padding: 0px 5px;
   transition: all .3s ease;
 }
@@ -144,4 +148,23 @@ tooltip {
 
 #memory.warning {
   color: #f53c3c;
+}
+
+#custom-spotify {
+  padding: 0px 15px;
+  transition: all .3s ease;
+  padding-bottom: 1px;
+}
+
+#custom-spotify-prev,
+#custom-spotify-next {
+  padding: 0px 5px;
+  color: #888888;
+  font-size: 16px;
+  transition: all .3s ease;
+}
+
+#custom-spotify-prev:hover,
+#custom-spotify-next:hover {
+  color: #1db954;
 }

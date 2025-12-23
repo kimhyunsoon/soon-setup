@@ -2,9 +2,9 @@
   "layer": "top",
   "position": "top",
   "reload_style_on_change": true,
-  "modules-left": ["hyprland/workspaces"],
+  "modules-left": ["hyprland/workspaces", "custom/spotify", "custom/spotify-prev", "custom/spotify-next"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu","memory","tray","battery"],
+  "modules-right": ["cpu","memory", "disk", "tray","battery"],
   "hyprland/workspaces": {
     "format": "<span font='12'>{icon}</span>",
     "format-icons": {
@@ -18,7 +18,7 @@
     }
   },
   "clock": {
-    "format": "{:%Y-%m-%d %H:%M:%S}",
+    "format": "{:%B %d, %Y %H:%M:%S}",
     "interval": 1
   },
   "battery": {
@@ -29,8 +29,9 @@
       "critical": 20
     },
     "format": "{capacity}%",
-    "format-charging": "{capacity}%",
-    "format-plugged": "{capacity}%"
+    "format-charging": "󱐋{capacity}%",
+    "format-plugged": "{capacity}%",
+    "format-discharging": "{capacity}%"
   },
   "cpu": {
     "interval": 1,
@@ -47,8 +48,35 @@
       "warning": 80
     }
   },
+  "disk": {
+    "interval": 30,
+    "format": "{percentage_used}%",
+    "format-alt": "{used}/{total}",
+    "path": "/",
+    "states": {
+      "warning": 80
+    }
+  },
   "tray": {
     "icon-size": 16,
     "spacing": 10
+  },
+  "custom/spotify": {
+    "exec": "~/.config/waybar/scripts/spotify.sh",
+    "interval": 1,
+    "format": "{}",
+    "max-length": 80,
+    "tooltip": false,
+    "on-click": "playerctl play-pause"
+  },
+  "custom/spotify-prev": {
+    "format": "◀",
+    "on-click": "playerctl previous",
+    "tooltip": false
+  },
+  "custom/spotify-next": {
+    "format": "▶",
+    "on-click": "playerctl next",
+    "tooltip": false
   }
 }

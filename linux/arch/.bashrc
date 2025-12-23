@@ -18,7 +18,9 @@ parse_git_branch() {
     # 브랜치 이름을 해시하여 0-6 사이의 숫자로 변환
     local hash=0
     for (( i=0; i<${#branch}; i++ )); do
-      hash=$(( (hash + $(printf '%d' "'${branch:$i:1}")) % 7 ))
+      local char="${branch:$i:1}"
+      local ascii=$(LC_CTYPE=C printf '%d' "'$char")
+      hash=$(( (hash + ascii) % 7 ))
     done
     # 해시값에 따라 색상 코드 선택 (31-37)
     local color=$((hash + 31))
@@ -74,12 +76,11 @@ PS1='
 \[\033[38;5;252m\]$PWD\[\033[0m\]\[$(parse_git_branch)\] \[\033[38;5;244m\]${TIMER_SHOW}\[\033[0m\]
 $ '
 
-
 # bash-completion
-[[ $PS1 && -f /usr/share/bash-completion/bash_completion ]] && source /usr/share/bash-completion/bash_completion
+[[ $PS1 && -f /usr/share/bash-completion/bash_completion ]] && source /usr/share/bash-completion/bash_completion 2>/dev/null
 
-# ble.sh start
-[[ $- == *i* ]] && source $HOME/ble.sh/out/ble.sh
+# ble.sh
+[[ $- == *i* ]] && source $HOME/ble.sh/out/ble.sh 2>/dev/null
 
 # nvm
 export NVM_DIR="$HOME/.nvm"
