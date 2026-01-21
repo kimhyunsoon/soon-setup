@@ -564,6 +564,31 @@ vim.keymap.set('n', '<leader>fo', function()
   vim.notify('Opening file: ' .. path, vim.log.levels.INFO)
 end, { noremap = true, silent = true, desc = '[common] 파일 열기' })
 
+-- 현재 파일의 폴더를 시스템 기본 프로그램으로 열기
+vim.keymap.set('n', '<leader>po', function()
+  local path = vim.fn.expand('%:p')
+
+  -- 파일이 존재하지 않으면 무시
+  if path == '' or vim.fn.filereadable(path) == 0 then
+    return
+  end
+
+  local dir = vim.fn.fnamemodify(path, ':h')
+  local os_name = vim.loop.os_uname().sysname
+
+  if os_name == 'Darwin' then  -- macOS
+    vim.fn.jobstart({'open', dir})
+  elseif os_name == 'Linux' then
+    vim.fn.jobstart({'xdg-open', dir})
+  elseif os_name == 'Windows' or os_name == 'Windows_NT' then
+    vim.fn.jobstart({'cmd.exe', '/c', 'start', '""', dir})
+  else
+    vim.notify('Unsupported OS for opening folders', vim.log.levels.ERROR)
+  end
+
+  vim.notify('Opening folder: ' .. dir, vim.log.levels.INFO)
+end, { noremap = true, silent = true, desc = '[common] 폴더 열기' })
+
 -- 현재 파일의 전체 경로를 클립보드에 복사
 vim.keymap.set('n', '<leader>yp',
   function()

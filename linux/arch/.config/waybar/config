@@ -19,7 +19,8 @@
   },
   "clock": {
     "format": "{:%B %d, %Y %H:%M:%S}",
-    "interval": 1
+    "interval": 1,
+    "tooltip-format": "{:%Y-%m-%d %H:%M:%S}"
   },
   "battery": {
     "interval":1,
@@ -62,9 +63,10 @@
     "spacing": 10
   },
   "custom/spotify": {
-    "exec": "~/.config/waybar/scripts/spotify.sh",
+    "exec": "$HOME/.config/waybar/scripts/spotify.sh",
     "interval": 1,
     "format": "{}",
+    "return-type": "pango",
     "max-length": 80,
     "tooltip": false,
     "on-click": "playerctl play-pause"

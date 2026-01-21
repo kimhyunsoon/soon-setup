@@ -24,7 +24,7 @@ shell-integration-features = no-cursor
 font-family = Maple Mono NL CN Light
 font-family = Hack Nerd Font Mono
 font-family = Noto Sans Mono CJK KR
-font-size = 15
+font-size = 16
 adjust-cell-width = -2
 adjust-cell-height = -4
 

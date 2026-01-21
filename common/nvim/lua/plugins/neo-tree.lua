@@ -81,6 +81,35 @@ return {
       callback = apply_neo_tree_git_hl,
     })
 
+    -- git tracked 파일 저장 시에만 neo-tree 새로고침 (ignored 파일 제외)
+    vim.api.nvim_create_autocmd('BufWritePost', {
+      callback = function()
+        local file = vim.fn.expand('%:p')
+        if file == '' or vim.fn.exists(':Neotree') == 0 then return end
+
+        -- git check-ignore로 ignored 파일인지 확인
+        vim.system({ 'git', 'check-ignore', '-q', file }, {}, function(result)
+          -- exit code 1 = not ignored, 0 = ignored
+          if result.code == 1 then
+            vim.schedule(function()
+              pcall(require('neo-tree.sources.manager').refresh, 'filesystem')
+            end)
+          end
+        end)
+      end,
+    })
+
+    -- 터미널에서 git 명령어 실행 후 새로고침
+    vim.api.nvim_create_autocmd({ 'FocusGained', 'TermClose', 'TermLeave' }, {
+      callback = function()
+        if vim.fn.exists(':Neotree') > 0 then
+          vim.defer_fn(function()
+            pcall(require('neo-tree.sources.manager').refresh, 'filesystem')
+          end, 100)
+        end
+      end,
+    })
+
     require('neo-tree').setup({
       -- 파일은 항상 마지막(네오트리가 아닌) 창에서 열고, 분할을 피함
       open_files_in_last_window = true,
@@ -89,6 +118,7 @@ return {
       popup_border_style = 'rounded',
       enable_git_status = true,
       enable_diagnostics = true,
+      use_libuv_file_watcher = true,
       filesystem = {
         window = {
           mappings = {

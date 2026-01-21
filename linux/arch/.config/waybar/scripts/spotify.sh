@@ -17,7 +17,7 @@ if [ "$player_status" = "Playing" ] || [ "$player_status" = "Paused" ]; then
     fi
 
     # 출력: 아티스트 • 앨범 | #트랙번호 곡명
-    printf "<span color='white'>%s</span> <span color='#888888'>|</span> <span color='white'>%s</span> <span color='#888888'>|</span> <span color='%s'>#%s %s</span>" \
+    printf "<span color='white'>%s</span> <span color='#888888'>•</span> <span color='white'>%s</span> <span color='#888888'>|</span> <span color='%s'>#%s %s</span>" \
         "$artist" "$album" "$color" "$track_number" "$title"
 else
     echo ""

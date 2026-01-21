@@ -1,0 +1,62 @@
+@import "/etc/xdg/swaync/style.css";
+
+:root {
+  /* 알림 배경색 RGB 값 */
+  --noti-bg: 255, 255, 255;
+  /* 알림 배경 투명도 */
+  --noti-bg-alpha: 1;
+  /* 알림 진한 배경색 */
+  --noti-bg-darker: #F0F0F0;
+  /* 알림 호버 배경색 */
+  --noti-bg-hover: #F0F0F0;
+  /* 알림 포커스 배경색 */
+  --noti-bg-focus: #E6E6E699;
+  /* 닫기 버튼 배경색 */
+  --noti-close-bg: #DCDCDC;
+  /* 닫기 버튼 호버 배경색 */
+  --noti-close-bg-hover: #C8C8C8;
+  /* 텍스트 색상 */
+  --text-color: #000000;
+  /* 본문 글씨 크기 */
+  --font-size-body: 18px;
+  /* 제목 글씨 크기 */
+  --font-size-summary: 18px;
+  /* 알림창 모서리 둥글기 */
+  --border-radius: 12px;
+}
+
+/* 기본 폰트 */
+* {
+  font-family: "Noto Sans CJK KR";
+}
+
+
+/* 알림창 사이 간격 (여러 알림 표시시 간격) */
+.notification-row .notification-background {
+  padding: 6px;
+}
+
+/* 알림창 그림자 */
+.notification-row .notification-background .notification {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 그림자 영역 확보 */
+.floating-notifications {
+  margin: 8px;
+  overflow: visible;
+}
+
+.notification-row {
+  overflow: visible;
+}
+
+/* 알림 내용 패딩 */
+.notification-row .notification-background .notification .notification-default-action {
+  padding: 4px;
+}
+
+/* 아이콘과 텍스트 사이 간격 */
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box {
+  margin-left: 4px;
+}

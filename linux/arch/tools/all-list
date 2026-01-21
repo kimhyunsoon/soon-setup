@@ -14,7 +14,6 @@ chromium 131.0.6778.204-1
 cliphist 1:0.6.1-1
 dbus-glib 0.112-4
 docker 1:27.3.1-1
-dunst 1.12.1-1
 efibootmgr 18-3
 file-roller 44.4-1
 firefox 133.0.3-2
@@ -101,3 +100,4 @@ xorg-xrandr 1.5.3-1
 xorg-xwayland 24.1.4-1
 rofi
 magick
+swaync

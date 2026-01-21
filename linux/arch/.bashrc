@@ -5,6 +5,7 @@
 
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
+alias hyprland='start-hyprland'
 
 # 명령어 시간 측정 변수
 TIMER_START=0
@@ -51,10 +52,21 @@ precmd() {
       local SEC=$((MS / 1000))
       local MSEC=$((MS % 1000))
       TIMER_SHOW="${SEC}s ${MSEC}ms"
-    else
+    elif [ $MS -lt 3600000 ]; then
       local MIN=$((MS / 60000))
       local SEC=$(((MS % 60000) / 1000))
       TIMER_SHOW="${MIN}m ${SEC}s"
+    elif [ $MS -lt 86400000 ]; then
+      local HOUR=$((MS / 3600000))
+      local MIN=$(((MS % 3600000) / 60000))
+      local SEC=$(((MS % 60000) / 1000))
+      TIMER_SHOW="${HOUR}h ${MIN}m ${SEC}s"
+    else
+      local DAY=$((MS / 86400000))
+      local HOUR=$(((MS % 86400000) / 3600000))
+      local MIN=$(((MS % 3600000) / 60000))
+      local SEC=$(((MS % 60000) / 1000))
+      TIMER_SHOW="${DAY}d ${HOUR}h ${MIN}m ${SEC}s"
     fi
   fi
   TIMER_START=0
@@ -78,6 +90,10 @@ $ '
 
 # bash-completion
 [[ $PS1 && -f /usr/share/bash-completion/bash_completion ]] && source /usr/share/bash-completion/bash_completion 2>/dev/null
+
+# 패키지 매니저 completion 비활성화
+_minimal_complete() { return 0; }
+complete -F _minimal_complete paru yay pacman
 
 # ble.sh
 [[ $- == *i* ]] && source $HOME/ble.sh/out/ble.sh 2>/dev/null

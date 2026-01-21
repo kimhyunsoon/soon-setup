@@ -37,7 +37,7 @@ else
     fi
 
     # 계산식인지 확인 (숫자나 연산자 포함 시 계산 시도)
-    if echo "$input" | grep -qE '[0-9]+.*[\+\-\*/\^\%\(\)]'; then
+    if echo "$input" | grep -qE '[0-9]+.*[+*/^%().-]'; then
         result=$(qalc -t "$input" 2>/dev/null | tail -n1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         if [ -n "$result" ]; then
             # 결과를 목록에 표시
