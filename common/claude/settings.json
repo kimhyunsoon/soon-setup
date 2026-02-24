@@ -14,6 +14,5 @@
   "spinnerTipsEnabled": false,
   "alwaysThinkingEnabled": true,
   "promptSuggestionEnabled": false,
-  "autoUpdatesChannel": "latest",
-  "model": "sonnet"
+  "autoUpdatesChannel": "latest"
 }
