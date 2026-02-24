@@ -3,6 +3,17 @@
     "type": "command",
     "command": "bash /home/soon/.claude/statusline-command.sh"
   },
+  "enabledPlugins": {
+    "lua-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true
+  },
+  "language": "한국어",
   "spinnerTipsEnabled": false,
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "promptSuggestionEnabled": false,
+  "autoUpdatesChannel": "latest",
+  "model": "sonnet"
 }

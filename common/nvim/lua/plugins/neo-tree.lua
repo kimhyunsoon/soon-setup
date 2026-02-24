@@ -119,6 +119,57 @@ return {
       enable_git_status = true,
       enable_diagnostics = true,
       use_libuv_file_watcher = true,
+      -- 정렬
+      sort_function = function(a, b)
+          local function natural_cmp(str1, str2)
+            if not str1 then return true end
+            if not str2 then return false end
+
+            local function split_alphanum(s)
+              local parts = {}
+              for num, alpha in s:gmatch("(%d*)(%D*)") do
+                if num ~= "" then
+                  table.insert(parts, { type = "num", value = tonumber(num) })
+                end
+                if alpha ~= "" then
+                  table.insert(parts, { type = "str", value = alpha })
+                end
+              end
+              return parts
+            end
+
+            local parts1 = split_alphanum(str1)
+            local parts2 = split_alphanum(str2)
+
+            for i = 1, math.max(#parts1, #parts2) do
+              local p1 = parts1[i]
+              local p2 = parts2[i]
+
+              if not p1 then return true end
+              if not p2 then return false end
+
+              if p1.type == "num" and p2.type == "num" then
+                if p1.value ~= p2.value then
+                  return p1.value < p2.value
+                end
+              else
+                local v1 = p1.type == "num" and tostring(p1.value) or p1.value
+                local v2 = p2.type == "num" and tostring(p2.value) or p2.value
+                if v1 ~= v2 then
+                  return v1 < v2
+                end
+              end
+            end
+
+            return false
+          end
+
+        -- 디렉토리 우선, 그 다음 자연스러운 정렬
+        if a.type == b.type then
+          return natural_cmp(a.name, b.name)
+        end
+        return a.type == "directory"
+      end,
       filesystem = {
         window = {
           mappings = {
@@ -292,25 +343,25 @@ return {
           ['Y'] = 'copy_path_to_clipboard',
           -- 버퍼 이동 키맵핑
           ['{'] = function()
-            -- 일반 버퍼로 포커스 이동 후 bprevious 실행
+            -- 네오트리가 아닌 버퍼로 포커스 이동 후 마지막 버퍼로 이동
             for _, win in ipairs(vim.api.nvim_list_wins()) do
               local buf = vim.api.nvim_win_get_buf(win)
               local ft = vim.bo[buf].filetype
-              if ft ~= 'neo-tree' and vim.bo[buf].buftype == '' then
+              if ft ~= 'neo-tree' then
                 vim.api.nvim_set_current_win(win)
-                vim.cmd('bprevious')
+                vim.cmd('blast')
                 return
               end
             end
           end,
           ['}'] = function()
-            -- 일반 버퍼로 포커스 이동 후 bnext 실행
+            -- 네오트리가 아닌 버퍼로 포커스 이동 후 첫 버퍼로 이동
             for _, win in ipairs(vim.api.nvim_list_wins()) do
               local buf = vim.api.nvim_win_get_buf(win)
               local ft = vim.bo[buf].filetype
-              if ft ~= 'neo-tree' and vim.bo[buf].buftype == '' then
+              if ft ~= 'neo-tree' then
                 vim.api.nvim_set_current_win(win)
-                vim.cmd('bnext')
+                vim.cmd('bfirst')
                 return
               end
             end

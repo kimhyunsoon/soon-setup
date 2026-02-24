@@ -144,20 +144,46 @@ return {
             local status = entry:sub(1, 2)
             local file_path = entry:sub(4)
 
-            -- staged only 파일 제외
-            if status:sub(1, 1) ~= ' ' and status:sub(2, 2) == ' ' then
-              return nil
-            end
-
-            -- deleted 파일 제외
-            if status:match(' D') or status:match('D ') then
-              return nil
+            -- 상태 분류: unstaged/untracked(1), deleted(2), renamed(3), staged(4)
+            local order
+            local highlight
+            if status == '??' then
+              -- untracked 파일 (새로 생긴 파일)
+              order = 1
+              highlight = 'TelescopeResultsGitUntracked'
+            elseif status:sub(1, 1) == 'R' then
+              -- renamed 파일
+              order = 3
+              highlight = 'TelescopeResultsGitRenamed'
+              -- renamed 파일명 처리: "old -> new" 에서 new만 추출
+              local new_path = file_path:match(' %-> (.+)$')
+              if new_path then
+                file_path = new_path
+              end
+            elseif status:sub(2, 2) == 'D' then
+              -- deleted 파일
+              order = 2
+              highlight = 'TelescopeResultsGitDeleted'
+            elseif status:sub(1, 1) ~= ' ' and status:sub(2, 2) == ' ' then
+              -- staged 파일 (unstaged 변경 없음)
+              order = 4
+              highlight = 'TelescopeResultsGitStaged'
+            else
+              -- unstaged 파일
+              order = 1
+              highlight = nil
             end
 
             return {
               value = file_path,
-              display = file_path,
-              ordinal = file_path,
+              display = function(entry)
+                local displayer = require('telescope.pickers.entry_display').create({
+                  separator = '',
+                  items = { { width = vim.fn.strwidth(entry.value) } }
+                })
+                return displayer({ { entry.value, highlight } })
+              end,
+              ordinal = string.format('%d_%s', order, file_path),
               path = file_path,
             }
           end,
@@ -580,6 +606,10 @@ return {
     require('telescope').load_extension('ui-select')
     vim.cmd([[
       highlight! link TelescopeSelection TabLine
+      highlight! link TelescopeResultsGitDeleted GitSignsDelete
+      highlight! link TelescopeResultsGitRenamed GitSignsChange
+      highlight! link TelescopeResultsGitUntracked Comment
+      highlight! link TelescopeResultsGitStaged GitSignsAdd
     ]])
 
     -- Telescope 종료 시 이미지 클리어

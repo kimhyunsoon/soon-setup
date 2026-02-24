@@ -166,22 +166,12 @@ esac
 # Created by `pipx` on 2025-01-24 00:34:55
 export PATH="$PATH:/home/soon/.local/bin"
 
-# code (cursor)
-code() {
-  nohup /usr/bin/cursor "$@" > /dev/null 2>&1 &
-  disown
-}
-
-# studio-3t
-3t() {
-  GDK_SCALE=1 GDK_DPI_SCALE=1.4 /usr/bin/studio-3t "$@" > ~/studio3t.log 2>&1 &
-  disown
-}
-
 # thunar
 open() {
   thunar "$@" > /dev/null 2>&1 &
 }
+
+export PATH="$HOME/.bun/bin:$PATH"
 
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 export PATH=$JAVA_HOME/bin:$PATH

@@ -233,21 +233,32 @@ end, { noremap = true, silent = true })
 
 -- 주석 토글 키맵은 comment.lua에서 처리됨
 
--- 50줄씩 위로 스크롤
-vim.keymap.set({ 'n', 'v' }, '[[',
-  function() _G.smooth_scroll(true)
-  end, { noremap = true, silent = true, desc = '[editor] 50줄 위로 스크롤' }
-)
+-- 50줄씩 위/아래로 스크롤
+local function setup_scroll_keys()
+  vim.keymap.set({ 'n', 'v' }, '[[',
+    function() _G.smooth_scroll(true) end,
+    { buffer = true, noremap = true, silent = true, desc = '[editor] 50줄 위로 스크롤' }
+  )
+  vim.keymap.set({ 'n', 'v' }, ']]',
+    function() _G.smooth_scroll(false) end,
+    { buffer = true, noremap = true, silent = true, desc = '[editor] 50줄 아래로 스크롤' }
+  )
+  vim.keymap.set('n', '[', '<Nop>', { buffer = true, noremap = true, silent = true })
+  vim.keymap.set('n', ']', '<Nop>', { buffer = true, noremap = true, silent = true })
+end
 
--- 50줄씩 아래로 스크롤
-vim.keymap.set({'n', 'v'}, ']]',
-  function() _G.smooth_scroll(false)
-  end, { noremap = true, silent = true, desc = '[editor] 50줄 아래로 스크롤' }
-)
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*',
+  callback = setup_scroll_keys
+})
 
--- 기본 내장 동작 무효화: '[' 또는 ']' 단독 입력 후 타임아웃으로 인한 파일 처음/끝 점프 방지
-vim.keymap.set('n', '[', '<Nop>', { noremap = true, silent = true })
-vim.keymap.set('n', ']', '<Nop>', { noremap = true, silent = true })
+vim.api.nvim_create_autocmd('BufEnter', {
+  callback = function()
+    if vim.bo.filetype == '' then
+      setup_scroll_keys()
+    end
+  end
+})
 
 -- 삭제 및 붙여넣기 시 레지스터에 저장하지 않음
 vim.keymap.set('n', 'd', '"_d', { noremap = true, silent = true })
@@ -311,6 +322,10 @@ local function surround_selection(open_char, close_char)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
   end
 end
+
+vim.keymap.set('t', '<S-Esc>', function()
+  vim.api.nvim_chan_send(vim.bo.channel, '\x1b')
+end, { noremap = true, desc = 'Send Esc to terminal process' })
 
 -- 비주얼 모드에서 따옴표로 감싸기
 vim.keymap.set('v', "'", surround_selection("'", "'"), { noremap = true, silent = true })  -- 선택 영역을 '로 감싸기
@@ -501,7 +516,35 @@ vim.keymap.set('n', '<leader>c',
 )
 
 -- 수정되지 않은 버퍼 전체 닫기
-vim.keymap.set('n', '<leader>q', ':%bd<CR>', { noremap = true, silent = true, desc = '[common] 수정되지 않은 버퍼 전체 닫기' })
+vim.keymap.set('n', '<leader>q', function()
+  local bufs = vim.api.nvim_list_bufs()
+  local bufs_to_delete = {}
+  local terminal_buf = nil
+
+  for _, buf in ipairs(bufs) do
+    if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted then
+      if vim.bo[buf].filetype == 'neo-tree' or vim.bo[buf].buftype == 'terminal' then
+        if vim.bo[buf].buftype == 'terminal' then
+          terminal_buf = buf
+        end
+      elseif not vim.bo[buf].modified then
+        table.insert(bufs_to_delete, buf)
+      end
+    end
+  end
+
+  if #bufs_to_delete > 0 then
+    if terminal_buf then
+      vim.api.nvim_set_current_buf(terminal_buf)
+    else
+      vim.cmd('enew')
+    end
+
+    for _, buf in ipairs(bufs_to_delete) do
+      vim.api.nvim_buf_delete(buf, {})
+    end
+  end
+end, { noremap = true, silent = true, desc = '[common] 수정되지 않은 버퍼 전체 닫기' })
 
 -- 전체 닫기
 vim.cmd('cabbrev q <c-r>=(getcmdtype()==\':\' && getcmdpos()==1 ? \'Q\' : \'q\')<CR>')
@@ -851,78 +894,148 @@ vim.keymap.set('n', '[e', function()
   vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR, float = false })
 end, { noremap = true, silent = true, desc = '[lsp] 이전 에러로 이동' })
 
- -- 다음/이전 심볼로 이동
- local function flatten_document_symbols(items, out)
-   out = out or {}
-   if not items then return out end
-   for _, item in ipairs(items) do
-     if item.selectionRange then
-       table.insert(out, {
-         name = item.name,
-         line = item.selectionRange.start.line,
-         character = item.selectionRange.start.character,
-       })
-       if item.children then
-         flatten_document_symbols(item.children, out)
-       end
-     elseif item.location and item.location.range then
-       table.insert(out, {
-         name = item.name,
-         line = item.location.range.start.line,
-         character = item.location.range.start.character,
-       })
-     end
-   end
-   return out
- end
+-- 다음/이전 함수로 이동 (treesitter 기반)
+local func_node_types = {
+  function_declaration = true,
+  function_definition = true,
+  function_expression = true,
+  arrow_function = true,
+  method_declaration = true,
+  method_definition = true,
+  generator_function_declaration = true,
+  generator_function = true,
+  local_function = true,
+  func_literal = true,
+}
 
--- 다음/이전 심볼로 이동
-vim.keymap.set('n', ']s', function()
-  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  vim.lsp.buf_request(0, 'textDocument/documentSymbol', vim.lsp.util.make_position_params(), function(err, result)
-    if err or not result then return end
+local function get_function_lines_ts()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+  if not ok or not parser then return {} end
 
-    local symbols = flatten_document_symbols(result)
-    table.sort(symbols, function(a, b) return a.line < b.line end)
+  parser:parse(true)
 
-    for _, symbol in ipairs(symbols) do
-      if symbol.line > current_line then
-        vim.api.nvim_win_set_cursor(0, { symbol.line + 1, symbol.character })
-        return
-      end
+  local results = {}
+  local function walk(node)
+    if func_node_types[node:type()] then
+      local row, col = node:start()
+      table.insert(results, { line = row, character = col })
     end
-  end)
-end, { noremap = true, silent = true, desc = '[lsp] 다음 심볼로 이동' })
-
-vim.keymap.set('n', '[s', function()
-  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  vim.lsp.buf_request(0, 'textDocument/documentSymbol', vim.lsp.util.make_position_params(), function(err, result)
-    if err or not result then return end
-
-    local symbols = flatten_document_symbols(result)
-    table.sort(symbols, function(a, b) return a.line > b.line end)
-
-    for _, symbol in ipairs(symbols) do
-      if symbol.line < current_line then
-        vim.api.nvim_win_set_cursor(0, { symbol.line + 1, symbol.character })
-        return
-      end
+    for child in node:iter_children() do
+      walk(child)
     end
+  end
+
+  -- embedded language(vue <script> 등)의 트리도 함께 순회
+  parser:for_each_tree(function(tstree, _)
+    walk(tstree:root())
   end)
-end, { noremap = true, silent = true, desc = '[lsp] 이전 심볼로 이동' })
+
+  return results
+end
+
+vim.keymap.set('n', ']f', function()
+  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local functions = get_function_lines_ts()
+  table.sort(functions, function(a, b) return a.line < b.line end)
+
+  for _, func in ipairs(functions) do
+    if func.line > current_line then
+      vim.api.nvim_win_set_cursor(0, { func.line + 1, func.character })
+      return
+    end
+  end
+end, { noremap = true, silent = true, desc = '[lsp] 다음 함수로 이동' })
+
+vim.keymap.set('n', '[f', function()
+  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local functions = get_function_lines_ts()
+  table.sort(functions, function(a, b) return a.line > b.line end)
+
+  for _, func in ipairs(functions) do
+    if func.line < current_line then
+      vim.api.nvim_win_set_cursor(0, { func.line + 1, func.character })
+      return
+    end
+  end
+end, { noremap = true, silent = true, desc = '[lsp] 이전 함수로 이동' })
 
  ------------------------------------------ [git] ------------------------------------------
--- 다음 Git 변경사항으로 이동
-vim.keymap.set('n', ']g', function() require('gitsigns').next_hunk() end, { noremap = true, silent = true, desc = '[git] 다음 Git 변경사항으로 이동' })
+-- 다음 Git 변경사항으로 이동 (unstaged만)
+vim.keymap.set('n', ']g', function()
+  local gs = require('gitsigns')
+  if vim.wo.diff then
+    vim.cmd.normal({']c', bang = true})
+    return
+  end
+  vim.schedule(function()
+    gs.nav_hunk('next', {target = 'unstaged'})
+  end)
+end, { noremap = true, silent = true, desc = '[git] 다음 Git 변경사항으로 이동' })
 
--- 이전 Git 변경사항으로 이동
-vim.keymap.set('n', '[g', function() require('gitsigns').prev_hunk() end, { noremap = true, silent = true, desc = '[git] 이전 Git 변경사항으로 이동' })
+-- 이전 Git 변경사항으로 이동 (unstaged만)
+vim.keymap.set('n', '[g', function()
+  local gs = require('gitsigns')
+  if vim.wo.diff then
+    vim.cmd.normal({'[c', bang = true})
+    return
+  end
+  vim.schedule(function()
+    gs.nav_hunk('prev', {target = 'unstaged'})
+  end)
+end, { noremap = true, silent = true, desc = '[git] 이전 Git 변경사항으로 이동' })
+
+-- 다음/이전 staged 변경사항으로 이동
+vim.keymap.set('n', ']s', function()
+  local gs = require('gitsigns')
+  if vim.wo.diff then
+    vim.cmd.normal({']c', bang = true})
+    return
+  end
+  vim.schedule(function()
+    gs.nav_hunk('next', {target = 'staged'})
+  end)
+end, { noremap = true, silent = true, desc = '[git] 다음 staged 변경사항으로 이동' })
+
+vim.keymap.set('n', '[s', function()
+  local gs = require('gitsigns')
+  if vim.wo.diff then
+    vim.cmd.normal({'[c', bang = true})
+    return
+  end
+  vim.schedule(function()
+    gs.nav_hunk('prev', {target = 'staged'})
+  end)
+end, { noremap = true, silent = true, desc = '[git] 이전 staged 변경사항으로 이동' })
 
 -- Git blame 토글
 vim.keymap.set('n', 'gl', function() require('gitsigns').toggle_current_line_blame() end, { noremap = true, silent = true, desc = '[git] Git blame 토글' })
 
 -- Git diff view
 vim.keymap.set('n', '<leader>gd', function() require('gitsigns').diffthis() end, { noremap = true, silent = true, desc = '[git] 현재 파일 Git diff view' })
+
+-- 현재 파일 git add/unstage 토글
+vim.keymap.set('n', '<leader>ga', function()
+  local filepath = vim.fn.expand('%')
+  if filepath == '' then
+    vim.notify('저장된 파일이 없습니다', vim.log.levels.WARN)
+    return
+  end
+
+  local is_staged = vim.fn.system('git diff --cached --name-only -- ' .. vim.fn.shellescape(filepath))
+  if is_staged ~= '' then
+    vim.fn.system('git reset ' .. vim.fn.shellescape(filepath))
+    vim.notify('Git unstaged: ' .. vim.fn.expand('%:t'), vim.log.levels.INFO)
+  else
+    vim.fn.system('git add ' .. vim.fn.shellescape(filepath))
+    vim.notify('Git staged: ' .. vim.fn.expand('%:t'), vim.log.levels.INFO)
+  end
+
+  -- git 명령어 완료 후 gitsigns 갱신
+  vim.schedule(function()
+    require('gitsigns').refresh()
+  end)
+end, { noremap = true, silent = true, desc = '[git] 현재 파일 stage/unstage 토글' })
 
 -- 일부 Git 키매핑은 telescope.lua에서 처리됨
 

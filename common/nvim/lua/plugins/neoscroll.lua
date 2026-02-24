@@ -15,10 +15,12 @@ return {
     })
 
     local function smooth_scroll(isUp)
-      local cursor = vim.api.nvim_win_get_cursor(0)
+      local win = vim.api.nvim_get_current_win()
+      local buf = vim.api.nvim_get_current_buf()
+      local cursor = vim.api.nvim_win_get_cursor(win)
       local current_line = cursor[1]
       local current_col = cursor[2]
-      local total_lines = vim.api.nvim_buf_line_count(0)
+      local total_lines = vim.api.nvim_buf_line_count(buf)
 
       local target_line = isUp
           and math.max(current_line - 50, 1)
@@ -33,9 +35,11 @@ return {
 
       for i = 1, steps do
         vim.defer_fn(function()
-          local next_line = math.floor(current_line + step_size * i)
-          if vim.api.nvim_win_is_valid(0) then
-            vim.api.nvim_win_set_cursor(0, {next_line, current_col})
+          if vim.api.nvim_win_is_valid(win) and vim.api.nvim_buf_is_valid(buf) then
+            if vim.api.nvim_win_get_buf(win) == buf and vim.api.nvim_get_current_win() == win then
+              local next_line = math.floor(current_line + step_size * i)
+              vim.api.nvim_win_set_cursor(win, {next_line, current_col})
+            end
           end
         end, delay * i)
       end

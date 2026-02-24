@@ -17,6 +17,12 @@
   "notification-body-image-height": 100,
   "notification-body-image-width": 100,
   "notification-visibility": {
+    "slack-auto-close": {
+      "state": "enabled",
+      "app-name": "Slack",
+      "summary": ".*KAEUN.*",
+      "urgency": "Normal"
+    },
     "slack-persistent": {
       "state": "enabled",
       "app-name": "Slack",

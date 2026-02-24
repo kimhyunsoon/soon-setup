@@ -1,13 +1,19 @@
 #!/bin/bash
 
-# playerctl 상태 확인
-player_status=$(playerctl status 2>/dev/null)
+# Spotify 우선, 없으면 다른 플레이어 사용
+if playerctl --player=spotify status &>/dev/null; then
+    player="--player=spotify"
+else
+    player=""
+fi
+
+player_status=$(playerctl $player status 2>/dev/null)
 
 if [ "$player_status" = "Playing" ] || [ "$player_status" = "Paused" ]; then
-    artist=$(playerctl metadata artist 2>/dev/null)
-    album=$(playerctl metadata album 2>/dev/null)
-    title=$(playerctl metadata title 2>/dev/null)
-    track_number=$(playerctl metadata xesam:trackNumber 2>/dev/null)
+    artist=$(playerctl $player metadata artist 2>/dev/null)
+    album=$(playerctl $player metadata album 2>/dev/null)
+    title=$(playerctl $player metadata title 2>/dev/null)
+    track_number=$(playerctl $player metadata xesam:trackNumber 2>/dev/null)
 
     # 재생 중이면 녹색, 일시정지면 흰색
     if [ "$player_status" = "Playing" ]; then
