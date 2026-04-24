@@ -18,7 +18,7 @@
     }
   },
   "clock": {
-    "format": "{:%B %d, %Y %H:%M:%S}",
+    "format": "{:%B %d %a, %Y %H:%M:%S}",
     "interval": 1,
     "tooltip-format": "{:%Y-%m-%d %H:%M:%S}"
   },

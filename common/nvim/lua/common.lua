@@ -8,7 +8,6 @@ local symbols = {
   Color = '󰏘',
   Reference = '',
   Folder = '󰉋',
-  Copilot = '',
   File = '',
   Module = '',
   Namespace = '',

@@ -201,18 +201,6 @@ vim.keymap.set({ 'n', 'i', 'v' }, '<ESC>', function()
     return
   end
 
-  -- copilot-chat 창인 경우 처리
-  if vim.bo.filetype == 'copilot-chat' then
-    if vim.fn.mode() == 'i' then
-      -- 인서트 모드라면 노말모드로 전환
-      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, true, true), 'n', false)
-    else
-      -- 노말모드라면 종료
-      vim.cmd('CopilotChatToggle')
-    end
-    return
-  end
-
   -- 검색 하이라이트 종료
   vim.cmd('nohlsearch')
   -- LSP hover 창 닫기
@@ -381,7 +369,7 @@ vim.keymap.set('c', '<ESC>', function()
 end, { noremap = true, expr = true })
 
 -- 인서트 모드 진입시 현재 커서의 문자 오른쪽에 커서 생성
-vim.keymap.set('n', 'i', function()
+local function enter_insert_mode()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line = vim.api.nvim_get_current_line()
   local col = cursor[2]
@@ -392,7 +380,10 @@ vim.keymap.set('n', 'i', function()
   else
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('a', true, false, true), 'n', false)
   end
-end, { noremap = true, silent = true })
+end
+
+vim.keymap.set('n', 'i', enter_insert_mode, { noremap = true, silent = true })
+vim.keymap.set('n', 'ㅑ', enter_insert_mode, { noremap = true, silent = true })
 
 -- Visual 모드에서 End 키를 누르면 줄의 맨 끝으로 이동 (개행 제외)
 vim.keymap.set('v', '<End>', function()
@@ -592,9 +583,29 @@ vim.keymap.set('n', '|', ':vsplit<CR>', { noremap = true, silent = true, desc = 
 -- 현재 파일을 시스템 기본 프로그램으로 열기
 vim.keymap.set('n', '<leader>fo', function()
   local path = vim.fn.expand('%:p')
+  local ext = vim.fn.expand('%:e'):lower()
   local os_name = vim.loop.os_uname().sysname
 
-  if os_name == 'Darwin' then  -- macOS
+  -- md 파일: markdown-preview.nvim (GitHub 스타일 렌더링)
+  if ext == 'md' or ext == 'markdown' then
+    vim.cmd('MarkdownPreview')
+    return
+  end
+
+  -- html 파일: firefox → safari → chromium 순으로 열기
+  if ext == 'html' or ext == 'htm' then
+    local browsers = { 'firefox', 'safari', 'chromium' }
+    for _, browser in ipairs(browsers) do
+      if vim.fn.executable(browser) == 1 then
+        vim.fn.jobstart({ browser, path })
+        vim.notify('Opening in ' .. browser .. ': ' .. path, vim.log.levels.INFO)
+        return
+      end
+    end
+  end
+
+  -- 기타 파일: 시스템 기본 프로그램
+  if os_name == 'Darwin' then
     vim.fn.jobstart({'open', path})
   elseif os_name == 'Linux' then
     vim.fn.jobstart({'xdg-open', path})
@@ -1039,12 +1050,6 @@ end, { noremap = true, silent = true, desc = '[git] 현재 파일 stage/unstage 
 
 -- 일부 Git 키매핑은 telescope.lua에서 처리됨
 
--- Git Graph 열기
-vim.keymap.set('n', '<leader>gg',
-  function()
-    require('gitgraph').draw({}, { all = true, max_count = 5000 })
-  end, { noremap = true, silent = true, desc = '[git] Git Graph 열기' }
-)
 
 -- :ws 입력시 formatter(포매팅)을 하지않고 저장
 vim.cmd([[

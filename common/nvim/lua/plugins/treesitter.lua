@@ -29,6 +29,8 @@ return {
           'dockerfile',
           'xml',
           'yaml',
+          'styled',
+          'jsdoc',
         },
         highlight = {
           enable = true,

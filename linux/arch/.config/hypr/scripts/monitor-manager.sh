@@ -75,28 +75,39 @@ fix_workspaces() {
   fi
 }
 
-# waybar 재시작
-restart_waybar() {
-  killall waybar 2>/dev/null
-  sleep 0.2
+# waybar 재시작 (flock으로 동시 실행 방지)
+_restart_waybar() {
+  (
+    flock -n 200 || { log "waybar restart skipped (locked)"; return; }
 
-  local monitors=$(hyprctl monitors -j | jq -r '.[].name')
-  local primary
+    log "waybar restart executing"
 
-  for mon in eDP-1 DP-1 HDMI-A-1; do
-    if echo "$monitors" | grep -q "^$mon$"; then
-      primary="$mon"
-      break
+    local monitors
+    monitors=$(hyprctl monitors -j 2>/dev/null | jq -r '.[].name' 2>/dev/null)
+
+    local primary
+    for mon in eDP-1 DP-1 HDMI-A-1; do
+      if echo "$monitors" | grep -q "^$mon$"; then
+        primary="$mon"
+        break
+      fi
+    done
+
+    if [[ -z "$primary" ]]; then
+      log "No primary monitor found"
+      return
     fi
-  done
 
-  if [[ -n "$primary" ]]; then
     local config_dir="$HOME/.config/waybar"
-    local temp_config="/tmp/waybar-config-$$.json"
+    local temp_config="/tmp/waybar-config.json"
     jq --arg output "$primary" '.output = [$output]' "$config_dir/config" > "$temp_config"
-    waybar -c "$temp_config" -s "$config_dir/style.css" &
+
+    pkill -x waybar 2>/dev/null
+    sleep 0.5
+    waybar -c "$temp_config" -s "$config_dir/style.css" 200>&- &
     disown
-  fi
+    log "waybar started on $primary"
+  ) 200>/tmp/waybar-restart.lock
 }
 
 # 즉시 실행 모드
@@ -105,36 +116,56 @@ run_once() {
   apply_clamshell
   sleep 0.8
   fix_workspaces
-  sleep 0.3
-  restart_waybar
+  _restart_waybar &
+  disown
   log "=== DONE ==="
 }
 
 # 데몬 모드 (이벤트 감지)
 run_daemon() {
-  local pidfile="/tmp/monitor-manager-daemon.pid"
-
-  # 기존 데몬 종료 (자기 자신 제외)
-  if [[ -f "$pidfile" ]]; then
-    local old_pid=$(cat "$pidfile")
-    if [[ "$old_pid" != "$$" ]] && kill -0 "$old_pid" 2>/dev/null; then
-      kill "$old_pid" 2>/dev/null
-      sleep 0.5
-    fi
+  # 기존 데몬 모두 종료 (자기 자신 제외)
+  local old_pids
+  old_pids=$(pgrep -f "monitor-manager.sh --daemon" | grep -v "^$$\$")
+  if [[ -n "$old_pids" ]]; then
+    echo "$old_pids" | xargs kill 2>/dev/null
+    sleep 0.5
   fi
-  echo $$ > "$pidfile"
-  trap 'rm -f "$pidfile"' EXIT
+
+  local watchdog_pid
+  trap 'kill $watchdog_pid 2>/dev/null' EXIT
 
   # 초기 실행
   run_once
 
-  # 이벤트 감지
+  # waybar watchdog (5초마다 체크, 죽었으면 재시작)
+  (while true; do
+    sleep 5
+    if ! pgrep -x waybar > /dev/null; then
+      log "waybar watchdog: not running, restarting"
+      _restart_waybar
+    fi
+  done) &
+  watchdog_pid=$!
+
+  # 이벤트 감지 (디바운스 3초)
+  local debounce_file="/tmp/monitor-manager-debounce"
+  echo 0 > "$debounce_file"
+
   socat -U - UNIX-CONNECT:"$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" | while read -r line; do
     case "${line%%>>*}" in
       monitoradded|monitorremoved)
+        local now=$(date +%s)
+        local last=$(cat "$debounce_file" 2>/dev/null || echo 0)
+        if (( now - last < 3 )); then
+          log "Debounced: $line"
+          continue
+        fi
+        echo "$now" > "$debounce_file"
+        sleep 1
+        apply_clamshell
         sleep 0.5
         fix_workspaces
-        restart_waybar
+        _restart_waybar &
         ;;
     esac
   done

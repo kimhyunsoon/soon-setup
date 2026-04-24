@@ -1,6 +1,7 @@
 return {
   {
     'neovim/nvim-lspconfig',
+    version = '^1.0.0',
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       'hrsh7th/cmp-nvim-lsp',
@@ -150,8 +151,17 @@ return {
 
         ts_ls = function()
           local mason_registry = require('mason-registry')
+
+          -- ts-lit-plugin 경로 탐색 (npm i -g ts-lit-plugin 필요)
+          local lit_plugin = nil
+          local npm_root = vim.fn.trim(vim.fn.system('npm root -g'))
+          if vim.v.shell_error == 0 and vim.fn.isdirectory(npm_root .. '/ts-lit-plugin') == 1 then
+            lit_plugin = { name = 'ts-lit-plugin', location = npm_root .. '/ts-lit-plugin' }
+          end
+
           if not mason_registry.is_installed('vue-language-server') then
             return {
+              init_options = lit_plugin and { plugins = { lit_plugin } } or nil,
               filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'json' },
               on_attach = function(client)
                 -- tsserver 포매팅 비활성화
@@ -185,15 +195,20 @@ return {
             }
           end
 
+          local plugins = {
+            {
+              name = '@vue/typescript-plugin',
+              location = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server',
+              languages = { 'vue' },
+            },
+          }
+          if lit_plugin then
+            table.insert(plugins, lit_plugin)
+          end
+
           return {
             init_options = {
-              plugins = {
-                {
-                  name = '@vue/typescript-plugin',
-                  location = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server',
-                  languages = { 'vue' },
-                },
-              },
+              plugins = plugins,
             },
             filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'json' },
             on_attach = function(client)

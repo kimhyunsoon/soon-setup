@@ -5,4 +5,3 @@
 4. install Hack Nerd Font Mono / Neovim(9^) / Wezterm
 5. ln -s ./common/nvim ~/.config/nvim
 6. ln -s ./common/.wezterm.lua ~/.wezterm.lua
-7. (optional) do :Copilot auth on nvim
