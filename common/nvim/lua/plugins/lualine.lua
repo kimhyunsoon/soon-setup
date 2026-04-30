@@ -1,14 +1,15 @@
+local p = require('soontheme')
 local colors = {
-  red    = '#FF6077',
-  blue   = '#85D3F2',
-  green  = '#A7DF78',
-  violet = '#d183e8',
-  yellow = '#F5D16C',
-  white  = '#FFFFFF',
-  grey   = '#2a2a2a',
-  light_grey = '#cccccc',
-  black  = '#000000',
-  transparent  = '#00000000',
+  red    = p.filled_red,
+  blue   = p.filled_blue,
+  green  = p.filled_green,
+  violet = p.purple,
+  yellow = p.yellow,
+  white  = p.white,
+  grey   = p.bg0,
+  light_grey = p.orange,
+  black  = p.black,
+  transparent  = p.none,
 }
 
 local function setup_symbol_highlights()
@@ -254,7 +255,7 @@ return {
               end
               return ''
             end,
-            color = { fg = '#ffffff' },
+            color = { fg = p.white },
           },
           {
             'diagnostics',
@@ -262,9 +263,20 @@ return {
             symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
           },
           {
-            'filesize',
-            icon = '',
-            color = { fg = colors.light_grey },
+            function()
+              local file = vim.fn.expand('%:p')
+              if file == '' or file == nil then return '' end
+              local size = vim.fn.getfsize(file)
+              if size < 0 then return '' end
+              if size < 1024 then
+                return string.format(' %dB', size)
+              elseif size < 1048576 then
+                return string.format(' %.1fKiB', size / 1024)
+              else
+                return string.format(' %.1fMiB', size / 1048576)
+              end
+            end,
+            color = { fg = p.white },
           },
         },
         lualine_y = {

@@ -2,8 +2,8 @@ return {
   'lukas-reineke/indent-blankline.nvim',
   main = 'ibl',
   config = function()
-    -- 현재 스코프 라인
-    vim.cmd [[highlight IblScopeLine guifg=#666666]]
+    local p = require('soontheme')
+    vim.api.nvim_set_hl(0, 'IblScopeLine', { fg = p.grey_dim })
 
     require('ibl').setup {
       indent = { char = '│' },

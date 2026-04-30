@@ -67,6 +67,10 @@ require('lazy').setup({ import = 'plugins' }, {
 
 
 
+-- 컬러스키마
+vim.cmd('colorscheme soontheme')
+vim.cmd('highlight Visual guibg=#666666')
+
 -- 키매핑
 require 'keybindings'
 

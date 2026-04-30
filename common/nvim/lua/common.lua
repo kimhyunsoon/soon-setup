@@ -148,10 +148,9 @@ vim.opt.sidescrolloff = 8
 vim.opt.list = true
 
 -- 커서가 위치한 라인의 배경색 설정
-vim.cmd([[
-  highlight CursorLine guibg=#555555
-  set cursorline
-]])
+local p = require('soontheme')
+vim.api.nvim_set_hl(0, 'CursorLine', { bg = p.bg3 })
+vim.opt.cursorline = true
 
 
 -- 버퍼 관련 autocmd 그룹화

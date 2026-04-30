@@ -3,6 +3,7 @@ return {
   version = '*',
   dependencies = 'nvim-tree/nvim-web-devicons',
   config = function()
+    local p = require('soontheme')
     require('bufferline').setup({
       options = {
         mode = 'buffers',
@@ -29,21 +30,21 @@ return {
       },
       highlights = {
         buffer_selected = {
-          fg = '#ffffff',
+          fg = p.white,
           bold = true,
           italic = false,
         },
         indicator_selected = {
-          fg = '#000000',
+          fg = p.black,
         },
         modified = {
-          fg = '#888888',
+          fg = p.grey,
         },
         modified_selected = {
-          fg = '#cccccc',
+          fg = p.orange,
         },
         modified_visible = {
-          fg = '#cccccc',
+          fg = p.orange,
         },
       },
     })

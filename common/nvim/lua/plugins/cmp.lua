@@ -9,23 +9,6 @@ return {
     local common = require('common')
     local symbols = common.symbols
 
-    vim.api.nvim_set_hl(0, 'CmpItemKindText', { fg = '#e2e2e3' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindKeyword', { fg = '#b39df3' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindConstant', { fg = '#e2e2e3' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindFunction', { fg = '#76cce0' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindMethod', { fg = '#fc5d7c' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindConstructor', { fg = '#fc5d7c' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindClass', { fg = '#fc5d7c' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindInterface', { fg = '#76cce0' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindModule', { fg = '#fc5d7c' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindProperty', { fg = '#7f8490' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindVariable', { fg = '#e2e2e3' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindField', { fg = '#7f8490' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindSnippet', { fg = '#b39df3' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindFile', { fg = '#9ed072' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindFolder', { fg = '#9ed072' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindCopilot', { fg = '#b39df3' })
-
     cmp.setup({
       preselect = cmp.PreselectMode.None,
       completion = {
