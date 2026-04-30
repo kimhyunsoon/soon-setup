@@ -4,6 +4,9 @@
 LOG="/tmp/monitor-manager.log"
 
 EDP="eDP-1,2880x1800@60,960x333,1"
+HDMI_EXTENDED="HDMI-A-1,3840x2160@60,7680x0,1,transform,1"
+HDMI_MIRROR="HDMI-A-1,preferred,auto,1,mirror,eDP-1"
+HDMI_STATE_FILE="/tmp/hdmi-mirror-state"
 
 log() {
   echo "[$(date '+%H:%M:%S')] $1" >> "$LOG"
@@ -162,6 +165,17 @@ run_daemon() {
         fi
         echo "$now" > "$debounce_file"
         sleep 1
+        # HDMI 재연결 시 상태에 맞는 설정 적용
+        if grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null; then
+          local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "mirror")
+          if [[ "$hdmi_state" == "mirror" ]]; then
+            hyprctl keyword monitor "$HDMI_MIRROR"
+          else
+            hyprctl keyword monitor "$HDMI_EXTENDED"
+          fi
+          log "HDMI-A-1 applied: $hdmi_state"
+          sleep 0.5
+        fi
         apply_clamshell
         sleep 0.5
         fix_workspaces

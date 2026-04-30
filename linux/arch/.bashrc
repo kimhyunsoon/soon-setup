@@ -155,6 +155,51 @@ ocr() {
   rm -rf "$SCREENSHOT_DIR"
 }
 
+# timer (스톱워치 / 카운트다운)
+timer() {
+  local total=0
+  if [[ -n "$1" ]]; then
+    local arg="$1"
+    if [[ "$arg" =~ ^([0-9]+)h$ ]]; then
+      total=$(( ${BASH_REMATCH[1]} * 3600 ))
+    elif [[ "$arg" =~ ^([0-9]+)m$ ]]; then
+      total=$(( ${BASH_REMATCH[1]} * 60 ))
+    elif [[ "$arg" =~ ^([0-9]+)s$ ]]; then
+      total=${BASH_REMATCH[1]}
+    elif [[ "$arg" =~ ^([0-9]+)$ ]]; then
+      total=$arg
+    else
+      echo "사용법: timer [시간]  예: timer 5m, timer 1h, timer 90s"
+      return 1
+    fi
+  fi
+
+  if [[ $total -gt 0 ]]; then
+    local remain=$total
+    while [[ $remain -ge 0 ]]; do
+      local h=$(( remain / 3600 ))
+      local m=$(( (remain % 3600) / 60 ))
+      local s=$(( remain % 60 ))
+      printf "\r%02d:%02d:%02d" $h $m $s
+      [[ $remain -eq 0 ]] && break
+      sleep 1
+      (( remain-- ))
+    done
+    printf "\n"
+    notify-send "타이머 종료" "$(printf '%02d:%02d:%02d' $((total/3600)) $(((total%3600)/60)) $((total%60))) 경과" 2>/dev/null
+  else
+    local elapsed=0
+    while true; do
+      local h=$(( elapsed / 3600 ))
+      local m=$(( (elapsed % 3600) / 60 ))
+      local s=$(( elapsed % 60 ))
+      printf "\r%02d:%02d:%02d" $h $m $s
+      sleep 1
+      (( elapsed++ ))
+    done
+  fi
+}
+
 # pnpm
 export PNPM_HOME="/home/soon/.local/share/pnpm"
 case ":$PATH:" in
