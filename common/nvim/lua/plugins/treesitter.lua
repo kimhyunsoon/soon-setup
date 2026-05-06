@@ -15,6 +15,7 @@ return {
           'scss',
           'json',
           'markdown',
+          'markdown_inline',
           'vue',
           'svelte',
           'java',

@@ -2,7 +2,14 @@ return {
   'numToStr/Comment.nvim',
   event = 'VeryLazy',
   config = function()
-    require('Comment').setup()
+    require('Comment').setup({
+      pre_hook = function(ctx)
+        local cs = require('Comment.ft').get(vim.bo.filetype, ctx.ctype)
+        if cs then return cs end
+        if vim.bo.commentstring ~= '' then return vim.bo.commentstring end
+        return '# %s'
+      end,
+    })
     -- 주석 토글 키맵 설정
     vim.keymap.set('n', '<leader>/', function()
       require('Comment.api').toggle.linewise.current()
@@ -15,4 +22,3 @@ return {
     end, { noremap = true, silent = true, desc = '[editor] 선택 영역 주석 토글' })
   end,
 }
-
