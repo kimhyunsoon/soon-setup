@@ -10,8 +10,8 @@ if ! grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null; then
   exit 0
 fi
 
-# 초기 상태: hyprland.conf 기본값이 mirror이므로 파일 없으면 mirror
-current=$(cat "$STATE_FILE" 2>/dev/null || echo "mirror")
+# 초기 상태: hyprland.conf 기본값이 extended이므로 파일 없으면 extended
+current=$(cat "$STATE_FILE" 2>/dev/null || echo "extended")
 
 if [[ "$current" == "mirror" ]]; then
   hyprctl keyword monitor "$HDMI_EXTENDED"

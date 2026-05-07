@@ -113,10 +113,23 @@ _restart_waybar() {
   ) 200>/tmp/waybar-restart.lock
 }
 
+# HDMI 상태 복원 (미러링/확장)
+restore_hdmi() {
+  if ! grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null; then
+    return
+  fi
+  local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "extended")
+  if [[ "$hdmi_state" == "mirror" ]]; then
+    hyprctl keyword monitor "$HDMI_MIRROR"
+    log "HDMI-A-1 restored: mirror"
+  fi
+}
+
 # 즉시 실행 모드
 run_once() {
   log "=== RUN_ONCE ==="
   apply_clamshell
+  restore_hdmi
   sleep 0.8
   fix_workspaces
   _restart_waybar &
@@ -132,6 +145,9 @@ run_daemon() {
   if [[ -n "$old_pids" ]]; then
     echo "$old_pids" | xargs kill 2>/dev/null
     sleep 0.5
+  else
+    # 첫 실행 시 모니터 준비 대기
+    sleep 3
   fi
 
   local watchdog_pid
@@ -139,6 +155,11 @@ run_daemon() {
 
   # 초기 실행
   run_once
+
+  # 초기 실행 직후 디바운스 설정 (reload 시 발생하는 모니터 이벤트 무시)
+  local debounce_file="/tmp/monitor-manager-debounce"
+  local suppress_file="/tmp/monitor-manager-suppress"
+  echo "$(date +%s)" > "$debounce_file"
 
   # waybar watchdog (5초마다 체크, 죽었으면 재시작)
   (while true; do
@@ -150,16 +171,18 @@ run_daemon() {
   done) &
   watchdog_pid=$!
 
-  # 이벤트 감지 (디바운스 3초)
-  local debounce_file="/tmp/monitor-manager-debounce"
-  echo 0 > "$debounce_file"
-
+  # 이벤트 감지 (디바운스 5초)
   socat -U - UNIX-CONNECT:"$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" | while read -r line; do
     case "${line%%>>*}" in
       monitoradded|monitorremoved)
+        # suppress 파일이 있으면 무시 (hdmi-reset.sh 실행 중)
+        if [[ -f "$suppress_file" ]]; then
+          log "Suppressed: $line"
+          continue
+        fi
         local now=$(date +%s)
         local last=$(cat "$debounce_file" 2>/dev/null || echo 0)
-        if (( now - last < 3 )); then
+        if (( now - last < 5 )); then
           log "Debounced: $line"
           continue
         fi
@@ -167,7 +190,7 @@ run_daemon() {
         sleep 1
         # HDMI 재연결 시 상태에 맞는 설정 적용
         if grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null; then
-          local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "mirror")
+          local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "extended")
           if [[ "$hdmi_state" == "mirror" ]]; then
             hyprctl keyword monitor "$HDMI_MIRROR"
           else

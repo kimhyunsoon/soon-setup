@@ -41,12 +41,28 @@ return {
           fg = p.grey,
         },
         modified_selected = {
-          fg = p.orange,
+          fg = p.white,
         },
         modified_visible = {
-          fg = p.orange,
+          fg = p.white,
         },
       },
+    })
+    -- 저장 시점의 해시를 저장하고, 유휴 시 비교하여 modified 플래그 해제
+    vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufWritePost' }, {
+      callback = function()
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        vim.b.saved_hash = vim.fn.sha256(table.concat(lines, '\n'))
+      end,
+    })
+    vim.api.nvim_create_autocmd({ 'CursorHold', 'InsertLeave' }, {
+      callback = function()
+        if not vim.bo.modified or not vim.b.saved_hash then return end
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        if vim.fn.sha256(table.concat(lines, '\n')) == vim.b.saved_hash then
+          vim.bo.modified = false
+        end
+      end,
     })
     vim.api.nvim_create_autocmd('BufEnter', {
       pattern = { '[No Name]' },

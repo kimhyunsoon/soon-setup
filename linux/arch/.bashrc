@@ -231,3 +231,5 @@ alias sudo='sudo '
 
 # 강제 재부팅 (--force --force: 즉시 재부팅, 프로그램 대기 없음)
 alias reboot='systemctl reboot --force --force'
+
+export PATH=$PATH:/home/soon/.spicetify
