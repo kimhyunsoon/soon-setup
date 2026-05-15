@@ -4,6 +4,13 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     build = ':TSUpdate',
     config = function()
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function(args)
+          vim.treesitter.stop(args.buf)
+        end,
+      })
+
       require('nvim-treesitter.configs').setup({
         ensure_installed = {
           'lua',
@@ -14,8 +21,6 @@ return {
           'css',
           'scss',
           'json',
-          'markdown',
-          'markdown_inline',
           'vue',
           'svelte',
           'java',
@@ -36,7 +41,10 @@ return {
         highlight = {
           enable = true,
           additional_vim_regex_highlighting = false,
-          disable = function(_, buf)
+          disable = function(lang, buf)
+            if lang == "markdown" or lang == "markdown_inline" then
+              return true
+            end
             local max_filesize = 2000 * 1024 -- 2MB
             local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
             if ok and stats and stats.size > max_filesize then
@@ -46,7 +54,10 @@ return {
         },
         indent = {
           enable = true,
-          disable = function(_, buf)
+          disable = function(lang, buf)
+            if lang == "markdown" or lang == "markdown_inline" then
+              return true
+            end
             local max_filesize = 2000 * 1024 -- 2MB
             local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
             if ok and stats and stats.size > max_filesize then
