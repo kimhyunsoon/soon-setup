@@ -11,6 +11,9 @@ return {
 
     cmp.setup({
       preselect = cmp.PreselectMode.None,
+      enabled = function()
+        return (vim.b.bigfile_tier or 0) < 2
+      end,
       completion = {
         completeopt = 'menu,menuone,noinsert,noselect'
       },

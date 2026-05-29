@@ -49,14 +49,17 @@ return {
       },
     })
     -- 저장 시점의 해시를 저장하고, 유휴 시 비교하여 modified 플래그 해제
+    -- tier 1 이상에서는 전버퍼 sha256가 비싸므로 건너뜀
     vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufWritePost' }, {
-      callback = function()
+      callback = function(args)
+        if (vim.b[args.buf].bigfile_tier or 0) >= 1 then return end
         local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
         vim.b.saved_hash = vim.fn.sha256(table.concat(lines, '\n'))
       end,
     })
     vim.api.nvim_create_autocmd({ 'CursorHold', 'InsertLeave' }, {
       callback = function()
+        if (vim.b.bigfile_tier or 0) >= 1 then return end
         if not vim.bo.modified or not vim.b.saved_hash then return end
         local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
         if vim.fn.sha256(table.concat(lines, '\n')) == vim.b.saved_hash then

@@ -11,11 +11,12 @@ return {
       vim.o.foldlevelstart = 99
       vim.o.foldenable = true
       require('ufo').setup({
-        provider_selector = function(_, filetype)
+        provider_selector = function(bufnr, filetype)
+          if (vim.b[bufnr].bigfile_tier or 0) >= 2 then return '' end
           if filetype == 'markdown' then
-              return {'indent'}
+            return { 'indent' }
           end
-          return {'treesitter', 'indent'}
+          return { 'treesitter', 'indent' }
         end
       })
     end,

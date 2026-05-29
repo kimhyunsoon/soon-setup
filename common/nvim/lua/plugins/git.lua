@@ -26,13 +26,15 @@ return {
         delay = 300,
       },
       current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
+      max_file_length = 40000,
     },
     config = function(_, opts)
       require('gitsigns').setup(opts)
 
-      -- 버퍼 진입 시 gitsigns 새로고침
+      -- 버퍼 진입 시 gitsigns 새로고침 (tier 2 이상에서는 건너뜀)
       vim.api.nvim_create_autocmd('BufEnter', {
-        callback = function()
+        callback = function(args)
+          if (vim.b[args.buf].bigfile_tier or 0) >= 2 then return end
           vim.schedule(function()
             pcall(require('gitsigns').refresh)
           end)

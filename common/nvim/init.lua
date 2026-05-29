@@ -14,6 +14,9 @@ vim.g.loaded_node_provider = 0
 -- 공통 설정
 require 'common'
 
+-- 대용량 파일 일괄 처리 (플러그인보다 먼저 등록되어야 BufReadPre 순서가 보장됨)
+require('bigfile').setup()
+
 require('lazy').setup({ import = 'plugins' }, {
   ui = { backdrop = 100 },
   performance = {
@@ -92,66 +95,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
   end,
 })
 
--- 대용량 파일 처리를 위한 설정
-local large_file_group = vim.api.nvim_create_augroup('LargeFileHandling', { clear = true })
-
-vim.api.nvim_create_autocmd('BufReadPre', {
-  group = large_file_group,
-  callback = function(args)
-    local buf = args.buf
-    local filename = vim.api.nvim_buf_get_name(buf)
-    local size = vim.fn.getfsize(filename)
-
-    if size > 2621440 then  -- 1MB 이상
-      -- 매우 큰 파일: Treesitter 비활성화하되 기본 syntax highlighting 유지
-      vim.b[buf].large_file = true
-      vim.bo[buf].swapfile = false
-      vim.bo[buf].bufhidden = 'unload'
-      vim.bo[buf].undolevels = 100
-      vim.wo.foldenable = false
-      vim.wo.wrap = false
-
-      -- 성능 최적화하되 하이라이트는 유지
-      vim.schedule(function()
-        if vim.api.nvim_buf_is_valid(buf) then
-          -- Treesitter 비활성화
-          vim.cmd('TSBufDisable highlight')
-          vim.cmd('TSBufDisable indent')
-          vim.cmd('TSBufDisable incremental_selection')
-
-          -- 파일 타입별 기본 syntax 활성화 (하이라이트 유지)
-          if filename:match('%.xml$') or filename:match('%.xsd$') or filename:match('%.xsl$') then
-            vim.bo[buf].syntax = 'xml'
-          elseif filename:match('%.json$') then
-            vim.bo[buf].syntax = 'json'
-          elseif filename:match('%.js$') then
-            vim.bo[buf].syntax = 'javascript'
-          elseif filename:match('%.ts$') then
-            vim.bo[buf].syntax = 'typescript'
-          elseif filename:match('%.py$') then
-            vim.bo[buf].syntax = 'python'
-          elseif filename:match('%.html$') then
-            vim.bo[buf].syntax = 'html'
-          elseif filename:match('%.css$') then
-            vim.bo[buf].syntax = 'css'
-          end
-        end
-      end)
-
-      vim.notify(string.format('Enable large file mode. (%.1fMB)', size / 1048576), vim.log.levels.INFO)
-
-    elseif size > 2097152 then  -- 2MB 이상
-      -- 중간 크기 파일: 일부 Treesitter 기능만 비활성화
-      vim.schedule(function()
-        if vim.api.nvim_buf_is_valid(buf) then
-          vim.cmd('TSBufDisable incremental_selection')
-        end
-      end)
-    end
-  end,
-})
-
--- 간소화된 하이라이팅 설정
+-- 기본 정규식 syntax 활성화 (트리시터가 처리하지 않는 파일타입용)
 vim.api.nvim_create_autocmd('BufEnter', {
   once = true,
   callback = function() vim.cmd('syntax on') end,
