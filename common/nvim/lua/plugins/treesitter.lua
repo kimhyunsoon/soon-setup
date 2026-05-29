@@ -37,32 +37,23 @@ return {
           'yaml',
           'styled',
           'jsdoc',
+          'comment',
+          'regex',
         },
+        auto_install = true,
         highlight = {
           enable = true,
           additional_vim_regex_highlighting = false,
           disable = function(lang, buf)
-            if lang == "markdown" or lang == "markdown_inline" then
-              return true
-            end
-            local max_filesize = 2000 * 1024 -- 2MB
-            local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-            if ok and stats and stats.size > max_filesize then
-              return true
-            end
+            if lang == 'markdown' or lang == 'markdown_inline' then return true end
+            return (vim.b[buf].bigfile_tier or 0) >= 2
           end,
         },
         indent = {
           enable = true,
           disable = function(lang, buf)
-            if lang == "markdown" or lang == "markdown_inline" then
-              return true
-            end
-            local max_filesize = 2000 * 1024 -- 2MB
-            local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-            if ok and stats and stats.size > max_filesize then
-              return true
-            end
+            if lang == 'markdown' or lang == 'markdown_inline' then return true end
+            return (vim.b[buf].bigfile_tier or 0) >= 2
           end,
         },
         autotag = { enable = true },
@@ -73,6 +64,12 @@ return {
           enable = false,
         },
       })
+
+      -- 히어독 동적 인젝션(<<SQL, <<EOF 등) 또는 HTML <script>/<style> 인젝션 시
+      -- 대상 파서 누락/버전 불일치로 인한 "attempt to call method 'range' (a nil value)" 방어
+      for _, lang in ipairs({ 'bash', 'html' }) do
+        pcall(vim.treesitter.query.set, lang, 'injections', '')
+      end
     end,
   }
 }

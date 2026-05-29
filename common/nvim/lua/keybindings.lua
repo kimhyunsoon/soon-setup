@@ -383,7 +383,6 @@ local function enter_insert_mode()
 end
 
 vim.keymap.set('n', 'i', enter_insert_mode, { noremap = true, silent = true })
-vim.keymap.set('n', 'ㅑ', enter_insert_mode, { noremap = true, silent = true })
 
 -- Visual 모드에서 End 키를 누르면 줄의 맨 끝으로 이동 (개행 제외)
 vim.keymap.set('v', '<End>', function()

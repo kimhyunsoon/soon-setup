@@ -19,5 +19,7 @@
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
   "promptSuggestionEnabled": false,
-  "autoUpdatesChannel": "latest"
+  "autoUpdatesChannel": "latest",
+  "theme": "dark-daltonized",
+  "preferredNotifChannel": "ghostty"
 }

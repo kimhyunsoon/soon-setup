@@ -1,0 +1,54 @@
+#!/bin/bash
+LOCKFILE="/tmp/ocr.lock"
+SCREENSHOT_DIR="$HOME/ocr_screenshot"
+
+# 동시 실행 방지
+exec 9>"$LOCKFILE"
+if ! flock -n 9; then
+  notify-send "OCR" "이미 실행 중"
+  exec 9>&-
+  exit 0
+fi
+trap 'rm -rf "$SCREENSHOT_DIR" 2>/dev/null; exec 9>&-' EXIT
+
+rm -rf "$SCREENSHOT_DIR" 2>/dev/null && mkdir -p "$SCREENSHOT_DIR"
+hyprshot -m region -o "$SCREENSHOT_DIR" --silent 9>&-
+
+SCREENSHOT_FILE=$(ls "$SCREENSHOT_DIR"/* 2>/dev/null | head -n 1)
+[[ -f "$SCREENSHOT_FILE" ]] || exit 0
+
+NOTI_ID=$(notify-send -p "OCR" "처리 중..." 9>&-)
+
+TEXT=$(timeout -k 5 30 nice -n 19 env \
+  CUDA_VISIBLE_DEVICES="" \
+  OMP_NUM_THREADS=2 \
+  MKL_NUM_THREADS=2 \
+  OPENBLAS_NUM_THREADS=2 \
+  DISABLE_MODEL_SOURCE_CHECK=True \
+  OCR_IMG="$SCREENSHOT_FILE" \
+  ~/.venv/ocr/bin/python3 -c "
+import os, sys
+from PIL import Image
+img = Image.open(os.environ['OCR_IMG']).convert('L')
+lo, hi = img.getextrema()
+if hi - lo < 5 or img.size[0] < 5 or img.size[1] < 5:
+    sys.exit(0)
+from paddleocr import PaddleOCR
+ocr = PaddleOCR(
+    lang='ch',
+    use_doc_orientation_classify=False,
+    use_doc_unwarping=False,
+    use_textline_orientation=False,
+    device='cpu',
+)
+for res in ocr.predict(os.environ['OCR_IMG']):
+    texts = res['rec_texts']
+    if texts:
+        print('\n'.join(texts))
+" 2>/tmp/ocr_err.log 9>&-)
+
+if [ -n "$TEXT" ]; then
+  printf '%s' "$TEXT" | wl-copy 9>&- && notify-send -r "$NOTI_ID" "OCR 완료" "$TEXT" 9>&-
+else
+  notify-send -r "$NOTI_ID" "OCR 실패" "텍스트 추출 실패" 9>&-
+fi

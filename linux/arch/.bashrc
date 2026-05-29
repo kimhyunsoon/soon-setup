@@ -132,41 +132,6 @@ ff() {
   fi
 }
 
-# ocr
-ocr() {
-  SCREENSHOT_DIR="$HOME/ocr_screenshot"
-  rm -rf "$SCREENSHOT_DIR" 2>/dev/null && mkdir -p "$SCREENSHOT_DIR"
-  hyprshot -m region -o "$SCREENSHOT_DIR" --silent
-
-  for i in {1..3}; do
-    SCREENSHOT_FILE=$(ls $SCREENSHOT_DIR/* 2>/dev/null | head -n 1)
-    [ -f "$SCREENSHOT_FILE" ] && break
-    [ $i -eq 3 ] && { notify-send "OCR 실패" "스크린샷 생성 실패"; rm -rf "$SCREENSHOT_DIR"; return 1; }
-    sleep 1
-  done
-
-  TEXT=$(DISABLE_MODEL_SOURCE_CHECK=True OCR_IMG="$SCREENSHOT_FILE" ~/.venv/ocr/bin/python3 -c "
-import os
-from paddleocr import PaddleOCR
-ocr = PaddleOCR(
-    lang='korean',
-    use_doc_orientation_classify=False,
-    use_doc_unwarping=False,
-    use_textline_orientation=False,
-)
-for res in ocr.predict(os.environ['OCR_IMG']):
-    texts = res['rec_texts']
-    if texts:
-        print('\n'.join(texts))
-" 2>/dev/null)
-  if [ -n "$TEXT" ]; then
-    printf '%s' "$TEXT" | wl-copy && notify-send "OCR 완료" "$TEXT"
-  else
-    notify-send "OCR 실패" "텍스트 추출 실패"
-  fi
-
-  rm -rf "$SCREENSHOT_DIR"
-}
 
 # timer (스톱워치 / 카운트다운)
 timer() {
@@ -244,5 +209,7 @@ alias sudo='sudo '
 
 # 강제 재부팅 (--force --force: 즉시 재부팅, 프로그램 대기 없음)
 alias reboot='systemctl reboot --force --force'
+
+check() { python3 ~/workspace/soon-setup/linux/arch/check.py "$@"; }
 
 export PATH=$PATH:/home/soon/.spicetify
