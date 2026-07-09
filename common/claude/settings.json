@@ -12,7 +12,8 @@
     "code-review@claude-plugins-official": true,
     "clangd-lsp@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": false
+    "frontend-design@claude-plugins-official": false,
+    "chrome-devtools-mcp@claude-plugins-official": true
   },
   "language": "한국어",
   "spinnerTipsEnabled": false,
@@ -20,6 +21,9 @@
   "effortLevel": "high",
   "promptSuggestionEnabled": false,
   "autoUpdatesChannel": "latest",
+  "tui": "default",
+  "skipWorkflowUsageWarning": true,
   "theme": "dark-daltonized",
-  "preferredNotifChannel": "ghostty"
+  "preferredNotifChannel": "ghostty",
+  "model": "claude-fable-5[1m]"
 }

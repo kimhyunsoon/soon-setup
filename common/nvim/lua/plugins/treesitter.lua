@@ -64,12 +64,6 @@ return {
           enable = false,
         },
       })
-
-      -- 히어독 동적 인젝션(<<SQL, <<EOF 등) 또는 HTML <script>/<style> 인젝션 시
-      -- 대상 파서 누락/버전 불일치로 인한 "attempt to call method 'range' (a nil value)" 방어
-      for _, lang in ipairs({ 'bash', 'html' }) do
-        pcall(vim.treesitter.query.set, lang, 'injections', '')
-      end
     end,
   }
 }
