@@ -73,3 +73,38 @@ ble-face varname_unset=fg=231
 ble-face vbell=fg=231
 ble-face vbell_erase=fg=231
 ble-face vbell_flash=fg=231
+
+# git commit -m 입력 시 현재 브랜치의 최근 커밋 메시지를 기반으로 자동완성 제안
+function ble/complete/auto-complete/source:git-commit-msg {
+  # 커서가 줄 끝에 있을 때만 제안
+  ((_ble_edit_ind==${#_ble_edit_str})) || return 1
+  local text=$_ble_edit_str
+  local rex='^git[[:space:]]+commit[[:space:]].*(-[a-zA-Z]*m[[:space:]]+|--message([[:space:]]+|=))'
+  [[ $text =~ $rex ]] || return 1
+  local after=${text:${#BASH_REMATCH[0]}}
+  local quote= prefix=$after
+  case $after in
+    (\"*) quote=\" prefix=${after#\"} ;;
+    (\'*) quote=\' prefix=${after#\'} ;;
+  esac
+  # 닫는 따옴표까지 입력된 경우는 메시지 입력이 끝난 것으로 보고 제안하지 않음
+  [[ $quote && $prefix == *"$quote"* ]] && return 1
+  local msg suggest
+  while IFS= read -r msg; do
+    [[ $msg ]] || continue
+    if [[ $quote ]]; then
+      [[ $msg != *"$quote"* && $msg == "$prefix"* && $msg != "$prefix" ]] || continue
+      suggest=${msg:${#prefix}}$quote
+    else
+      # 따옴표 없이 이미 입력을 시작한 경우는 제외 (공백 포함 메시지가 깨짐)
+      [[ $prefix ]] && return 1
+      [[ $msg == *\"* ]] && continue
+      suggest=\"$msg\"
+    fi
+    ble/complete/auto-complete/enter h 0 "$suggest" '' "$text$suggest"
+    return 0
+  done < <(git log --no-merges --pretty=%s -n 30 HEAD -- 2>/dev/null)
+  return 1
+}
+ble/util/import/eval-after-load core-complete '
+  ble/array#insert-before _ble_complete_auto_source history git-commit-msg'

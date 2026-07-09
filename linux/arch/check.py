@@ -77,16 +77,23 @@ def calc_avg_cycle(records: list[Record]) -> int:
 
 def get_cycle_day(records: list[Record], target: date) -> int:
     avg_cycle = calc_avg_cycle(records)
-    # target 이하의 가장 최근 시작일을 기준으로 주기일차 계산
+    # target을 감싸는 구간 찾기: 이전 시작일(base)과 바로 다음 시작일(next_start)
     base = None
+    next_start = None
     for r in records:
         if r.start <= target:
             base = r.start
+        elif next_start is None:
+            next_start = r.start
     if base is None:
         # 모든 기록이 target 이후 → 첫 기록 기준 역산
         days_diff = (records[0].start - target).days
         return (-days_diff) % avg_cycle + 1
     days_since = (target - base).days
+    # 다음 실제 기록이 존재하면 base~next 구간은 실측 주기 → 모듈로 없이 그대로 일차 계산
+    if next_start is not None:
+        return days_since + 1
+    # 마지막 기록 이후 → 데이터 없음, 평균 주기로 추측
     return days_since % avg_cycle + 1
 
 
@@ -115,45 +122,59 @@ def _peak_day(avg_cycle: int) -> int:
     return avg_cycle - 13
 
 
-def eval_level(cycle_day: int, avg_cycle: int) -> int:
-    peak = _peak_day(avg_cycle)
-    diff = cycle_day - peak  # 음수: 정점 전, 양수: 정점 후
-    # 정점 5일 전부터 상승해 정점 당일 최대, 이후 급감
-    if diff <= -6:
-        return 1
-    if diff == -5:
+def calc_cycle_spread(records: list[Record]) -> int:
+    # 정점일 변동폭(일). 주기 편차가 클수록 구간을 넓게 본다 (기록이 적으면 기본 2일)
+    if len(records) < 3:
         return 2
-    if diff == -4:
-        return 3
-    if diff == -3:
-        return 4
-    if diff <= 0:  # -2, -1, 0: 정점
+    gaps = [(records[i + 1].start - records[i].start).days for i in range(len(records) - 1)]
+    avg = sum(gaps) / len(gaps)
+    sd = (sum((g - avg) ** 2 for g in gaps) / len(gaps)) ** 0.5
+    return max(1, min(round(sd), 4))
+
+
+def _base_level(diff: int) -> int:
+    # diff = 주기일차 - 정점일. 정점 1일 전(-1)이 최대, 정점 당일은 한 단계 낮고, 이후 급감
+    if diff == -1:
         return 5
+    if diff in (-2, 0):
+        return 4
+    if diff == -3:
+        return 3
+    if diff in (-4, -5):
+        return 2
     if diff == 1:
         return 2
     return 1
 
 
-def eval_position(cycle_day: int, avg_cycle: int) -> int:
+def eval_level(cycle_day: int, avg_cycle: int, spread: int) -> int:
+    peak = _peak_day(avg_cycle)
+    # 정점 시점 불확실성(±spread)을 반영해 후보 정점일 중 최댓값을 취함
+    return max(_base_level(cycle_day - ov) for ov in range(peak - spread, peak + spread + 1))
+
+
+def eval_position(cycle_day: int, avg_cycle: int, spread: int) -> int:
     peak = _peak_day(avg_cycle)
     early = round(avg_cycle * 0.18)
     if cycle_day <= early:
-        return 2
+        return 2  # 초기 구간: 낮음 고정
     if cycle_day <= peak:
-        dist = peak - cycle_day
-        if dist <= 1:
+        # 정점 접근: 상승. 정점 불확실성(spread)만큼 정점 구간을 평탄화
+        dist = max(0, peak - cycle_day - spread)
+        if dist == 0:
             return 5
-        if dist <= 3:
+        if dist <= 1:
             return 4
-        if dist <= 5:
+        if dist <= 3:
             return 3
         return 2
+    # 정점 후: 급강하
     dist = cycle_day - peak
-    if dist <= 2:
+    if dist == 1:
         return 4
-    if dist <= 5:
+    if dist == 2:
         return 3
-    if dist <= 8:
+    if dist == 3:
         return 2
     return 1
 
@@ -182,6 +203,7 @@ def cmd_show(extra_days: int = 0) -> None:
 
     today = date.today()
     avg_cycle = calc_avg_cycle(records)
+    spread = calc_cycle_spread(records)
 
     # 이전 (현재 사이클)
     prev_start = predict_current_start(records, today)
@@ -209,8 +231,8 @@ def cmd_show(extra_days: int = 0) -> None:
         d = today + timedelta(days=i)
         cd = get_cycle_day(records, d)
         st = eval_status(cd, DURATION)
-        lv = eval_level(cd, avg_cycle)
-        ps = eval_position(cd, avg_cycle)
+        lv = eval_level(cd, avg_cycle, spread)
+        ps = eval_position(cd, avg_cycle, spread)
 
         label = format_date(d, color_weekend=True)
         if d == today:
@@ -243,6 +265,24 @@ def cmd_add() -> None:
     records.append(Record(start, end))
     save_records(records)
     print("저장되었습니다.")
+
+
+def cmd_list() -> None:
+    records = load_records()
+    if not records:
+        print("데이터가 없습니다.")
+        return
+
+    avg_cycle = calc_avg_cycle(records)
+    for i, r in enumerate(records, 1):
+        # 직전 기록과의 간격 표시
+        if i < len(records):
+            gap = (records[i].start - r.start).days
+            print(f"  {i}. {format_date(r.start)} ~ {format_date(r.end)}  (+{gap}일)")
+        else:
+            print(f"  {i}. {format_date(r.start)} ~ {format_date(r.end)}")
+    print()
+    print(f"총 {len(records)}건, 평균 주기 {avg_cycle}일")
 
 
 def cmd_delete() -> None:
@@ -297,6 +337,7 @@ def print_help() -> None:
     print("  (없음)              현재 주기 정보 표시")
     print("  -e, --extend <N>    기본 표시 범위 이후 N일 추가 표시 (1~100)")
     print("  -a, --add           새 기록 추가")
+    print("  -l, --list          추가한 기록 목록 표시")
     print("  -d, --delete        기록 삭제")
     print("  -h, --help          도움말 표시")
 
@@ -312,6 +353,8 @@ def main() -> None:
         print_help()
     elif opt in ("-a", "--add"):
         cmd_add()
+    elif opt in ("-l", "--list"):
+        cmd_list()
     elif opt in ("-d", "--delete"):
         cmd_delete()
     elif opt in ("-e", "--extend"):
