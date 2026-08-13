@@ -2,6 +2,7 @@
   "env": {
     "DISABLE_AUTOUPDATER": "1"
   },
+  "model": "claude-fable-5[1m]",
   "statusLine": {
     "type": "command",
     "command": "bash /home/soon/.claude/statusline-command.sh"
@@ -24,6 +25,6 @@
   "tui": "default",
   "skipWorkflowUsageWarning": true,
   "theme": "dark-daltonized",
-  "preferredNotifChannel": "ghostty",
-  "model": "claude-fable-5[1m]"
+  "editorMode": "normal",
+  "preferredNotifChannel": "ghostty"
 }

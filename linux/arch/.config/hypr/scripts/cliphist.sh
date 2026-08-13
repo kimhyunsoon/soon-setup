@@ -10,7 +10,14 @@ while true; do
   exit_code=$?
 
   if [ "$exit_code" -eq 0 ]; then
-    echo "$selected" | cliphist decode | wl-copy
+    # --type 명시: wl-copy의 MIME 자동감지(xdg-mime -> xprop)가 X11 소켓에서 멈추는 것 방지
+    if [[ "$selected" == *"[[ binary data"* ]]; then
+      fmt=$(grep -oE 'png|jpe?g|gif|webp|bmp' <<< "$selected" | head -1)
+      [ "$fmt" = "jpg" ] && fmt="jpeg"
+      echo "$selected" | cliphist decode | wl-copy --type "image/${fmt:-png}"
+    else
+      echo "$selected" | cliphist decode | wl-copy --type text/plain
+    fi
     break
   elif [ "$exit_code" -eq 10 ] || [ "$exit_code" -eq 11 ]; then
     echo "$selected" | cliphist delete
