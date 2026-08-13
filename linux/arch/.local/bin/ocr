@@ -2,13 +2,20 @@
 LOCKFILE="/tmp/ocr.lock"
 SCREENSHOT_DIR="$HOME/ocr_screenshot"
 
-# 동시 실행 방지
+# 동시 실행 방지 — 이미 실행 중이면 선택 단계는 취소, 처리 단계는 알림
 exec 9>"$LOCKFILE"
 if ! flock -n 9; then
-  notify-send "OCR" "이미 실행 중"
+  if pgrep -x slurp > /dev/null; then
+    pkill -x slurp
+  else
+    notify-send "OCR" "이미 실행 중"
+  fi
   exec 9>&-
   exit 0
 fi
+
+# 캡처(slurp) 진행 중이면 무시
+pgrep -x slurp > /dev/null && exit 0
 trap 'rm -rf "$SCREENSHOT_DIR" 2>/dev/null; exec 9>&-' EXIT
 
 rm -rf "$SCREENSHOT_DIR" 2>/dev/null && mkdir -p "$SCREENSHOT_DIR"

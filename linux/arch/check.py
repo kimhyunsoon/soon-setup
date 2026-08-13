@@ -118,22 +118,24 @@ def eval_status(cycle_day: int, avg_duration: int) -> str:
 
 
 def _peak_day(avg_cycle: int) -> int:
-    # 배란일 = 다음 시작 14일 전. 시작일이 1일차이므로 주기일차로는 avg_cycle - 13
+    # 정점일 = 다음 시작 14일 전. 시작일이 1일차이므로 주기일차로는 avg_cycle - 13
     return avg_cycle - 13
 
 
-def calc_cycle_spread(records: list[Record]) -> int:
-    # 배란일 변동폭(일). 주기 편차가 클수록 가임 창을 넓게 본다 (기록이 적으면 기본 2일)
+def peak_window(records: list[Record], avg_cycle: int) -> tuple[int, int]:
+    # 정점일 후보 범위(주기일차). 관측된 실제 주기 길이들이 만드는 범위에 ±1 여유
+    # 주기가 20일이었다면 정점은 7일차, 33일이었다면 20일차일 수 있으므로 관측 범위 전체를 후보로 본다
+    peak = _peak_day(avg_cycle)
     if len(records) < 3:
-        return 2
+        return max(1, peak - 2), peak + 2
     gaps = [(records[i + 1].start - records[i].start).days for i in range(len(records) - 1)]
-    avg = sum(gaps) / len(gaps)
-    sd = (sum((g - avg) ** 2 for g in gaps) / len(gaps)) ** 0.5
-    return max(1, min(round(sd), 4))
+    lo = min(min(gaps) - 13, peak) - 1
+    hi = max(max(gaps) - 13, peak) + 1
+    return max(1, lo), hi
 
 
-def _base_fertility(diff: int) -> int:
-    # diff = 주기일차 - 배란일. 배란 1일 전(-1)이 정점, 배란 당일은 한 단계 낮고, 배란 후 급감(난자 수명)
+def _base_level(diff: int) -> int:
+    # diff = 주기일차 - 정점일. 정점 1일 전(-1)이 최대, 정점 당일은 한 단계 낮고, 이후 급감
     if diff == -1:
         return 5
     if diff in (-2, 0):
@@ -147,36 +149,29 @@ def _base_fertility(diff: int) -> int:
     return 1
 
 
-def eval_level(cycle_day: int, avg_cycle: int, spread: int) -> int:
-    peak = _peak_day(avg_cycle)
-    # 배란 시점 불확실성(±spread)을 반영해 후보 배란일 중 최대 가임도를 취함
-    return max(_base_fertility(cycle_day - ov) for ov in range(peak - spread, peak + spread + 1))
-
-
-def eval_position(cycle_day: int, avg_cycle: int, spread: int) -> int:
-    peak = _peak_day(avg_cycle)
-    menses = round(avg_cycle * 0.18)
-    if cycle_day <= menses:
-        return 2  # 생리 중: 낮고 단단하게 닫힘
-    if cycle_day <= peak:
-        # 배란 접근: 상승. 배란 불확실성(spread)만큼 정점 구간을 평탄화
-        dist = max(0, peak - cycle_day - spread)
-        if dist == 0:
-            return 5
-        if dist <= 1:
-            return 4
-        if dist <= 3:
-            return 3
-        return 2
-    # 배란 후: 경부가 빠르게 낮고 단단하게 닫힘 (급강하)
-    dist = cycle_day - peak
-    if dist == 1:
+def _base_position(diff: int) -> int:
+    # diff = 주기일차 - 정점일. 정점 무렵 가장 높고, 지나면 급강하
+    if diff in (-1, 0):
+        return 5
+    if diff in (-3, -2, 1):
         return 4
-    if dist == 2:
+    if diff in (-5, -4, 2):
         return 3
-    if dist == 3:
+    if diff in (-7, -6, 3):
         return 2
     return 1
+
+
+def eval_level(cycle_day: int, pk_lo: int, pk_hi: int) -> int:
+    # 후보 정점일 범위 중 최댓값을 취하는 보수적 추정
+    return max(_base_level(cycle_day - pk) for pk in range(pk_lo, pk_hi + 1))
+
+
+def eval_position(cycle_day: int, avg_cycle: int, pk_lo: int, pk_hi: int) -> int:
+    early = round(avg_cycle * 0.18)
+    if cycle_day <= early:
+        return 2  # 초기 구간: 낮음 고정
+    return max(_base_position(cycle_day - pk) for pk in range(pk_lo, pk_hi + 1))
 
 
 def color_position(v: int) -> str:
@@ -203,7 +198,7 @@ def cmd_show(extra_days: int = 0) -> None:
 
     today = date.today()
     avg_cycle = calc_avg_cycle(records)
-    spread = calc_cycle_spread(records)
+    pk_lo, pk_hi = peak_window(records, avg_cycle)
 
     # 이전 (현재 사이클)
     prev_start = predict_current_start(records, today)
@@ -231,8 +226,8 @@ def cmd_show(extra_days: int = 0) -> None:
         d = today + timedelta(days=i)
         cd = get_cycle_day(records, d)
         st = eval_status(cd, DURATION)
-        lv = eval_level(cd, avg_cycle, spread)
-        ps = eval_position(cd, avg_cycle, spread)
+        lv = eval_level(cd, pk_lo, pk_hi)
+        ps = eval_position(cd, avg_cycle, pk_lo, pk_hi)
 
         label = format_date(d, color_weekend=True)
         if d == today:

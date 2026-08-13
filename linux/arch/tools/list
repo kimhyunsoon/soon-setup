@@ -69,3 +69,10 @@ desktop 파일 생성
 
 # dbgate
 paru -S dbgate-bin
+
+# 로지텍 마우스 (MX Master 4)
+paru -S logiops
+./ln.sh  # /etc/logid.cfg 링크
+sudo systemctl enable --now logid
+# 설정 변경 후: sudo systemctl restart logid
+# 장치 이름/버튼 CID 확인: sudo logid -v
