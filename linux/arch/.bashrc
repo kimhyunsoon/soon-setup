@@ -212,4 +212,7 @@ alias reboot='systemctl reboot --force --force'
 
 check() { python3 ~/workspace/soon-setup/linux/arch/check.py "$@"; }
 
+# 타자연습
+alias typo='~/workspace/soon-setup/common/typo/typo'
+
 export PATH=$PATH:/home/soon/.spicetify
