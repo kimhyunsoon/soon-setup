@@ -23,4 +23,6 @@ rm -f "$PID_FILE"
 
 mkdir -p "$SAVE_DIR"
 FILE="$SAVE_DIR/$(date +%Y%m%d_%H%M%S).png"
+# 클립보드 히스토리에 파일 경로도 추가 (바이너리가 먼저 저장되도록 대기)
+( sleep 1; [[ -s "$FILE" ]] && printf '%s' "$FILE" | cliphist store ) &
 grim -g "$GEOM" - | tee "$FILE" >(wl-copy -t image/png) | satty --filename -

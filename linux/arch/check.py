@@ -1,5 +1,6 @@
 import sys
 import csv
+import math
 from datetime import date, timedelta
 from pathlib import Path
 from typing import NamedTuple
@@ -14,6 +15,9 @@ DURATION = 6
 
 # 기본 주기 (기록이 없거나 적을 때의 기준값)
 DEFAULT_CYCLE = 28
+
+# 위치/가능성 표시 단계 (1~SCALE)
+SCALE = 5
 
 # ANSI colors
 C_RESET = "\033[0m"
@@ -117,75 +121,92 @@ def eval_status(cycle_day: int, avg_duration: int) -> str:
     return "TRUE" if cycle_day <= avg_duration else "FALSE"
 
 
-def _peak_day(avg_cycle: int) -> int:
-    # 정점일 = 다음 시작 14일 전. 시작일이 1일차이므로 주기일차로는 avg_cycle - 13
-    return avg_cycle - 13
+# 정점 이후 다음 시작까지의 고정 지연(일)과 그 자체의 변동(σ)
+PEAK_LAG = 13
+LAG_SIGMA = 1.0
 
 
-def peak_window(records: list[Record], avg_cycle: int) -> tuple[int, int]:
-    # 정점일 후보 범위(주기일차). 관측된 실제 주기 길이들이 만드는 범위에 ±1 여유
-    # 주기가 20일이었다면 정점은 7일차, 33일이었다면 20일차일 수 있으므로 관측 범위 전체를 후보로 본다
-    peak = _peak_day(avg_cycle)
-    if len(records) < 3:
-        return max(1, peak - 2), peak + 2
+def _gap_stats(records: list[Record]) -> tuple[float, float]:
+    # 관측 간격 + 기본 28일(가상 관측 1개)의 평균과 표본 표준편차. 극단 이상치는 없다고 가정.
+    # 간격 변동은 대부분 정점 이전 구간에서 생기므로 정점일 σ ≈ 간격 σ, 여기에 고정 지연 변동을 합산.
+    # 간격 σ 하한 1.0은 규칙적 주기에서도 존재하는 자연 변동, 상한 4.0은 과도한 평탄화 방지
     gaps = [(records[i + 1].start - records[i].start).days for i in range(len(records) - 1)]
-    lo = min(min(gaps) - 13, peak) - 1
-    hi = max(max(gaps) - 13, peak) + 1
-    return max(1, lo), hi
+    vals = [float(g) for g in gaps] + [float(DEFAULT_CYCLE)]
+    mu = sum(vals) / len(vals)
+    var = sum((v - mu) ** 2 for v in vals) / max(len(vals) - 1, 1)
+    gap_sigma = min(max(math.sqrt(var), 1.0), 4.0)
+    return mu, math.sqrt(gap_sigma**2 + LAG_SIGMA**2)
 
 
-def _base_level(diff: int) -> int:
-    # diff = 주기일차 - 정점일. 정점 1일 전(-1)이 최대, 정점 당일은 한 단계 낮고, 이후 급감
-    if diff == -1:
-        return 5
-    if diff in (-2, 0):
-        return 4
-    if diff == -3:
-        return 3
-    if diff in (-4, -5):
-        return 2
-    if diff == 1:
-        return 2
-    return 1
+def _normal_dist(center: float, sigma: float) -> list[tuple[int, float]]:
+    # 정점일(주기일차) 정규분포를 ±2.5σ 범위에서 이산화해 정규화
+    lo = max(1, math.floor(center - 2.5 * sigma))
+    hi = math.ceil(center + 2.5 * sigma)
+    raw = [(pk, math.exp(-((pk - center) ** 2) / (2 * sigma**2))) for pk in range(lo, hi + 1)]
+    total = sum(w for _, w in raw)
+    return [(pk, w / total) for pk, w in raw]
 
 
-def _base_position(diff: int) -> int:
-    # diff = 주기일차 - 정점일. 정점 무렵 가장 높고, 지나면 급강하
-    if diff in (-1, 0):
-        return 5
-    if diff in (-3, -2, 1):
-        return 4
-    if diff in (-5, -4, 2):
-        return 3
-    if diff in (-7, -6, 3):
-        return 2
-    return 1
+def peak_distribution(records: list[Record], target: date) -> list[tuple[int, float]]:
+    # target이 속한 구간의 다음 시작이 이미 기록돼 있으면 실측 간격 기준(지연 변동만 남음),
+    # 아니면 평균 간격 기준 예측 분포
+    base = next_start = None
+    for r in records:
+        if r.start <= target:
+            base = r.start
+        elif next_start is None:
+            next_start = r.start
+    if base is not None and next_start is not None:
+        return _normal_dist((next_start - base).days - PEAK_LAG, LAG_SIGMA)
+    mu, sigma = _gap_stats(records)
+    return _normal_dist(mu - PEAK_LAG, sigma)
 
 
-def eval_level(cycle_day: int, pk_lo: int, pk_hi: int) -> int:
-    # 후보 정점일 범위 중 최댓값을 취하는 보수적 추정
-    return max(_base_level(cycle_day - pk) for pk in range(pk_lo, pk_hi + 1))
+# 정점일 기준(diff = 주기일차 - 정점일) 일별 확률. 관측 연구 기반 값으로 정점 당일까지 이어지고
+# 정점 다음 날부터는 사실상 0
+_LEVEL_TABLE = {-5: 0.10, -4: 0.16, -3: 0.14, -2: 0.27, -1: 0.31, 0: 0.33}
+
+# 정점일 기준 상대 높이(0~1). 정점 일주일 전부터 점진 상승, 정점 전후 최고, 이후 이틀 내 급강하
+_POSITION_TABLE = {
+    -7: 0.10, -6: 0.20, -5: 0.30, -4: 0.45, -3: 0.60, -2: 0.80, -1: 1.00,
+    0: 1.00, 1: 0.60, 2: 0.30, 3: 0.10,
+}
 
 
-def eval_position(cycle_day: int, avg_cycle: int, pk_lo: int, pk_hi: int) -> int:
-    early = round(avg_cycle * 0.18)
-    if cycle_day <= early:
-        return 2  # 초기 구간: 낮음 고정
-    return max(_base_position(cycle_day - pk) for pk in range(pk_lo, pk_hi + 1))
+# 정점일 분포 하에서의 기댓값 (정점일 불확실성을 확률 가중으로 반영)
+def _expected(cycle_day: int, dist: list[tuple[int, float]], table: dict[int, float]) -> float:
+    return sum(w * table.get(cycle_day - pk, 0.0) for pk, w in dist)
+
+
+def _scaled(cycle_day: int, dist: list[tuple[int, float]], table: dict[int, float]) -> int:
+    # 해당 분포에서 도달 가능한 최고 기댓값을 SCALE, 0을 1로 두는 상대 단계
+    horizon = dist[-1][0] + 4
+    top = max(_expected(cd, dist, table) for cd in range(1, horizon + 1))
+    if top <= 0:
+        return 1
+    return 1 + round((SCALE - 1) * _expected(cycle_day, dist, table) / top)
+
+
+def eval_level(cycle_day: int, dist: list[tuple[int, float]]) -> int:
+    return _scaled(cycle_day, dist, _LEVEL_TABLE)
+
+
+def eval_position(cycle_day: int, dist: list[tuple[int, float]]) -> int:
+    return _scaled(cycle_day, dist, _POSITION_TABLE)
 
 
 def color_position(v: int) -> str:
-    if v <= 2:
+    if v <= SCALE * 0.4:
         return f"{C_RED}{v}{C_RESET}"
-    if v >= 4:
+    if v >= SCALE * 0.8:
         return f"{C_GREEN}{v}{C_RESET}"
     return str(v)
 
 
 def color_level(v: int) -> str:
-    if v <= 2:
+    if v <= SCALE * 0.4:
         return f"{C_GREEN}{v}{C_RESET}"
-    if v >= 4:
+    if v >= SCALE * 0.8:
         return f"{C_RED}{v}{C_RESET}"
     return str(v)
 
@@ -197,8 +218,6 @@ def cmd_show(extra_days: int = 0) -> None:
         return
 
     today = date.today()
-    avg_cycle = calc_avg_cycle(records)
-    pk_lo, pk_hi = peak_window(records, avg_cycle)
 
     # 이전 (현재 사이클)
     prev_start = predict_current_start(records, today)
@@ -226,8 +245,9 @@ def cmd_show(extra_days: int = 0) -> None:
         d = today + timedelta(days=i)
         cd = get_cycle_day(records, d)
         st = eval_status(cd, DURATION)
-        lv = eval_level(cd, pk_lo, pk_hi)
-        ps = eval_position(cd, avg_cycle, pk_lo, pk_hi)
+        dist = peak_distribution(records, d)
+        lv = eval_level(cd, dist)
+        ps = eval_position(cd, dist)
 
         label = format_date(d, color_weekend=True)
         if d == today:

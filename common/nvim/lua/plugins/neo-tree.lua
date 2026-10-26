@@ -30,7 +30,29 @@ return {
   config = function()
     vim.api.nvim_create_autocmd('FileType', {
       pattern = 'neo-tree-popup',
-      callback = function()
+      -- 팝업 입력창에서는 단어 단위로 이동하되 줄 시작/끝에서 순환하지 않음
+      callback = function(ev)
+        local function feed(keys)
+          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
+        end
+        vim.keymap.set('i', '<Home>', function()
+          local col = vim.api.nvim_win_get_cursor(0)[2]
+          local line = vim.api.nvim_get_current_line()
+          if col - #line:match('^%s*') > 0 then
+            feed('<S-Left>')
+          end
+        end, { buffer = ev.buf, noremap = true, silent = true })
+        vim.keymap.set('i', '<End>', function()
+          local col = vim.api.nvim_win_get_cursor(0)[2]
+          local line = vim.api.nvim_get_current_line()
+          if col >= #line then return end
+          local word = line:match('%w+', col)
+          if word == nil or col + #word == #line then
+            feed('<End>')
+          else
+            feed('<S-Right>')
+          end
+        end, { buffer = ev.buf, noremap = true, silent = true })
       end,
     })
 

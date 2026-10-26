@@ -20,7 +20,7 @@ selection-foreground = #ffffff
 cursor-color = green
 cursor-style = block
 cursor-style-blink = false
-shell-integration-features = no-cursor
+shell-integration-features = no-cursor,ssh-env,ssh-terminfo
 
 font-family = Maple Mono NL CN Light
 font-family = Hack Nerd Font Mono
@@ -37,3 +37,4 @@ keybind = ctrl+w=close_window
 keybind = ctrl+r=reload_config
 keybind = super+c=text:\x03
 keybind = shift+enter=text:\x1b\r
+keybind = ctrl+f=start_search

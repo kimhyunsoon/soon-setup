@@ -125,7 +125,12 @@ vim.keymap.set('i', '<Home>',
 -- 다음 단어로 이동
 vim.keymap.set('i', '<End>',
   function()
-    if move_cursor_by_word(true) then
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local line_length = string.len(vim.api.nvim_get_current_line())
+    if cursor[2] >= line_length then
+      -- 줄끝이면 줄시작으로 순환
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Home>', true, false, true), 'n', false)
+    elseif move_cursor_by_word(true) then
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<End>', true, false, true), 'n', false)
     else
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<S-Right>', true, false, true), 'n', false)
@@ -585,10 +590,12 @@ vim.keymap.set('n', '<leader>fo', function()
   local ext = vim.fn.expand('%:e'):lower()
   local os_name = vim.loop.os_uname().sysname
 
-  -- md 파일: markdown-preview.nvim (GitHub 스타일 렌더링)
+  -- md 파일: GitHub 스타일 정적 HTML로 변환한 뒤 아래 html 분기로 브라우저에서 열기
+  -- (저장 시 HTML만 재생성되고 브라우저는 새로고침해야 반영됨)
   if ext == 'md' or ext == 'markdown' then
-    vim.cmd('MarkdownPreview')
-    return
+    path = require('md-viewer').render()
+    if not path then return end
+    ext = 'html'
   end
 
   -- html 파일: firefox → safari → chromium 순으로 열기

@@ -1,3 +1,4 @@
+# /etc/udev/rules.d/99-logid-restart.rules
 # MX Master 4(046D:B042)가 (재)연결되면 logid 재시작
 # logiops가 블루투스 연결 초기에 장치 추가를 포기하는 문제 대응
 ACTION=="add", SUBSYSTEM=="hidraw", KERNELS=="*:046D:B042.*", RUN+="/usr/bin/systemctl --no-block restart logid.service"
