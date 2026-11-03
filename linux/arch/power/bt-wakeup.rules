@@ -1,0 +1,8 @@
+# /etc/udev/rules.d/90-bt-wakeup.rules
+# 절전 중 블루투스 키보드로 깨우기
+# 내장 BT(10ab:9309) → 내장 hub(05e3:0610) → usb1 → xHCI(0000:c3:00.3) 경로 전체에 wakeup이 켜져야 함
+# 어떤 BT 장치가 깨울 수 있는지는 BlueZ의 장치별 WakeAllowed로 제어
+ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:c3:00.3", ATTR{power/wakeup}="enabled"
+ACTION=="add", SUBSYSTEM=="usb", KERNEL=="usb1", KERNELS=="0000:c3:00.3", ATTR{power/wakeup}="enabled"
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="05e3", ATTR{idProduct}=="0610", KERNELS=="0000:c3:00.3", ATTR{power/wakeup}="enabled"
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="10ab", ATTR{idProduct}=="9309", ATTR{power/wakeup}="enabled"

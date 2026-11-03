@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=rhwp
+Comment=HWP/HWPX 문서를 rhwp 웹 뷰어로 열기
+Exec=rhwp-open %F
+Icon=x-office-document
+Terminal=false
+NoDisplay=true
+MimeType=application/x-hwp;application/x-hwp+zip;application/vnd.hancom.hwp;application/vnd.hancom.hwpx;application/haansofthwp;application/haansofthwpx;

@@ -20,8 +20,22 @@ for dir in "$SCRIPT_DIR/.config/"*/; do
   linker $(realpath $dir) $HOME/.config/$(basename $dir)
 done
 
+# .local/ (디렉토리는 다른 앱과 공유하므로 파일 단위로 링크)
+for sub in bin share/applications; do
+  mkdir -p "$HOME/.local/$sub"
+  for f in "$SCRIPT_DIR/.local/$sub/"*; do
+    linker "$f" "$HOME/.local/$sub/$(basename "$f")"
+  done
+done
+
+# hwp/hwpx 는 rhwp 웹 뷰어로 열기
+xdg-mime default rhwp-open.desktop application/x-hwp application/x-hwp+zip application/vnd.hancom.hwp application/vnd.hancom.hwpx
+
 # limits (io_uring memlock 상향, 다음 로그인부터 적용. pam이 root로 읽으므로 복사)
 sudo install -m 644 "$SCRIPT_DIR/limits/memlock.conf" /etc/security/limits.d/90-memlock.conf
+
+# 절전: BT 키보드 깨우기 + 깨어난 원인 로그 (sudo 필요)
+"$SCRIPT_DIR/power/install.sh"
 
 # logid (logiops 설치된 경우만, sudo 필요)
 if command -v logid &> /dev/null; then

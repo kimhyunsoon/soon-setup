@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+# hwp/hwpx 파일을 rhwp 웹 뷰어(https://edwardkim.github.io/rhwp/)로 연다.
+# 뷰어가 ?url= 을 fetch 하므로, 넘겨받은 파일만 127.0.0.1 에서 랜덤 토큰 경로로 서빙하고
+# 브라우저가 모두 가져가면(또는 TIMEOUT 초 지나면) 종료한다. 파일은 외부로 업로드되지 않는다.
+import os
+import secrets
+import subprocess
+import sys
+import threading
+import urllib.parse
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+VIEWER = "https://edwardkim.github.io/rhwp/"
+ORIGIN = "https://edwardkim.github.io"
+TIMEOUT = 180
+
+files = {}  # token -> path
+for arg in sys.argv[1:]:
+    path = urllib.parse.unquote(arg.removeprefix("file://"))
+    if os.path.isfile(path):
+        files[secrets.token_urlsafe(16)] = os.path.abspath(path)
+if not files:
+    subprocess.run(["notify-send", "rhwp", "열 파일이 없음"])
+    sys.exit(1)
+
+pending = set(files)
+done = threading.Event()
+
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        token = self.path.lstrip("/")
+        if token not in files:
+            self.send_error(404)
+            return
+        with open(files[token], "rb") as f:
+            data = f.read()
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", ORIGIN)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+        pending.discard(token)
+        if not pending:
+            done.set()
+
+    def log_message(self, *args):
+        pass
+
+
+server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+threading.Thread(target=server.serve_forever, daemon=True).start()
+port = server.server_address[1]
+
+for token, path in files.items():
+    query = urllib.parse.urlencode(
+        {"url": f"http://127.0.0.1:{port}/{token}", "filename": os.path.basename(path)}
+    )
+    subprocess.Popen(["xdg-open", f"{VIEWER}?{query}"])
+
+if not done.wait(TIMEOUT):
+    subprocess.run(["notify-send", "rhwp", f"브라우저가 {len(pending)}개 파일을 가져가지 않음"])
+server.shutdown()

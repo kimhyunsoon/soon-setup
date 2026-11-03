@@ -7,6 +7,9 @@ EDP="eDP-1,2880x1800@60,960x333,1"
 HDMI_EXTENDED="HDMI-A-1,3840x2160@60,7680x0,1,transform,1"
 HDMI_MIRROR="HDMI-A-1,preferred,auto,1,mirror,eDP-1"
 HDMI_STATE_FILE="/tmp/hdmi-mirror-state"
+STATE_FILE="/tmp/monitor-manager-state"
+TRAILING_FILE="/tmp/monitor-manager-trailing"
+POWER_DPMS_OFF="$XDG_RUNTIME_DIR/power/dpms-off"
 
 log() {
   echo "[$(date '+%H:%M:%S')] $1" >> "$LOG"
@@ -137,6 +140,50 @@ run_once() {
   log "=== DONE ==="
 }
 
+# 모니터 상태 요약: 물리 연결된 외장 출력 | Hyprland가 인식한 모니터
+monitor_state() {
+  local f
+  for f in /sys/class/drm/card*-{DP,HDMI-A}-*/status; do
+    [[ "$(cat "$f" 2>/dev/null)" == connected ]] && basename "$(dirname "$f")"
+  done | paste -sd' '
+  echo "|$(hyprctl monitors -j 2>/dev/null | jq -r '[.[].name] | sort | join(" ")')"
+}
+
+# HDMI 상태(미러링/확장)에 맞는 설정 적용
+apply_hdmi() {
+  grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null || return 1
+  local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "extended")
+  if [[ "$hdmi_state" == "mirror" ]]; then
+    hyprctl keyword monitor "$HDMI_MIRROR"
+  else
+    hyprctl keyword monitor "$HDMI_EXTENDED"
+  fi
+  log "HDMI-A-1 applied: $hdmi_state"
+}
+
+# 모니터 연결 변화 처리
+handle_change() {
+  apply_hdmi && sleep 0.5
+  apply_clamshell
+  sleep 0.5
+  fix_workspaces
+  _restart_waybar &
+  # power.sh가 화면을 꺼둔 상태면 다시 연결된 모니터도 끔
+  if [[ -f "$POWER_DPMS_OFF" ]]; then
+    hyprctl dispatch dpms off
+    log "dpms off 유지"
+  fi
+  monitor_state > "$STATE_FILE"
+}
+
+# 화면을 다시 켠 뒤 호출 (power.sh): 깨어나며 신호를 못 잡은 HDMI를 다시 설정
+run_refresh() {
+  log "=== REFRESH ==="
+  handle_change
+  # 그 사이 power.sh가 다시 화면을 껐으면 켜지 않음
+  [[ -f "$POWER_DPMS_OFF" ]] || hyprctl dispatch dpms on
+}
+
 # 데몬 모드 (이벤트 감지)
 run_daemon() {
   # 기존 데몬 모두 종료 (자기 자신 제외)
@@ -154,7 +201,9 @@ run_daemon() {
   trap 'kill $watchdog_pid 2>/dev/null' EXIT
 
   # 초기 실행
+  rm -f "$TRAILING_FILE"
   run_once
+  monitor_state > "$STATE_FILE"
 
   # 초기 실행 직후 디바운스 설정 (reload 시 발생하는 모니터 이벤트 무시)
   local debounce_file="/tmp/monitor-manager-debounce"
@@ -180,29 +229,33 @@ run_daemon() {
           log "Suppressed: $line"
           continue
         fi
+        # 덮개 닫힘 상태에서 외장 연결/해제 → 절전 유예 재평가 (디바운스와 무관하게 매번)
+        ~/.config/hypr/scripts/lid.sh check &
+        # power.sh가 화면을 꺼둔 상태면 디바운스로 무시되는 이벤트에서도 다시 끔
+        [[ -f "$POWER_DPMS_OFF" ]] && (sleep 2; hyprctl dispatch dpms off > /dev/null) &
         local now=$(date +%s)
         local last=$(cat "$debounce_file" 2>/dev/null || echo 0)
         if (( now - last < 5 )); then
           log "Debounced: $line"
+          # 모니터가 깨어나며 연결이 여러 번 끊겼다 붙으면 마지막 상태가 버려지므로,
+          # 디바운스가 끝난 뒤 물리 연결 상태가 마지막 처리 때와 다르면 한 번 더 처리
+          if [[ ! -f "$TRAILING_FILE" ]]; then
+            touch "$TRAILING_FILE"
+            (
+              sleep 6
+              rm -f "$TRAILING_FILE"
+              if [[ "$(monitor_state)" != "$(cat "$STATE_FILE" 2>/dev/null)" ]]; then
+                log "Trailing: $(monitor_state | paste -sd' ')"
+                echo "$(date +%s)" > "$debounce_file"
+                handle_change
+              fi
+            ) &
+          fi
           continue
         fi
         echo "$now" > "$debounce_file"
         sleep 1
-        # HDMI 재연결 시 상태에 맞는 설정 적용
-        if grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null; then
-          local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "extended")
-          if [[ "$hdmi_state" == "mirror" ]]; then
-            hyprctl keyword monitor "$HDMI_MIRROR"
-          else
-            hyprctl keyword monitor "$HDMI_EXTENDED"
-          fi
-          log "HDMI-A-1 applied: $hdmi_state"
-          sleep 0.5
-        fi
-        apply_clamshell
-        sleep 0.5
-        fix_workspaces
-        _restart_waybar &
+        handle_change
         ;;
     esac
   done
@@ -210,5 +263,6 @@ run_daemon() {
 
 case "$1" in
   --daemon) run_daemon ;;
+  --refresh) run_refresh ;;
   *) run_once ;;
 esac
