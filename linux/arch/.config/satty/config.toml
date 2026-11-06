@@ -1,0 +1,10 @@
+# satty (Super+A 캡처 편집기) 설정
+# 팔레트 첫 번째 색이 시작 기본색 (satty 기본 순서에서 주황/빨강만 맞바꿈)
+[color-palette]
+palette = [
+    "#eb4d4bff", # 빨강 (기본)
+    "#f0932bff", # 주황
+    "#6ab04cff", # 초록
+    "#22a6b3ff", # 청록
+    "#130f40ff", # 남색
+]

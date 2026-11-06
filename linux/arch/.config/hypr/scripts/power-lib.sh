@@ -5,6 +5,7 @@ STATE="${XDG_RUNTIME_DIR:-/run/user/$UID}/power"
 LOG="/tmp/power-manager.log"
 SCRIPTS="$HOME/.config/hypr/scripts"
 mkdir -p "$STATE"
+source "$SCRIPTS/hypr.sh"
 
 log() {
   echo "[$(date '+%m-%d %H:%M:%S')] [$(basename "$0")] $1" >> "$LOG"
@@ -35,7 +36,7 @@ hypr_dpms() {
   if [[ -n "$POWER_DRY_RUN" ]]; then
     log "DRY_RUN: dpms $*"
   else
-    hyprctl dispatch dpms "$@" > /dev/null
+    hypr_dpms_raw "$@"
   fi
 }
 

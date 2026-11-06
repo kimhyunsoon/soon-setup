@@ -2,11 +2,12 @@
 # 절전 메뉴 (Super+Ctrl+L)
 #   menu              rofi 메뉴 (절전 / 화면만 끄기)
 #   suspend           절전
-#   screenoff         바로 화면만 끄기 (작업 유지, 입력 시 복귀)
+#   screenoff         바로 화면만 끄기 (작업 유지, Super+[ / Super+] 로 복귀)
 #   cancel            진행 중인 세션 취소 (덮개 열림 등)
 # 절전 후 깨어났을 때 (덮개 닫힘):
 #   블루투스 키보드로 깨움 → 바로 화면 켜기
-#   그 외(원치 않는 깨어남) → 화면을 꺼둔 채 5분간 키보드 입력이 없으면 다시 절전
+#   그 외(원치 않는 깨어남) → 화면을 꺼둔 채 5분간 Super+[ / Super+] 입력이 없으면 다시 절전
+# 화면은 Super+[ / Super+] (워크스페이스 이동 키)로만 다시 켬 (input-wait.py)
 # POWER_DRY_RUN=1 이면 실제 절전/dpms 대신 로그만 남김
 
 source "$(dirname "$0")/power-lib.sh"
@@ -90,13 +91,17 @@ wait_input_dark() {
   local i
   dpms_off
   sleep 2
-  "$SCRIPTS/input-wait.py" "$1" & INPUT_PID=$!
+  log "입력 대기 시작 (${1}초)"
+  "$SCRIPTS/input-wait.py" "$1" > "$STATE/input-wait.out" 2>&1 & INPUT_PID=$!
   for ((i = 0; i < 15; i++)); do
     kill -0 $INPUT_PID 2>/dev/null || break
     hypr_dpms off
     sleep 2
   done
-  wait $INPUT_PID
+  local rc=0
+  wait $INPUT_PID || rc=$?
+  log "입력 대기 종료 (rc=$rc) $(tr '\n' ' ' < "$STATE/input-wait.out")"
+  return $rc
 }
 
 run_suspend() {
@@ -131,8 +136,8 @@ run_suspend() {
 run_screenoff() {
   echo screenoff > "$STATE/mode"
   log "화면만 끄기"
-  wait_input_dark 999999
-  log "입력 감지 → 화면 켜기"
+  # 입력 감지 외의 이유로 끝나도(오류 등) 화면을 꺼둔 채 두지 않음
+  wait_input_dark 999999 && log "입력 감지 → 화면 켜기"
   dpms_on
 }
 

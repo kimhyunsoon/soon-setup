@@ -1,11 +1,10 @@
 #!/bin/bash
 # 모니터/워크스페이스/waybar 통합 관리
 
+source "$(dirname "$0")/hypr.sh"
+
 LOG="/tmp/monitor-manager.log"
 
-EDP="eDP-1,2880x1800@60,960x333,1"
-HDMI_EXTENDED="HDMI-A-1,3840x2160@60,7680x0,1,transform,1"
-HDMI_MIRROR="HDMI-A-1,preferred,auto,1,mirror,eDP-1"
 HDMI_STATE_FILE="/tmp/hdmi-mirror-state"
 STATE_FILE="/tmp/monitor-manager-state"
 TRAILING_FILE="/tmp/monitor-manager-trailing"
@@ -18,27 +17,19 @@ log() {
 log "Script started ($1)"
 
 # 클램쉘 상태 확인 및 eDP-1 설정
+# 덮개가 닫혀 있고 외장 모니터가 물리적으로 연결되어 있으면 eDP-1을 끔
+# (Hyprland 모니터 수로 판단하면 외장 하나가 잠시 빠졌을 때 eDP-1이 켜졌다 꺼지며 출력이 흔들림)
 apply_clamshell() {
   local lid_state=$(cat /proc/acpi/button/lid/LID/state 2>/dev/null | awk '{print $2}')
+  local external=$(grep -l "^connected" /sys/class/drm/card*-{DP,HDMI-A}-*/status 2>/dev/null | wc -l)
 
-  local retry=0
-  local monitor_count=0
-  while [[ $retry -lt 5 ]]; do
-    monitor_count=$(hyprctl monitors -j 2>/dev/null | jq 'length' 2>/dev/null)
-    if [[ $monitor_count -gt 0 ]]; then
-      break
-    fi
-    sleep 0.3
-    ((retry++))
-  done
+  log "Lid: $lid_state, External: $external"
 
-  log "Lid: $lid_state, Monitors: $monitor_count"
-
-  if [[ "$lid_state" == "closed" ]] && [[ $monitor_count -gt 1 ]]; then
-    hyprctl keyword monitor "eDP-1,disable"
+  if [[ "$lid_state" == "closed" ]] && [[ $external -gt 0 ]]; then
+    hypr_monitor_disable eDP-1
     log "eDP-1 disabled"
   else
-    hyprctl keyword monitor "$EDP"
+    hypr_monitor_set eDP-1 2880x1800@60 960x333 1
     log "eDP-1 enabled"
   fi
 }
@@ -65,19 +56,19 @@ fix_workspaces() {
       if echo "$monitors" | grep -q "^$monitor$"; then
         local current=$(echo "$workspaces" | jq -r ".[] | select(.id == $ws) | .monitor" 2>/dev/null)
         if [[ -n "$current" && "$current" != "$monitor" ]]; then
-          hyprctl dispatch moveworkspacetomonitor "$ws" "$monitor"
+          hypr_move_workspace "$ws" "$monitor"
           log "WS $ws: $current -> $monitor"
         fi
-        hyprctl keyword workspace "$ws,monitor:$monitor"
+        hypr_workspace_rule "$ws" "$monitor"
         break
       fi
     done
   done
 
   if [[ -n "$active_ws" ]] && echo "$workspaces" | jq -e ".[] | select(.id == $active_ws)" >/dev/null 2>&1; then
-    hyprctl dispatch workspace "$active_ws"
+    hypr_workspace "$active_ws"
   else
-    hyprctl dispatch workspace 1
+    hypr_workspace 1
   fi
 }
 
@@ -123,7 +114,7 @@ restore_hdmi() {
   fi
   local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "extended")
   if [[ "$hdmi_state" == "mirror" ]]; then
-    hyprctl keyword monitor "$HDMI_MIRROR"
+    hypr_monitor_mirror HDMI-A-1 eDP-1
     log "HDMI-A-1 restored: mirror"
   fi
 }
@@ -154,9 +145,9 @@ apply_hdmi() {
   grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null || return 1
   local hdmi_state=$(cat "$HDMI_STATE_FILE" 2>/dev/null || echo "extended")
   if [[ "$hdmi_state" == "mirror" ]]; then
-    hyprctl keyword monitor "$HDMI_MIRROR"
+    hypr_monitor_mirror HDMI-A-1 eDP-1
   else
-    hyprctl keyword monitor "$HDMI_EXTENDED"
+    hypr_monitor_set HDMI-A-1 3840x2160@60 7680x0 1 1
   fi
   log "HDMI-A-1 applied: $hdmi_state"
 }
@@ -170,7 +161,7 @@ handle_change() {
   _restart_waybar &
   # power.sh가 화면을 꺼둔 상태면 다시 연결된 모니터도 끔
   if [[ -f "$POWER_DPMS_OFF" ]]; then
-    hyprctl dispatch dpms off
+    hypr_dpms_raw off
     log "dpms off 유지"
   fi
   monitor_state > "$STATE_FILE"
@@ -181,7 +172,7 @@ run_refresh() {
   log "=== REFRESH ==="
   handle_change
   # 그 사이 power.sh가 다시 화면을 껐으면 켜지 않음
-  [[ -f "$POWER_DPMS_OFF" ]] || hyprctl dispatch dpms on
+  [[ -f "$POWER_DPMS_OFF" ]] || hypr_dpms_raw on
 }
 
 # 데몬 모드 (이벤트 감지)
@@ -231,8 +222,13 @@ run_daemon() {
         fi
         # 덮개 닫힘 상태에서 외장 연결/해제 → 절전 유예 재평가 (디바운스와 무관하게 매번)
         ~/.config/hypr/scripts/lid.sh check &
-        # power.sh가 화면을 꺼둔 상태면 디바운스로 무시되는 이벤트에서도 다시 끔
-        [[ -f "$POWER_DPMS_OFF" ]] && (sleep 2; hyprctl dispatch dpms off > /dev/null) &
+        # power.sh가 화면을 꺼둔 상태: 모니터가 절전하며 연결이 끊겼다 붙는 것이므로 설정을 다시 적용하지 않음
+        # (출력이 반복해서 바뀌면 ghostty(GTK4)가 죽는 경우가 있음). 화면을 켤 때 power.sh가 --refresh로 한 번에 정리
+        if [[ -f "$POWER_DPMS_OFF" ]]; then
+          log "Screen off, skipped: $line"
+          (sleep 2; hypr_dpms_raw off) &
+          continue
+        fi
         local now=$(date +%s)
         local last=$(cat "$debounce_file" 2>/dev/null || echo 0)
         if (( now - last < 5 )); then
@@ -244,7 +240,7 @@ run_daemon() {
             (
               sleep 6
               rm -f "$TRAILING_FILE"
-              if [[ "$(monitor_state)" != "$(cat "$STATE_FILE" 2>/dev/null)" ]]; then
+              if [[ ! -f "$POWER_DPMS_OFF" && "$(monitor_state)" != "$(cat "$STATE_FILE" 2>/dev/null)" ]]; then
                 log "Trailing: $(monitor_state | paste -sd' ')"
                 echo "$(date +%s)" > "$debounce_file"
                 handle_change

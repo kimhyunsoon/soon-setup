@@ -1,8 +1,8 @@
 #!/bin/bash
 # HDMI-A-1 확장/미러링 토글
 
-HDMI_EXTENDED="HDMI-A-1,3840x2160@60,7680x0,1,transform,1"
-HDMI_MIRROR="HDMI-A-1,preferred,auto,1,mirror,eDP-1"
+source "$(dirname "$0")/hypr.sh"
+
 STATE_FILE="/tmp/hdmi-mirror-state"
 
 if ! grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null; then
@@ -10,15 +10,15 @@ if ! grep -q "^connected" /sys/class/drm/card*-HDMI-A-1/status 2>/dev/null; then
   exit 0
 fi
 
-# 초기 상태: hyprland.conf 기본값이 extended이므로 파일 없으면 extended
+# 초기 상태: Hyprland 설정 기본값이 extended이므로 파일 없으면 extended
 current=$(cat "$STATE_FILE" 2>/dev/null || echo "extended")
 
 if [[ "$current" == "mirror" ]]; then
-  hyprctl keyword monitor "$HDMI_EXTENDED"
+  hypr_monitor_set HDMI-A-1 3840x2160@60 7680x0 1 1
   echo "extended" > "$STATE_FILE"
   notify-send -t 3000 "HDMI-A-1 확장 모드로 전환"
 else
-  hyprctl keyword monitor "$HDMI_MIRROR"
+  hypr_monitor_mirror HDMI-A-1 eDP-1
   echo "mirror" > "$STATE_FILE"
   notify-send -t 3000 "HDMI-A-1 미러링 모드로 전환"
 fi

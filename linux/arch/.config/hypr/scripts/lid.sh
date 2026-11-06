@@ -1,5 +1,5 @@
 #!/bin/bash
-# 덮개/외장 모니터 처리 (logind 대신 담당, hyprland.conf의 handle-lid-switch 억제 참고)
+# 덮개/외장 모니터 처리 (logind 대신 담당, Hyprland 설정의 handle-lid-switch 억제 참고)
 #   close   덮개 닫힘: 외장 있으면 클램쉘, 없으면 유예 후 절전
 #   open    덮개 열림: 유예/절전 대기 취소, 내장 화면 복귀
 #   check   모니터 연결 변화 시 재평가 (monitor-manager.sh에서 호출)
@@ -8,7 +8,6 @@
 source "$(dirname "$0")/power-lib.sh"
 
 PIDFILE="$STATE/lid-grace.pid"
-EDP="eDP-1,2880x1800@60,960x333,1"
 # 덮개 닫힘 + 외장 모니터 없음 상태에서 절전까지 유예
 GRACE_SEC=${POWER_GRACE_SEC:-300}
 
@@ -54,7 +53,7 @@ case "$1" in
   close)
     log "덮개 닫힘 (외장: $(external_count))"
     if (($(external_count) > 0)); then
-      hyprctl keyword monitor "eDP-1,disable" && sleep 0.5 && "$SCRIPTS/monitor-manager.sh"
+      hypr_monitor_disable eDP-1 && sleep 0.5 && "$SCRIPTS/monitor-manager.sh"
     else
       start_grace
     fi
@@ -63,7 +62,7 @@ case "$1" in
     log "덮개 열림"
     kill_pidfile "$PIDFILE"
     "$SCRIPTS/power.sh" cancel
-    hyprctl keyword monitor "$EDP" && sleep 0.5 && "$SCRIPTS/monitor-manager.sh"
+    hypr_monitor_set eDP-1 2880x1800@60 960x333 1 && sleep 0.5 && "$SCRIPTS/monitor-manager.sh"
     dpms_on
     ;;
   check)

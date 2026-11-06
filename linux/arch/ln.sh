@@ -34,8 +34,9 @@ xdg-mime default rhwp-open.desktop application/x-hwp application/x-hwp+zip appli
 # limits (io_uring memlock 상향, 다음 로그인부터 적용. pam이 root로 읽으므로 복사)
 sudo install -m 644 "$SCRIPT_DIR/limits/memlock.conf" /etc/security/limits.d/90-memlock.conf
 
-# 절전: BT 키보드 깨우기 + 깨어난 원인 로그 (sudo 필요)
-"$SCRIPT_DIR/power/install.sh"
+# 절전: BT 키보드 깨우기 + 깨어난 원인 로그 (sudo 필요, 장치 경로는 bt-wakeup.rules 참고. 재부팅 후 적용)
+sudo ln -sf "$(realpath $SCRIPT_DIR/power/bt-wakeup.rules)" /etc/udev/rules.d/90-bt-wakeup.rules
+sudo ln -sf "$(realpath $SCRIPT_DIR/power/pm-debug.conf)" /etc/tmpfiles.d/pm-debug.conf
 
 # logid (logiops 설치된 경우만, sudo 필요)
 if command -v logid &> /dev/null; then

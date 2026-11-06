@@ -25,4 +25,5 @@ mkdir -p "$SAVE_DIR"
 FILE="$SAVE_DIR/$(date +%Y%m%d_%H%M%S).png"
 # 클립보드 히스토리에 파일 경로도 추가 (바이너리가 먼저 저장되도록 대기)
 ( sleep 1; [[ -s "$FILE" ]] && printf '%s' "$FILE" | cliphist store ) &
-grim -g "$GEOM" - | tee "$FILE" >(wl-copy -t image/png) | satty --filename -
+# satty 0.21+ 는 시스템(라이트) 색 구성을 따르므로 다크 강제
+grim -g "$GEOM" - | tee "$FILE" >(wl-copy -t image/png) | ADW_DEBUG_COLOR_SCHEME=prefer-dark satty --filename -
