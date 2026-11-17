@@ -28,8 +28,8 @@ for sub in bin share/applications; do
   done
 done
 
-# hwp/hwpx 는 rhwp 웹 뷰어로 열기
-xdg-mime default rhwp-open.desktop application/x-hwp application/x-hwp+zip application/vnd.hancom.hwp application/vnd.hancom.hwpx
+# hwp/hwpx 는 rhwp 뷰어로 열기 (뷰어는 rhwp-open 첫 실행 때 ~/.local/share/rhwp-viewer 에 받아 로컬 서빙)
+xdg-mime default rhwp-open.desktop application/x-hwp application/x-hwpx application/x-hwp+zip application/vnd.hancom.hwp application/vnd.hancom.hwpx
 
 # limits (io_uring memlock 상향, 다음 로그인부터 적용. pam이 root로 읽으므로 복사)
 sudo install -m 644 "$SCRIPT_DIR/limits/memlock.conf" /etc/security/limits.d/90-memlock.conf

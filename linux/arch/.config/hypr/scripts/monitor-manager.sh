@@ -72,29 +72,42 @@ fix_workspaces() {
   fi
 }
 
+# waybar를 띄울 모니터: 켜져 있고 미러링이 아닌 모니터 중 노트북 화면(eDP) > DP > HDMI > 그 밖의 순
+# (모니터 이름에 의존하지 않으므로 처음 보는 모니터를 연결해도 동작)
+_waybar_primary() {
+  hyprctl monitors -j 2>/dev/null \
+    | jq -r '.[] | select(.disabled != true and (.mirrorOf // "none") == "none") | .name' 2>/dev/null \
+    | awk '{ p = /^eDP-/ ? 0 : /^DP-/ ? 1 : /^HDMI-/ ? 2 : 3; print p, $0 }' \
+    | sort -k1,1n -k2,2V | head -1 | cut -d' ' -f2
+}
+
+# 해당 모니터에 waybar가 실제로 떠 있는지 (Hyprland layer 목록으로 확인)
+_waybar_on() {
+  pgrep -x waybar > /dev/null || return 1
+  hyprctl layers -j 2>/dev/null \
+    | jq -e --arg m "$1" '.[$m].levels // {} | [.[][]?.namespace] | index("waybar")' > /dev/null 2>&1
+}
+
 # waybar 재시작 (flock으로 동시 실행 방지)
+# 띄울 모니터에 이미 waybar가 떠 있으면 건너뜀 (다른 모니터가 끊겼다 붙어도 깜빡이지 않게)
 _restart_waybar() {
   (
     flock -n 200 || { log "waybar restart skipped (locked)"; return; }
 
-    log "waybar restart executing"
-
-    local monitors
-    monitors=$(hyprctl monitors -j 2>/dev/null | jq -r '.[].name' 2>/dev/null)
-
     local primary
-    for mon in eDP-1 DP-1 HDMI-A-1; do
-      if echo "$monitors" | grep -q "^$mon$"; then
-        primary="$mon"
-        break
-      fi
-    done
-
+    primary=$(_waybar_primary)
     if [[ -z "$primary" ]]; then
       log "No primary monitor found"
       return
     fi
 
+    # 모니터가 막 다시 붙은 직후면 waybar가 아직 그 모니터에 다시 뜨는 중일 수 있어 1초 더 기다려 봄
+    if _waybar_on "$primary" || { sleep 1; _waybar_on "$primary"; }; then
+      log "waybar ok on $primary"
+      return
+    fi
+
+    log "waybar restart executing"
     local config_dir="$HOME/.config/waybar"
     local temp_config="/tmp/waybar-config.json"
     jq --arg output "$primary" '.output = [$output]' "$config_dir/config" > "$temp_config"

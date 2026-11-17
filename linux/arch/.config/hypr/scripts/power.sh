@@ -6,7 +6,7 @@
 #   cancel            진행 중인 세션 취소 (덮개 열림 등)
 # 절전 후 깨어났을 때 (덮개 닫힘):
 #   블루투스 키보드로 깨움 → 바로 화면 켜기
-#   그 외(원치 않는 깨어남) → 화면을 꺼둔 채 5분간 Super+[ / Super+] 입력이 없으면 다시 절전
+#   그 외(원치 않는 깨어남, 절전 30초 안에 깨어남 포함) → 화면을 꺼둔 채 5분간 Super+[ / Super+] 입력이 없으면 다시 절전
 # 화면은 Super+[ / Super+] (워크스페이스 이동 키)로만 다시 켬 (input-wait.py)
 # POWER_DRY_RUN=1 이면 실제 절전/dpms 대신 로그만 남김
 
@@ -29,17 +29,24 @@ start() {
   setsid "$0" _run "$@" > /dev/null 2>&1 < /dev/null &
 }
 
-# 절전 후 깨어날 때까지 대기 (벽시계 점프로 감지). 60초 안에 절전이 안 되면 실패
+# 커널이 센 절전 성공 횟수 (아주 짧게 절전했다 바로 깨어나도 늘어남)
+suspend_count() {
+  cat /sys/power/suspend_stats/success 2>/dev/null || echo 0
+}
+
+# 절전 후 깨어날 때까지 대기. 60초 안에 절전이 안 되면 실패
+# 절전 성공 횟수 증가 또는 벽시계 점프로 감지 (절전 직후 곧바로 깨어나면 시계 점프가 없으므로 횟수로 판단)
 wait_resume() {
   if [[ -n "$POWER_DRY_RUN" ]]; then
     return 0
   fi
-  local prev now i
+  local count_before=$1 prev now i
   prev=$(date +%s)
   for ((i = 0; i < 60; i++)); do
     sleep 1
     now=$(date +%s)
     ((now - prev > 5)) && return 0
+    (($(suspend_count) > count_before)) && return 0
     prev=$now
   done
   return 1
@@ -110,15 +117,20 @@ run_suspend() {
   while :; do
     log "절전"
     dpms_off
-    local gpe_before bt_before
+    local gpe_before bt_before count_before t0 slept
     gpe_before=$(non_ec_gpe)
     bt_before=$(bt_inputs)
+    count_before=$(suspend_count)
+    t0=$(date +%s)
     do_suspend || { log "suspend 실패"; dpms_on; return; }
-    wait_resume || { log "절전되지 않음"; dpms_on; return; }
-    log "깨어남 (lid: $(lid_closed && echo closed || echo open))"
+    wait_resume "$count_before" || { log "절전되지 않음"; dpms_on; return; }
+    slept=$(($(date +%s) - t0))
+    log "깨어남 (lid: $(lid_closed && echo closed || echo open), ${slept}초 경과)"
     # 덮개를 열어서 깨운 경우는 lid.sh open이 처리
     lid_closed || return
-    if woke_by_bt_input "$gpe_before" "$bt_before"; then
+    # 절전 직후(30초 안) 깨어난 것은 키보드로 깨운 것이 아님 (키보드를 끄는 중 블루투스 연결 해제 등)
+    # → 블루투스 판별 없이 화면을 꺼둔 채 입력을 기다렸다가 다시 절전
+    if ((slept >= 30)) && woke_by_bt_input "$gpe_before" "$bt_before"; then
       log "블루투스 키보드로 깨어남 → 복귀"
       dpms_on
       return

@@ -7,10 +7,9 @@ alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias hyprland='start-hyprland'
 
-# 명령어 시간 측정 변수
-TIMER_START=0
+# 명령어 시간 측정 (시작 시각 걸린 시간)
+CMD_START=""
 TIMER_SHOW=""
-TIMER_READY=1
 
 # Git 브랜치 함수
 parse_git_branch() {
@@ -30,58 +29,34 @@ parse_git_branch() {
   fi
 }
 
-# 명령어 실행 전 타이머 시작 (ble.sh용)
-preexec() {
-  TIMER_START=$(date +%s%N)
-  TIMER_READY=0
-}
-
-# 프롬프트 표시 전에 실행 시간 계산
-precmd() {
-  local EXIT="$?"
-  # 실행 시간 계산
-  if [[ $TIMER_READY == 0 && $TIMER_START -ne 0 ]]; then
-    local TIMER_END=$(date +%s%N)
-    local TIMER_DIFF=$((TIMER_END - TIMER_START))
-    # 나노초를 밀리초로 변환
-    local MS=$((TIMER_DIFF / 1000000))
-    # 시간 형식 결정
-    if [ $MS -lt 1000 ]; then
-      TIMER_SHOW="${MS}ms"
-    elif [ $MS -lt 60000 ]; then
-      local SEC=$((MS / 1000))
-      local MSEC=$((MS % 1000))
-      TIMER_SHOW="${SEC}s ${MSEC}ms"
-    elif [ $MS -lt 3600000 ]; then
-      local MIN=$((MS / 60000))
-      local SEC=$(((MS % 60000) / 1000))
-      TIMER_SHOW="${MIN}m ${SEC}s"
-    elif [ $MS -lt 86400000 ]; then
-      local HOUR=$((MS / 3600000))
-      local MIN=$(((MS % 3600000) / 60000))
-      local SEC=$(((MS % 60000) / 1000))
-      TIMER_SHOW="${HOUR}h ${MIN}m ${SEC}s"
-    else
-      local DAY=$((MS / 86400000))
-      local HOUR=$(((MS % 86400000) / 3600000))
-      local MIN=$(((MS % 3600000) / 60000))
-      local SEC=$(((MS % 60000) / 1000))
-      TIMER_SHOW="${DAY}d ${HOUR}h ${MIN}m ${SEC}s"
-    fi
+# 걸린 시간을 읽기 쉬운 단위로 (320ms · 2.9s · 1m 05s · 1h 02m 03s)
+_fmt_duration() {
+  local ms=$1
+  if (( ms < 1000 )); then
+    printf '%dms' "$ms"
+  elif (( ms < 60000 )); then
+    printf '%d.%ds' $((ms / 1000)) $((ms % 1000 / 100))
+  elif (( ms < 3600000 )); then
+    printf '%dm %02ds' $((ms / 60000)) $((ms % 60000 / 1000))
+  else
+    printf '%dh %02dm %02ds' $((ms / 3600000)) $((ms % 3600000 / 60000)) $((ms % 60000 / 1000))
   fi
-  TIMER_START=0
-  TIMER_READY=1
 }
 
-# ble.sh 호환 설정
-if [[ ${BLE_VERSION-} ]]; then
-  blehook PRECMD+=precmd
-  blehook PREEXEC+=preexec
-else
-  # ble.sh가 없는 경우 기본 bash 설정
-  trap '[[ $TIMER_READY == 1 ]] && TIMER_START=$(date +%s%N) && TIMER_READY=0' DEBUG
-  PROMPT_COMMAND=precmd
-fi
+# 명령어 실행 직전: 시작 시각 기록 (마이크로초, fork 없음)
+preexec() {
+  CMD_START=${EPOCHREALTIME//[!0-9]/}
+}
+
+# 프롬프트 표시 직전: 시작 시각 걸린 시간
+precmd() {
+  TIMER_SHOW=""
+  [[ -n $CMD_START ]] || return 0   # 빈 Enter 면 표시하지 않음 (이전 값 남기지 않음)
+  local end=${EPOCHREALTIME//[!0-9]/}
+  local ms=$(( (end - CMD_START) / 1000 ))
+  printf -v TIMER_SHOW '%(%H:%M:%S)T %s' $(( CMD_START / 1000000 )) "$(_fmt_duration "$ms")"
+  CMD_START=""
+}
 
 # PS1 설정 (개행 포함)
 PS1='
@@ -97,6 +72,15 @@ complete -F _minimal_complete paru yay pacman
 
 # ble.sh
 [[ $- == *i* ]] && source $HOME/ble.sh/out/ble.sh 2>/dev/null
+
+# 시간 측정 훅 (ble.sh 를 불러온 뒤에 걸어야 BLE_VERSION 이 보인다)
+if [[ ${BLE_VERSION-} ]]; then
+  blehook PRECMD+=precmd
+  blehook PREEXEC+=preexec
+else
+  trap '[[ -z $CMD_START && $BASH_COMMAND != precmd ]] && preexec' DEBUG
+  PROMPT_COMMAND=precmd
+fi
 
 # nvm
 export NVM_DIR="$HOME/.nvm"

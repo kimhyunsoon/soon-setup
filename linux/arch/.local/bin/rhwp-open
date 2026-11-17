@@ -1,64 +1,274 @@
 #!/usr/bin/env python3
-# hwp/hwpx 파일을 rhwp 웹 뷰어(https://edwardkim.github.io/rhwp/)로 연다.
-# 뷰어가 ?url= 을 fetch 하므로, 넘겨받은 파일만 127.0.0.1 에서 랜덤 토큰 경로로 서빙하고
-# 브라우저가 모두 가져가면(또는 TIMEOUT 초 지나면) 종료한다. 파일은 외부로 업로드되지 않는다.
+# hwp/hwpx 파일을 rhwp 뷰어(https://github.com/edwardkim/rhwp, MIT)로 연다. 완전히 로컬에서 동작한다.
+#
+# - 뷰어: 릴리스의 Firefox 확장 zip 안에 든 웹 뷰어(viewer.html + wasm + 글꼴)를 처음 실행할 때
+#   한 번 내려받아 ~/.local/share/rhwp-viewer/<버전>/ 에 풀어 둔다(sha256 고정 검증).
+# - 서버: 127.0.0.1:PORT 하나에서 뷰어와 문서를 같이 서빙한다. 출처가 고정이라 뷰어 설정
+#   (글꼴 감지 선택 등)이 유지되고, 외부로 나가는 요청이 없다.
+# - 문서: $XDG_RUNTIME_DIR/rhwp-open/<토큰> 에 경로를 적어 등록하고 /doc/<토큰> 으로 서빙한다.
+#   서버는 마지막 요청 후 IDLE_TIMEOUT 초 동안 살아 있으므로 F5 로 다시 불러올 수 있다.
+# - 패치: 뷰어의 빈 화면 버그(렌더러 준비 경합)를 우회하는 패치를 설치본에 한 번 적용한다(PATCHES 참고).
+# - 버전 올리기: VERSION, ZIP_SHA256 을 바꾼다(릴리스의 BROWSER_SHA256SUMS 참고).
+import hashlib
+import io
 import os
 import secrets
+import shutil
+import socket
 import subprocess
 import sys
+import tempfile
 import threading
+import time
 import urllib.parse
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import urllib.request
+import zipfile
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-VIEWER = "https://edwardkim.github.io/rhwp/"
-ORIGIN = "https://edwardkim.github.io"
-TIMEOUT = 180
-
-files = {}  # token -> path
-for arg in sys.argv[1:]:
-    path = urllib.parse.unquote(arg.removeprefix("file://"))
-    if os.path.isfile(path):
-        files[secrets.token_urlsafe(16)] = os.path.abspath(path)
-if not files:
-    subprocess.run(["notify-send", "rhwp", "열 파일이 없음"])
-    sys.exit(1)
-
-pending = set(files)
-done = threading.Event()
+VERSION = "0.9.0"
+ZIP_SHA256 = "f4918c4970b1750cc4d724a19443e0edb3cbe92a3dbda25c34e62c49691bd1f2"
+ZIP_URL = f"https://github.com/edwardkim/rhwp/releases/download/v{VERSION}/rhwp-firefox-{VERSION}.zip"
+VIEWER_DIR = os.path.expanduser(f"~/.local/share/rhwp-viewer/{VERSION}")
+REG_DIR = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}", "rhwp-open")
+PORT = 47380
+HOST = f"127.0.0.1:{PORT}"
+HEALTH = "/__rhwp_open__"
+HEALTH_BODY = f"rhwp-open {VERSION}".encode()
+IDLE_TIMEOUT = 30 * 60
 
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        token = self.path.lstrip("/")
-        if token not in files:
-            self.send_error(404)
-            return
-        with open(files[token], "rb") as f:
-            data = f.read()
+def notify(msg):
+    subprocess.run(["notify-send", "rhwp", msg])
+
+
+def install_viewer():
+    if os.path.isfile(os.path.join(VIEWER_DIR, "viewer.html")):
+        return
+    notify(f"rhwp 뷰어 {VERSION} 내려받는 중…")
+    parent = os.path.dirname(VIEWER_DIR)
+    os.makedirs(parent, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=parent) as tmp:
+        zip_path = os.path.join(tmp, "viewer.zip")
+        with urllib.request.urlopen(ZIP_URL, timeout=120) as r, open(zip_path, "wb") as f:
+            shutil.copyfileobj(r, f)
+        with open(zip_path, "rb") as f:
+            digest = hashlib.sha256(f.read()).hexdigest()
+        if digest != ZIP_SHA256:
+            raise RuntimeError(f"sha256 불일치: {digest}")
+        out = os.path.join(tmp, "viewer")
+        with zipfile.ZipFile(zip_path) as z:
+            z.extractall(out)  # extractall 은 절대경로·'..' 를 제거한다
+        if not os.path.isfile(os.path.join(out, "viewer.html")):
+            raise RuntimeError("zip 에 viewer.html 이 없음")
+        os.rename(out, VIEWER_DIR)
+
+
+# 뷰어 버그 우회 패치(0.9.0 기준). CanvasView.loadDocument() 가 렌더러를 준비하는 동안 폰트 갱신 등이
+# selectNextDocumentRevision() 으로 epoch 를 올리면, loadDocument 가 페이지를 하나도 올리지 않고 조용히
+# 끝나 빈 페이지 자리표시자만 남는다(새로고침해도 같은 경합이 반복될 수 있음). 그 경우 몇 번 다시 시도한다.
+# 버전을 올렸는데 문자열이 안 맞으면 패치 없이 그대로 쓴다.
+PATCHES = [
+    (
+        "async loadDocument(){if(this.disposed)return;this.documentLoadPrepared",
+        "async loadDocument(__n=0){if(this.disposed)return;this.documentLoadPrepared",
+    ),
+    (
+        "if(this.documentLoadPrepared=!1,this.disposed||!await this.prepareRendererRevision"
+        "(e,()=>this.rendererSession.resolve(this.wasm)))return;",
+        "if(this.documentLoadPrepared=!1,this.disposed||!await this.prepareRendererRevision"
+        "(e,()=>this.rendererSession.resolve(this.wasm))){if(!this.disposed&&__n<5){"
+        "console.warn(`[rhwp-open] 렌더러 준비가 도중에 바뀜 → loadDocument 재시도`,__n+1);"
+        "await new Promise(r=>setTimeout(r,50));return this.loadDocument(__n+1)}return}",
+    ),
+]
+PATCH_ID = "2"  # 패치 내용을 바꾸면 올린다
+PATCH_MARK = os.path.join(VIEWER_DIR, ".rhwp-open-patched")
+
+
+def apply_patches(path, patches):
+    """이미 적용된 건 건너뛰고(멱등), 원문이 정확히 한 번 있는 것만 바꾼다. 실패하면 False."""
+    with open(path, encoding="utf-8") as f:
+        src = f.read()
+    for old, new in patches:
+        if new in src:
+            continue
+        if src.count(old) != 1:
+            return False
+        src = src.replace(old, new)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(src)
+    os.replace(tmp, path)
+    return True
+
+
+def patch_viewer():
+    try:
+        with open(PATCH_MARK) as f:
+            if f.read() == PATCH_ID:
+                return
+    except OSError:
+        pass
+    assets = os.path.join(VIEWER_DIR, "assets")
+    js = [n for n in os.listdir(assets) if n.startswith("viewer-") and n.endswith(".js")]
+    if len(js) != 1:
+        notify("rhwp 뷰어 패치 건너뜀: viewer-*.js 를 찾지 못함")
+        return
+    # 패치 전 JS 가 브라우저 캐시에 남아 있어도 새 파일을 받도록 viewer.html 의 스크립트 주소를 바꾼다
+    html_patch = [(f'src="/assets/{js[0]}"', f'src="/assets/{js[0]}?rhwp-open={PATCH_ID}"')]
+    if not (apply_patches(os.path.join(assets, js[0]), PATCHES)
+            and apply_patches(os.path.join(VIEWER_DIR, "viewer.html"), html_patch)):
+        notify("rhwp 뷰어 패치 건너뜀: 이 버전과 맞지 않음")
+        return
+    with open(PATCH_MARK, "w") as f:
+        f.write(PATCH_ID)
+
+
+# ---------- 서버 ----------
+
+class Handler(SimpleHTTPRequestHandler):
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".wasm": "application/wasm",
+        ".js": "text/javascript",
+        ".mjs": "text/javascript",
+    }
+
+    def __init__(self, *args, state, **kwargs):
+        self.state = state
+        super().__init__(*args, directory=VIEWER_DIR, **kwargs)
+
+    def send_head(self):
+        self.state["last"] = time.monotonic()
+        # DNS rebinding 방지: 외부 도메인 이름으로 들어온 요청은 거절
+        if self.headers.get("Host") != HOST:
+            self.send_error(403)
+            return None
+        path = urllib.parse.urlsplit(self.path).path
+        if path == HEALTH:
+            return self.send_bytes(HEALTH_BODY, "text/plain")
+        if path.startswith("/doc/"):
+            return self.send_doc(path.removeprefix("/doc/"))
+        return super().send_head()
+
+    cache_control = "no-cache"  # 정적 파일: 매번 재검증(로컬이라 304 비용은 무시할 만함)
+
+    def end_headers(self):
+        self.send_header("Cache-Control", self.cache_control)
+        super().end_headers()
+
+    def send_bytes(self, data, ctype):
         self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", ORIGIN)
-        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
+        self.cache_control = "no-store"
         self.end_headers()
-        self.wfile.write(data)
-        pending.discard(token)
-        if not pending:
-            done.set()
+        return io.BytesIO(data)
+
+    def send_doc(self, token):
+        if not token or not token.replace("-", "").replace("_", "").isalnum():
+            self.send_error(404)
+            return None
+        try:
+            with open(os.path.join(REG_DIR, token)) as f:
+                doc = f.read()
+            with open(doc, "rb") as f:
+                data = f.read()
+        except OSError:
+            self.send_error(404)
+            return None
+        return self.send_bytes(data, "application/octet-stream")
 
     def log_message(self, *args):
         pass
 
 
-server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-threading.Thread(target=server.serve_forever, daemon=True).start()
-port = server.server_address[1]
+def serve():
+    state = {"last": time.monotonic()}
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", PORT), partial(Handler, state=state))
+    except OSError:
+        return  # 이미 다른 인스턴스가 떠 있음
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    while time.monotonic() - state["last"] < IDLE_TIMEOUT:
+        time.sleep(30)
+    server.shutdown()
+    # 오래된 등록만 지운다(종료 직전에 새로 등록된 것은 남겨 둠)
+    for name in os.listdir(REG_DIR) if os.path.isdir(REG_DIR) else []:
+        p = os.path.join(REG_DIR, name)
+        if time.time() - os.path.getmtime(p) > IDLE_TIMEOUT:
+            os.remove(p)
 
-for token, path in files.items():
-    query = urllib.parse.urlencode(
-        {"url": f"http://127.0.0.1:{port}/{token}", "filename": os.path.basename(path)}
+
+def server_alive():
+    try:
+        req = urllib.request.Request(f"http://{HOST}{HEALTH}")
+        with urllib.request.urlopen(req, timeout=1) as r:
+            return r.read() == HEALTH_BODY
+    except OSError:
+        return False
+
+
+def port_in_use():
+    with socket.socket() as s:
+        return s.connect_ex(("127.0.0.1", PORT)) == 0
+
+
+def ensure_server():
+    if server_alive():
+        return True
+    if port_in_use():
+        notify(f"포트 {PORT} 를 다른 프로그램(또는 다른 버전의 rhwp-open)이 쓰고 있음")
+        return False
+    subprocess.Popen(
+        [sys.executable, os.path.abspath(__file__), "--serve"],
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        start_new_session=True,
     )
-    subprocess.Popen(["xdg-open", f"{VIEWER}?{query}"])
+    for _ in range(50):
+        if server_alive():
+            return True
+        time.sleep(0.1)
+    notify("rhwp 서버를 띄우지 못함")
+    return False
 
-if not done.wait(TIMEOUT):
-    subprocess.run(["notify-send", "rhwp", f"브라우저가 {len(pending)}개 파일을 가져가지 않음"])
-server.shutdown()
+
+def main():
+    if sys.argv[1:] == ["--serve"]:
+        serve()
+        return
+
+    paths = []
+    for arg in sys.argv[1:]:
+        path = urllib.parse.unquote(arg.removeprefix("file://"))
+        if os.path.isfile(path):
+            paths.append(os.path.abspath(path))
+    if not paths:
+        notify("열 파일이 없음")
+        sys.exit(1)
+
+    try:
+        install_viewer()
+        patch_viewer()
+    except Exception as e:
+        notify(f"rhwp 뷰어 설치 실패: {e}")
+        sys.exit(1)
+
+    os.makedirs(REG_DIR, mode=0o700, exist_ok=True)
+    tokens = []
+    for path in paths:
+        token = secrets.token_urlsafe(16)
+        with open(os.path.join(REG_DIR, token), "w") as f:
+            f.write(path)
+        tokens.append((token, path))
+
+    if not ensure_server():
+        sys.exit(1)
+
+    for token, path in tokens:
+        query = urllib.parse.urlencode({"url": f"/doc/{token}", "filename": os.path.basename(path)})
+        subprocess.Popen(["xdg-open", f"http://{HOST}/viewer.html?{query}"])
+
+
+main()
